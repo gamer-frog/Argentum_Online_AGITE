@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101611">
+  <title>Argentum Online — Las Tierras del Sur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IM+Fell+English:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Argentum Online"><span class="brand-mark">A</span><span>ARGENTUM <b>ONLINE</b><small>LAS TIERRAS DEL SUR</small></span></a>
+      <div class="server-status"><i></i> SERVIDOR · TIERRAS DEL SUR <span>1.284 conectados</span></div>
+      <div class="top-actions"><button class="icon-button" id="soundBtn" title="Sonido">♫</button><button class="icon-button" id="helpBtn" title="Controles">?</button><div class="user-chip"><span class="avatar-mini">✦</span><span>AVENTURERO<small>PALADÍN · NIVEL <b id="levelMini">1</b></small></span></div></div>
+    </header>
+
+    <section class="game-layout">
+      <aside class="left-rail">
+        <section class="panel character-card">
+          <div class="section-label">TU AVENTURERO <span>◈</span></div>
+          <div class="character-heading"><div class="portrait">⚔<span>1</span></div><div><h2>Sin Nombre</h2><p>Paladín <i>·</i> Humano</p></div><button class="more-btn" aria-label="Más opciones">···</button></div>
+          <div class="level-line"><span>NIVEL <b id="levelText">1</b></span><span><b id="xpText">0</b> / <span id="xpGoal">100</span> XP</span></div><div class="xp-track"><i id="xpBar"></i></div>
+          <div class="stat-row"><span>❤️</span><div class="stat-info"><div><b>VIDA</b><span id="hpText">100 / 100</span></div><div class="meter hp-meter"><i id="hpBar"></i></div></div></div>
+          <div class="stat-row"><span>✦</span><div class="stat-info"><div><b>MANA</b><span id="mpText">40 / 40</span></div><div class="meter mp-meter"><i id="mpBar"></i></div></div></div>
+          <div class="stat-row"><span>◉</span><div class="stat-info"><div><b>RESISTENCIA</b><span id="stamText">100 / 100</span></div><div class="meter stam-meter"><i id="stamBar"></i></div></div></div>
+          <div class="mini-stats"><span><small>ORO</small><b>◈ <span id="goldText">24</span></b></span><span><small>ATAQUE</small><b>⚔ 12</b></span><span><small>DEFENSA</small><b>⬟ 8</b></span></div>
+        </section>
+
+        <section class="panel quest-card">
+          <div class="section-label">DIARIO DE VIAJE <span class="quest-count">ACTIVO</span></div>
+          <div class="quest-title"><span class="quest-icon">⚑</span><div><h3>Una plaga verde</h3><small>Encargo de la aldea</small></div></div>
+          <p>El camino está infestado de limos. Ayudá a <b>Don Eusebio</b> a despejarlo.</p>
+          <div class="objective"><span class="objective-dot"></span><span>Derrotá limos</span><b id="questCount">0 / 3</b></div>
+          <div class="reward-line">RECOMPENSA <span>✦ 80 XP&nbsp;&nbsp; ◈ 35 oro</span></div>
+          <button class="text-button" id="questFocus">MARCAR EN EL MAPA <span>↗</span></button>
+        </section>
+
+        <section class="panel inventory-card">
+          <div class="section-label">EQUIPO <button class="text-button" id="inventoryBtn">VER TODO <span>↗</span></button></div>
+          <div class="equipment"><div class="equip-item weapon" title="Espada corta"><span>⚔</span><small>ARMA</small></div><div class="equip-item armor" title="Túnica de cuero"><span>♜</span><small>PECHO</small></div><div class="equip-item empty" title="Cabeza"><span>◌</span><small>CABEZA</small></div><div class="equip-item empty" title="Botas"><span>◌</span><small>BOTAS</small></div></div>
+          <div class="quick-items"><span>ACCESO RÁPIDO</span><button class="quick-item" id="potionBtn" title="Tomar poción de vida (H)"><span>🧪</span><b id="potionCount">3</b><small>H</small></button><button class="quick-item" id="manaBtn" title="Tomar poción de maná (J)"><span>🔵</span><b id="manaCount">2</b><small>J</small></button><span class="quick-hint">H / J</span></div>
+        </section>
+      </aside>
+
+      <section class="world-column">
+        <div class="world-header"><div class="location"><span class="location-pin">⌖</span><div><h1>Bosque de Ullathorpe</h1><p><span class="weather-icon">☀</span> PRIMAVERA · DÍA 14 <i>·</i> 10:42</p></div></div><div class="world-tools"><span class="online"><i></i> ZONA SEGURA</span><button class="map-toggle" id="mapBtn">⌖ <span>MAPA</span></button></div></div>
+        <div class="canvas-wrap"><canvas id="gameCanvas" aria-label="Mundo de Argentum Online"></canvas><div class="canvas-vignette"></div><div class="world-coords"><span id="coords">X: 048 · Y: 032</span><span>Ullathorpe <i>◆</i> 32, 48</span></div><div class="target-toast" id="targetToast">◉ <span>Elegí un objetivo</span></div><div class="interaction-hint" id="interactionHint"><kbd>E</kbd> HABLAR CON EUSEBIO</div><div class="map-overlay" id="mapOverlay"><div class="map-title">MAPA DE LA ZONA <button id="closeMap">×</button></div><div class="map-picture" id="mapPicture"></div><p>Ullathorpe y alrededores <span>32, 48</span></p><div class="map-legend"><span><i class="legend-player"></i>Vos</span><span><i class="legend-town"></i>Aldea</span><span><i class="legend-enemy"></i>Limos</span></div></div><div class="start-screen" id="startScreen"><div class="start-emblem">✥</div><p class="eyebrow">LAS TIERRAS DEL SUR TE ESPERAN</p><h2>Una nueva aventura<br><em>comienza aquí.</em></h2><p class="start-copy">Perdéte entre bosques antiguos, conocé a sus habitantes<br>y escribí tu propia leyenda.</p><button id="enterBtn" class="enter-button">ENTRAR AL MUNDO <span>→</span></button><small>Una aventura para un jugador · Progreso guardado en este dispositivo</small></div></div>
+        <div class="world-footer"><div class="controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <small>MOVER</small></span><span><kbd>ESPACIO</kbd> <small>ATACAR</small></span><span><kbd>E</kbd> <small>INTERACTUAR</small></span></div><div class="world-message" id="worldMessage"><span class="message-dot"></span><span>El bosque está tranquilo... por ahora.</span></div><div class="zoom-controls"><button id="zoomOut">−</button><span>100%</span><button id="zoomIn">+</button></div></div>
+      </section>
+
+      <aside class="right-rail">
+        <section class="panel minimap-card"><div class="section-label">BRÚJULA <span>⌖</span></div><div class="minimap" id="miniMap"><div class="mini-grid"></div><span class="mini-path"></span><span class="mini-water"></span><span class="mini-tree t1"></span><span class="mini-tree t2"></span><span class="mini-tree t3"></span><span class="mini-tree t4"></span><span class="mini-town">⌂</span><span class="mini-dot player-dot"></span><span class="mini-dot enemy-dot e1"></span><span class="mini-dot enemy-dot e2"></span></div><div class="map-footer"><span>32, 48</span><span><i></i> TU UBICACIÓN</span></div></section>
+        <section class="panel nearby-card"><div class="section-label">CERCA DE VOS <span id="nearbyNum">2</span></div><div class="nearby-list" id="nearbyList"></div><div class="danger-note"><span>!</span> Los limos atacan a la vista.</div></section>
+        <section class="panel chat-card"><div class="section-label">REGISTRO DE AVENTURA <button id="clearLog" class="clear-log">LIMPIAR</button></div><div class="chat-lines" id="chatLog"><p><time>10:40</time><span class="log-system">Bienvenido a las Tierras del Sur.</span></p><p><time>10:41</time><span>Don Eusebio <i>:</i> ¡Qué bueno que llegaste, aventurero!</span></p><p><time>10:41</time><span class="log-quest">Nueva misión: Una plaga verde</span></p><p><time>10:42</time><span>Un <b>limo verde</b> merodea por el bosque...</span></p></div><form id="chatForm" class="chat-input"><span>›</span><input id="chatInput" aria-label="Escribir mensaje" placeholder="Escribí un mensaje..." maxlength="90"><button aria-label="Enviar">↗</button></form></section>
+        <section class="social-strip"><span class="social-icon">◈</span><div><b>EL MUNDO TE ACOMPAÑA</b><small>Una comunidad, infinitas historias.</small></div><span class="social-arrow">↗</span></section>
+      </aside>
+    </section>
+    <footer class="bottom-bar"><span>ARGENTUM ONLINE <i>·</i> EDICIÓN AVENTURERO</span><span>UN CLÁSICO, UNA NUEVA HISTORIA <b>✦</b></span><span>v1.0.4 <i>·</i> <button id="resetBtn">REINICIAR PARTIDA</button></span></footer>
+  </main>
+  <div class="modal-backdrop" id="modalBackdrop"><section class="modal" id="modal"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></section></div>
+  <script src="game.js"></script>
+</body>
+</html>
