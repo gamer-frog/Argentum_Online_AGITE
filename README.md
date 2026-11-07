@@ -1,19 +1,31 @@
-# Argentum_Online_AGITE
+# Argentum Online — Arena del Robledal
 
-<!-- omgithub:readme:start -->
-## 🚀 Build, play, and remix with OMGithub
+Prototipo web jugable inspirado en Argentum Online. Incluye una arena de combate local, movimiento por tiles, bots, ataques cuerpo a cuerpo, habilidades por clase y controles táctiles; funciona en navegador sin backend.
 
-**Remixed using [OMGithub.com](https://go.ondev.store/).**
+## Ejecutar
 
-[![OMGithub](https://img.shields.io/badge/OMGithub-Open%20project-orange?style=for-the-badge)](https://go.ondev.store/gamer-frog/Argentum_Online_AGITE)
-[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github&style=for-the-badge)](https://github.com/gamer-frog/Argentum_Online_AGITE)
+Serví esta carpeta por HTTP, por ejemplo:
 
-- 🎮 [Open the project](https://go.ondev.store/gamer-frog/Argentum_Online_AGITE).
-- ✨ [Remix this project](https://go.ondev.store/gamer-frog/Argentum_Online_AGITE?remix=1).
-- 💻 [Explore the source](https://github.com/gamer-frog/Argentum_Online_AGITE).
-- 🛠️ [Check build runs](https://github.com/gamer-frog/Argentum_Online_AGITE/actions).
-- 🐛 [Report an issue](https://github.com/gamer-frog/Argentum_Online_AGITE/issues).
-- 👤 [Explore the creator's projects](https://go.ondev.store/gamer-frog).
-- 🌍 [Create with OMGithub](https://go.ondev.store/).
-- 🧬 [Explore the remix source](https://github.com/gamer-frog/Argentum_Online_AGITE).
-<!-- omgithub:readme:end -->
+```bash
+python3 -m http.server 8000
+```
+
+Después abrí <http://localhost:8000>.
+
+## Controles
+
+- **Flechas o WASD:** moverse.
+- **Clic en un personaje o Tab:** elegir objetivo.
+- **F o Enter:** atacar al objetivo adyacente.
+- **1–3:** elegir/cancelar habilidad; luego clic en un rival para atacar o en tu personaje para curarte.
+- **Combatientes / Esc:** mostrar el marcador o cerrar paneles.
+- **☰:** pausar o reanudar.
+- **Móvil:** pad táctil para moverse y botón de ataque.
+
+## Archivos
+
+- `index.html`, `styles.css`, `game.js`: aplicación web.
+- `assets/ao/`: mapa, datos de personajes y gráficos usados por el juego.
+- `scripts/extract_ao_assets.py`: herramienta de extracción de los recursos AO incluidos.
+
+La aplicación y sus recursos fueron recuperados de [gamer-frog/PLAYGROUND](https://github.com/gamer-frog/PLAYGROUND), revisión `fb02a4c` (clonada el 7 de noviembre de 2026). Se copiaron los archivos de la aplicación y sus recursos al repositorio `Argentum_Online_AGITE`; el clon de origen no forma parte de este repositorio.
