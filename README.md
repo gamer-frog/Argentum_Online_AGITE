@@ -28,4 +28,4 @@ Después abrí <http://localhost:8000>.
 - `assets/ao/`: mapa, datos de personajes y gráficos usados por el juego.
 - `scripts/extract_ao_assets.py`: herramienta de extracción de los recursos AO incluidos.
 
-La aplicación y sus recursos fueron recuperados de [gamer-frog/PLAYGROUND](https://github.com/gamer-frog/PLAYGROUND), revisión `fb02a4c` (clonada el 7 de noviembre de 2026). Se copiaron los archivos de la aplicación y sus recursos al repositorio `Argentum_Online_AGITE`; el clon de origen no forma parte de este repositorio.
+La aplicación y sus recursos fueron recuperados de [gamer-frog/PLAYGROUND](https://github.com/gamer-frog/PLAYGROUND), checkpoint `bb607ed43d187283e4defe41f27340bc7f1170fc` (rama `opencode-checkpoints/18`, 6 de noviembre de 2026). Se copiaron los archivos de la aplicación y sus recursos al repositorio `Argentum_Online_AGITE`; el clon de origen no forma parte de este repositorio. Esta recuperación no implica que los cambios se hayan publicado o integrado en `main`.
