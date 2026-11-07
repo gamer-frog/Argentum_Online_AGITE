@@ -709,7 +709,13 @@
     }
     if (key === 'enter' || key === 'f') { event.preventDefault(); attack(); return; }
     if (['1', '2', '3'].includes(key)) { selectSkill(Number(key) - 1); return; }
-    if (key === 'tab') { event.preventDefault(); const next = fighters.filter(f => f !== player && f.alive); if (next.length) selectTarget(next[(next.findIndex(f => f.id === selected) + 1) % next.length]); return; }
+    if (key === 'tab') {
+      event.preventDefault();
+      if (gameOver || paused) return;
+      const enemies = fighters.filter(f => isEnemy(player, f) && f.alive);
+      if (enemies.length) selectTarget(enemies[(enemies.findIndex(f => f.id === selected) + 1) % enemies.length]);
+      return;
+    }
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
