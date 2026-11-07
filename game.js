@@ -50,6 +50,7 @@
     ] }
   };
   const STEP_DURATION = .115;
+  const MATCH_KILL_LIMIT = 5;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const images = new Map();
@@ -381,6 +382,9 @@
       button.title = `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}`;
     });
   }
+  function teamScore(team) {
+    return fighters.reduce((total, actor) => total + (actor.team === team ? actor.kills : 0), 0);
+  }
   function kill(victim, attacker) {
     victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
@@ -394,7 +398,7 @@
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${names[victim.id]}.` : `${names[victim.id]} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    if (kills >= 5) endMatch(true);
+    if (teamScore(attacker.team) >= MATCH_KILL_LIMIT) endMatch(attacker.team);
     refreshHud();
   }
   function respawn(actor) {
@@ -501,7 +505,10 @@
     while (floatingTexts.length && floatingTexts[0].age > 1.05) floatingTexts.shift();
     while (spellEffects.length && spellEffects[0].age > spellEffects[0].duration) spellEffects.shift();
     updatePlayer(); updateNpcAims(dt); updateBots(dt);
-    if (remaining <= 0) endMatch(false);
+    if (remaining <= 0) {
+      const sacredScore = teamScore('sacred'), chaoticScore = teamScore('chaotic');
+      endMatch(sacredScore === chaoticScore ? null : sacredScore > chaoticScore ? 'sacred' : 'chaotic');
+    }
     refreshHud();
   }
 
@@ -653,12 +660,15 @@
       button.classList.toggle('cooling', cooldown > 0);
       button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
-    $('playerKills').innerHTML = `${kills} <i>/ 5</i>`; $('rosterPlayerKills').textContent = kills;
+    $('playerKills').textContent = kills; $('rosterPlayerKills').textContent = kills;
+    $('sacredScore').textContent = teamScore('sacred');
+    $('chaoticScore').textContent = teamScore('chaotic');
     for (const actor of fighters) {
       const score = $(`score-${actor.id}`);
       if (score) score.textContent = actor.kills;
     }
     $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
+    $('matchStatus').textContent = gameOver ? 'RONDA FINALIZADA' : paused ? 'EN PAUSA' : 'EN CURSO';
     const target = byId[selected]; $('targetName').textContent = target?.alive ? target.name : 'Sin objetivo';
     $('targetStatus').textContent = target?.alive ? `${Math.round(target.hp)}% · ${distance(player, target) <= 1 ? 'AL ALCANCE' : 'FUERA DE ALCANCE'}` : 'Seleccioná un combatiente';
     $('attackBtn').disabled = !target?.alive || distance(player, target) > 1 || player.attackCd > 0;
@@ -667,11 +677,20 @@
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('fighter-leading', actor === player && kills >= 3); row.classList.toggle('targeted', actor.id === selected); }
     }
   }
-  function endMatch(won) {
-    if (gameOver) return; gameOver = true;
-    $('resultPanel').classList.remove('hidden'); $('resultTitle').textContent = won ? 'VICTORIA' : 'FIN DE LA RONDA';
-    $('resultTitle').style.color = won ? '#e2c47e' : '#c6c7b9';
-    $('resultSub').textContent = won ? 'El Robledal recuerda tu nombre.' : 'La arena volverá a abrir sus puertas.';
+  function endMatch(winningTeam) {
+    if (gameOver) return;
+    gameOver = true;
+    const draw = winningTeam === null;
+    const won = winningTeam === player.team;
+    const winnerScore = winningTeam ? teamScore(winningTeam) : teamScore(player.team);
+    const loserScore = winningTeam ? teamScore(winningTeam === 'sacred' ? 'chaotic' : 'sacred') : teamScore(player.team === 'sacred' ? 'chaotic' : 'sacred');
+    $('resultPanel').classList.remove('hidden');
+    $('resultTitle').textContent = draw ? 'EMPATE' : won ? 'VICTORIA' : 'DERROTA';
+    $('resultTitle').style.color = draw ? '#c6c7b9' : won ? '#e2c47e' : '#d58a78';
+    const duration = Math.floor(elapsed);
+    const durationLabel = `${String(Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}`;
+    const outcome = draw ? 'Las legiones igualaron' : `${winningTeam === 'sacred' ? 'La Legión Sagrada' : 'La Legión Caótica'} gana`;
+    $('resultSub').textContent = `${outcome} ${winnerScore} a ${loserScore} · Tus bajas: ${kills} · Duración: ${durationLabel}.`;
   }
   function resetGame() {
     for (const actor of fighters) {
