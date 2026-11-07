@@ -23,3 +23,59 @@ button,select{font:inherit;color:inherit}button{cursor:pointer}button:focus-visi
 @media(max-width:760px){.client-window{padding:7px 7px 18px}.client-titlebar{height:38px;padding:0 7px}.client-brand{gap:6px}.client-brand strong{font-size:10px;letter-spacing:.7px}.brand-gem{font-size:16px}.client-version{font-size:7px}.window-actions{gap:3px}.window-actions button{height:23px;padding:0 5px;font-size:8px}.client-layout{display:flex;flex-direction:column;gap:8px}.world-window,.right-dock{width:100%}.world-toolbar{height:33px;gap:6px;padding:0 5px;font-size:7px}.world-toolbar>strong{font-size:7px}.toolbar-actions{gap:3px}.toolbar-actions>button{height:22px;padding:0 4px;font-size:7px}.match-state{font-size:0}.match-state i{width:7px;height:7px}.game-frame{height:min(64vh,560px);min-height:320px}.game-top-hud{top:7px;left:6px;right:6px}.round-pill,.score-goal{height:23px;padding:0 6px;font-size:6px}.round-pill span{margin-right:3px}.score-goal{margin-right:4px}.round-timer{min-width:49px;padding:3px 5px}.round-timer strong{font-size:12px}.round-timer span{font-size:6px}.kill-feed{top:39px;left:6px;max-width:70%}.feed-line{padding:4px 5px;font-size:8px}.canvas-tip{display:none}.mobile-joystick{position:absolute;z-index:3;left:13px;bottom:14px;width:92px;height:92px;display:block;touch-action:none}.joy-ring{position:absolute;inset:0;display:grid;place-items:center;border:1px solid #eee0a877;border-radius:50%;background:#10180fa1;box-shadow:inset 0 0 0 7px #d6d2b515}.joy-knob{width:37px;height:37px;border:1px solid #e4d59b;border-radius:50%;background:#b9aa7555;box-shadow:0 1px 5px #0008}.mobile-cast-hint{position:absolute;right:10px;bottom:14px;display:block;padding:5px 7px;border:1px solid #ddd2a344;background:#10150fc9;color:#e2d6aa;font:7px var(--mono)}.world-statusbar{font-size:7px}.right-dock{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:7px}.character-panel,.skills-panel{grid-column:1/-1}.character-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px}.character-panel>.panel-title{grid-column:1/-1}.character-summary{grid-row:2;grid-column:1}.resource-block{grid-row:2;grid-column:2;margin-top:0;align-self:center}.character-stats{grid-column:1/-1}.target-panel{grid-column:1/-1}.inventory-panel,.equipment-panel{grid-column:span 1}.side-panel{position:static;grid-column:1/-1;width:100%;max-height:60vh}.client-footer{font-size:7px}.project-roadmap{margin-top:18px;padding:14px}.roadmap-heading{align-items:flex-start;flex-direction:column;gap:9px}.project-roadmap h1{font-size:21px}.roadmap-intro{font-size:10px}.roadmap-grid{grid-template-columns:1fr}.roadmap-wide{grid-column:auto}.roadmap-card{padding:11px}.roadmap-card li{font-size:9px}}
 @media(max-width:420px){.client-brand strong{font-size:8px}.client-version{display:none}.world-toolbar{gap:4px}.world-toolbar>strong{font-size:6px;letter-spacing:.3px}.toolbar-divider{height:12px}.toolbar-actions>button{font-size:6px;padding:0 3px}.world-toolbar>span:not(.location-mark):not(.toolbar-divider){display:none}.game-frame{height:58vh;min-height:300px}.round-pill{font-size:0}.round-pill span{font-size:14px}.score-goal{font-size:5px}.character-panel{column-gap:7px;padding:8px}.character-paperdoll{width:48px;height:62px}.character-info select{font-size:7px}.hero-name{font-size:10px}.character-stats{font-size:6px}.spell-slot{height:64px}.spell-name{font-size:7px}.spell-cost{font-size:6px}.client-footer{flex-direction:column;gap:5px}.control-list p{grid-template-columns:100px 1fr}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Classic-client pass: square, compact beveled panels keep the world and character sheet in view. */
+:root{--page:#242424;--window:#4a4a4a;--window-light:#707070;--window-dark:#202020;--panel:#484848;--panel-inset:#303030;--line:#777;--text:#e5e5e5;--muted:#bcbcbc;--gold:#d5c78b;--green:#73ad65;--red:#bd5d55;--blue:#659fc2;--mono:"Lucida Console",Consolas,monospace;--sans:Tahoma,Verdana,sans-serif}
+body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
+.client-window{width:min(1660px,100%);padding:8px 10px 20px}
+.client-titlebar,.world-toolbar,.dock-panel,.world-window,.window-actions button,.toolbar-actions>button{border-radius:0;box-shadow:inset 1px 1px #888,inset -1px -1px #202020}
+.client-titlebar{height:34px;background:linear-gradient(#666,#444);border-color:#929292;border-bottom-color:#1c1c1c}
+.client-brand strong{font-family:Tahoma,Verdana,sans-serif;font-size:13px;letter-spacing:.5px}
+.client-version{font:9px Tahoma,Verdana,sans-serif;letter-spacing:.3px}
+.client-layout{grid-template-columns:minmax(0,1fr) 320px;gap:6px;margin-top:6px}
+.world-window,.dock-panel{background:#494949;border-color:#898989;border-right-color:#1e1e1e;border-bottom-color:#1e1e1e}
+.world-toolbar{height:29px;background:linear-gradient(#626262,#484848);font:10px Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.world-toolbar>strong{font:700 10px Tahoma,Verdana,sans-serif;color:#f0e2ad}
+.world-toolbar .location-mark{font-size:15px}
+.toolbar-actions>button{font:9px Tahoma,Verdana,sans-serif}
+.game-frame{height:clamp(420px,calc(100vh - 125px),820px);min-height:360px;border:2px solid #252525;box-shadow:inset 0 0 0 1px #898989}
+.game-frame canvas{image-rendering:pixelated}
+.game-top-hud{top:7px;left:7px;right:7px}
+.round-pill,.score-goal,.round-timer{border-color:#aaa;background:#242424e8;color:#eee;font-family:Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.round-pill,.score-goal{height:24px;font:10px Tahoma,Verdana,sans-serif}
+.round-timer span{font:8px Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.round-timer strong{font:700 14px "Lucida Console",Consolas,monospace}
+.feed-line{border-color:#aaa8;background:#242424e8;font-size:10px}
+.world-statusbar{height:21px;background:#3d3d3d;font:9px Tahoma,Verdana,sans-serif;letter-spacing:.15px}
+.right-dock{gap:5px}
+.dock-panel{padding:8px 9px;background:#494949}
+.panel-title{font:700 10px Tahoma,Verdana,sans-serif;letter-spacing:.25px;border-bottom-color:#777}
+.character-paperdoll{border-color:#171717;outline-color:#888;background:#333}
+.character-info select{border-radius:0;background:#303030;color:#f0e2ad;font:700 10px Tahoma,Verdana,sans-serif}
+.hero-name{font-size:12px}
+.character-faction{font:8px Tahoma,Verdana,sans-serif}
+.resource-row{font:9px Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.resource-row b{font:9px "Lucida Console",Consolas,monospace}
+.health-track,.mana-track{height:10px;border-radius:0}
+.character-stats{font:8px Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.target-copy strong{font-size:12px}
+.target-copy span{font:8px Tahoma,Verdana,sans-serif;letter-spacing:0}
+.attack-button{border-radius:0}
+.attack-button b{font:700 9px Tahoma,Verdana,sans-serif}
+.spell-slot{height:62px;border-radius:0}
+.spell-name{font-size:9px}
+.spell-cost{font:8px Tahoma,Verdana,sans-serif}
+.spell-hint{font:8px Tahoma,Verdana,sans-serif}
+.inventory-grid{gap:5px}
+.inventory-slot{background:#363636;outline-color:#767676}
+.inventory-note{font:8px Tahoma,Verdana,sans-serif;color:#e3c978}
+.equipment-slot{background:#363636;outline-color:#767676}
+.equipment-slot small{font:7px Tahoma,Verdana,sans-serif}
+.client-footer{font:9px Tahoma,Verdana,sans-serif;letter-spacing:.1px}
+.project-roadmap{border-radius:0}
+@media(max-width:1100px){.client-layout{grid-template-columns:minmax(0,1fr) 294px}.game-frame{height:clamp(390px,calc(100vh - 125px),740px)}}
+@media(max-width:760px){.client-window{padding:6px 6px 16px}.client-layout{display:flex;flex-direction:column;gap:6px}.world-toolbar{height:31px}.game-frame{height:min(64vh,560px);min-height:320px}.right-dock{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.character-panel,.skills-panel{grid-column:1/-1}.character-panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.panel-title{font-size:9px}.inventory-grid{gap:4px}}
+@media(max-width:420px){.client-window{padding:5px 5px 14px}.client-titlebar{height:32px}.client-brand strong{font-size:10px}.world-toolbar{height:29px}.world-toolbar>strong{font-size:7px}.world-toolbar .toolbar-actions>button{font-size:6px}.game-frame{height:58vh;min-height:300px}.right-dock{gap:5px}.inventory-grid{gap:3px}}
+
+/* Keep the reference client's map and character sheet essentials in the first mobile viewport. */
+@media(max-width:760px){.game-frame{height:min(40vh,360px);min-height:280px}.character-panel{order:1}.inventory-panel{order:2}.equipment-panel{order:3}.target-panel{order:4;grid-column:1/-1}.skills-panel{order:5}}

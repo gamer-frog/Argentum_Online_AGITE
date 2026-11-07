@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#252525" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Argentum Online — Cliente de combate</title>
+  <title>Argentum Online — Cliente de prueba</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,21 +14,21 @@
 <body>
   <main class="client-window">
     <header class="client-titlebar">
-      <div class="client-brand"><span class="brand-gem">✦</span><strong>ARGENTUM ONLINE</strong><span class="client-version">CLIENTE DE COMBATE</span></div>
+      <div class="client-brand"><span class="brand-gem">✦</span><strong>ARGENTUM ONLINE</strong><span class="client-version">CLIENTE DE PRUEBA</span></div>
       <div class="window-actions"><button id="soundToggle" type="button" title="Alternar sonido"><span id="soundIcon">♫</span> <span id="soundLabel">SONIDO</span></button><button id="helpBtn" type="button" title="Controles">?</button><button id="menuBtn" type="button" title="Pausar o reanudar">Ⅱ</button></div>
     </header>
 
     <section class="client-layout" id="arenaLayout" aria-label="Cliente de juego">
       <section class="world-window">
         <div class="world-toolbar">
-          <span class="location-mark">⌖</span><strong>ROBLEDAL DE UMBRÍA</strong><span class="toolbar-divider"></span><span>COMBATE 4 VS 4</span>
+          <span class="location-mark">⌖</span><strong>ROBLEDAL DE UMBRÍA</strong><span class="toolbar-divider"></span><span>MUNDO · PRUEBA LOCAL</span>
           <div class="toolbar-actions"><span class="match-state"><i></i> EN CURSO</span><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar partida">NUEVA PARTIDA</button></div>
         </div>
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
-          <div class="game-top-hud"><div class="round-pill"><span>✦</span> ARENA DE ENTRENAMIENTO</div><div class="round-timer"><span>TIEMPO</span><strong id="timer">03:00</strong></div><div class="score-goal">OBJETIVO <b>5 BAJAS</b></div></div>
-          <div class="kill-feed" id="killFeed"><div class="feed-line"><b>La arena te espera</b><span>—</span> buena suerte.</div></div>
+          <div class="game-top-hud"><div class="round-pill"><span>✦</span> ROBLEDAL DE UMBRÍA</div><div class="round-timer"><span>TIEMPO</span><strong id="timer">03:00</strong></div><div class="score-goal">OBJETIVO <b>5 BAJAS</b></div></div>
+          <div class="kill-feed" id="killFeed"><div class="feed-line"><b>Has llegado al Robledal</b><span>—</span> partida local.</div></div>
           <div class="match-result hidden" id="resultPanel"><div class="result-kicker">FIN DE LA PARTIDA</div><div class="result-title" id="resultTitle">VICTORIA</div><div class="result-sub" id="resultSub">El Robledal recuerda tu nombre.</div><button id="playAgain" type="button">VOLVER A LUCHAR <span>↻</span></button></div>
           <div class="mobile-joystick" id="joystick"><div class="joy-ring"><div class="joy-knob" id="joyKnob"></div></div></div>
           <div class="mobile-cast-hint">MOVER · ATACAR EN EL PANEL</div>
