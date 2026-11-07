@@ -54,24 +54,18 @@
           <button class="attack-button" id="attackBtn" type="button" title="Ataque cuerpo a cuerpo (F / Enter)"><span>⚔</span><b>ATACAR</b><kbd>F</kbd></button>
         </section>
 
-        <section class="dock-panel skills-panel">
-          <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
-          <div class="spell-loadout" aria-label="Habilidades del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button></div>
-          <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
-        </section>
-
         <section class="dock-panel inventory-panel" aria-label="Inventario (interfaz en desarrollo)">
-          <h2 class="panel-title">INVENTARIO <span class="inventory-capacity">0 / 20</span></h2>
+          <h2 class="panel-title">INVENTARIO · EN DESARROLLO <span class="inventory-capacity">0 / 20</span></h2>
           <div class="inventory-grid" aria-label="Veinte espacios de inventario vacíos">
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
           </div>
-          <p class="inventory-note">Inventario visual · objetos aún no implementados</p>
+          <p class="inventory-note">INTERFAZ PENDIENTE · SIN OBJETOS FUNCIONALES</p>
         </section>
 
-        <section class="dock-panel equipment-panel"><h2 class="panel-title">EQUIPAMIENTO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">Equipo y objetos: pendiente</p></section>
+        <section class="dock-panel equipment-panel" aria-label="Equipamiento (interfaz en desarrollo)"><h2 class="panel-title">EQUIPAMIENTO · EN DESARROLLO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">INTERFAZ PENDIENTE · SIN EQUIPO FUNCIONAL</p></section>
 
         <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
           <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
@@ -87,6 +81,15 @@
           <section class="battle-log"><h2 class="panel-title">REGISTRO DE BATALLA</h2><div id="battleLog" class="log-items"><div class="empty-log">Las acciones aparecerán aquí.</div></div></section>
         </aside>
       </aside>
+    </section>
+
+    <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
+      <div class="spellbar-heading">
+        <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
+        <span class="spellbar-shortcut">ATAJOS · 1 / 2 / 3</span>
+      </div>
+      <div class="spell-loadout" aria-label="Habilidades del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button></div>
+      <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
     </section>
 
     <footer class="client-footer"><span>ARGENTUM ONLINE · PROTOTIPO DE COMBATE LOCAL</span><span>HOJA DE RUTA: <a href="#roadmap">VER PENDIENTES</a></span></footer>
