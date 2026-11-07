@@ -38,10 +38,15 @@
       { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36 },
       { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8 }
     ] },
-    ranger: { label: 'CAZADOR', body: 3, head: 3, hp: 105, mana: 95, skills: [
-      { name: 'Flecha certera', icon: '➶', type: 'damage', cost: 16, damage: [22, 32], range: 6 },
-      { name: 'Hierbas', icon: '✚', type: 'heal', cost: 20, heal: 30 },
-      { name: 'Flecha venenosa', icon: '☠', type: 'damage', cost: 27, damage: [32, 43], range: 7 }
+    cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
+      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [24, 34], range: 6 },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40 },
+      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [34, 46], range: 7 }
+    ] },
+    paladin: { label: 'PALADÍN', body: 1, head: 3, hp: 145, mana: 90, skills: [
+      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [26, 36], range: 1 },
+      { name: 'Plegaria', icon: '✚', type: 'heal', cost: 20, heal: 34 },
+      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [34, 44], range: 2 }
     ] }
   };
   const STEP_DURATION = .115;
@@ -51,22 +56,22 @@
   let mapData, grhs, characters;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, remaining = 180, gameOver = false, paused = false;
-  let selected = 'sacredMage', selectedSkill = null, kills = 0, currentClass = 'warrior';
+  let selected = 'chaoticWarrior', selectedSkill = null, kills = 0, currentClass = 'warrior';
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
   let joystickKey = null;
-  const fighters = ACTORS.map((actor, index) => ({
-    ...actor, homeX: actor.x, homeY: actor.y,
-    hp: index === 0 ? CLASS_PROFILES.warrior.hp : 100,
-    maxHp: index === 0 ? CLASS_PROFILES.warrior.hp : 100,
-    mana: index === 0 ? CLASS_PROFILES.warrior.mana : 0,
-    maxMana: index === 0 ? CLASS_PROFILES.warrior.mana : 0,
-    alive: true, kills: 0,
-    heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
-    attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
-    skillCooldowns: [0, 0, 0]
-  }));
+  const fighters = ACTORS.map((actor, index) => {
+    const profile = CLASS_PROFILES[actor.className];
+    return {
+      ...actor, body: profile.body, head: profile.head, homeX: actor.x, homeY: actor.y,
+      hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana,
+      alive: true, kills: 0,
+      heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
+      attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
+      skillCooldowns: [0, 0, 0]
+    };
+  });
   const player = fighters[0];
   const byId = Object.fromEntries(fighters.map(actor => [actor.id, actor]));
   let lastToast = 0;
@@ -106,8 +111,7 @@
       for (const [id, image] of loaded) if (image) images.set(id, image);
       const missing = ids.length - images.size;
       if (missing) toast(`${missing} láminas de mapa no cargaron; el resto del mundo sigue disponible.`);
-      const positions = [[48, 43], [52, 43], [50, 48], [44, 46]];
-      fighters.forEach((actor, i) => { [actor.x, actor.y] = findOpen(positions[i][0], positions[i][1]); actor.homeX = actor.x; actor.homeY = actor.y; });
+      fighters.forEach(actor => { [actor.x, actor.y] = findOpen(actor.x, actor.y, actor); actor.homeX = actor.x; actor.homeY = actor.y; });
       refreshHud();
     } catch (error) {
       console.error(error);
@@ -171,8 +175,9 @@
     const t = clamp(actor.stepTime / STEP_DURATION, 0, 1), [x0, y0] = actor.step.from, [x1, y1] = actor.step.to;
     return [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t];
   }
+  function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
   function nearestEnemy(actor) {
-    return fighters.filter(other => other !== actor && other.alive)
+    return fighters.filter(other => isEnemy(actor, other) && other.alive)
       .sort((a, b) => distance(actor, a) - distance(actor, b))[0] || null;
   }
   function nextPathStep(actor, target) {
@@ -200,7 +205,7 @@
   function attack(actor = player, targetOverride = null) {
     if (gameOver || paused || !actor.alive || actor.attackCd > 0) return false;
     const target = targetOverride || byId[selected];
-    if (!target || !target.alive || target === actor) { toast('Elegí un combatiente primero.'); return false; }
+    if (!target || !target.alive || target === actor || !isEnemy(actor, target)) { toast('Elegí un rival de la legión contraria.'); return false; }
     const d = distance(actor, target);
     if (d > 1) { toast('Acercate al objetivo para atacar.'); return false; }
     actor.heading = actorTile(target)[0] < actorTile(actor)[0] ? 'W' : actorTile(target)[0] > actorTile(actor)[0] ? 'E' : actorTile(target)[1] < actorTile(actor)[1] ? 'N' : 'S';
@@ -220,9 +225,9 @@
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
   function beginNpcAim(actor, target) {
-    const [x, y] = actorTile(target);
-    actor.heading = x < actorTile(actor)[0] ? 'W' : x > actorTile(actor)[0] ? 'E' : y < actorTile(actor)[1] ? 'N' : 'S';
-    actor.aim = { targetId: target.id, x, y, remaining: NPC_AIM_DURATION };
+    const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
+    actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
+    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, remaining: NPC_AIM_DURATION };
     actor.attackCd = rand(.85, 1.15);
   }
   function resolveNpcAim(actor) {
@@ -251,6 +256,12 @@
     for (const actor of fighters.slice(1)) {
       if (!actor.aim) continue;
       actor.aim.remaining -= dt;
+      const target = byId[actor.aim.targetId];
+      if (target?.alive) {
+        const [tx, ty] = actorTile(target), progress = clamp(1 - actor.aim.remaining / NPC_AIM_DURATION, 0, 1);
+        actor.aim.cursorX = tx + Math.sin(elapsed * 15 + actor.aim.phase) * (1 - progress) * .18;
+        actor.aim.cursorY = ty + Math.cos(elapsed * 13 + actor.aim.phase) * (1 - progress) * .18;
+      }
       if (actor.aim.remaining <= 0) resolveNpcAim(actor);
     }
   }
@@ -273,7 +284,7 @@
   function castSkill(index, targetOverride = null) {
     if (gameOver || paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index], target = targetOverride || byId[selected];
-    if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player)) {
+    if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
       toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
     }
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
@@ -307,7 +318,6 @@
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0]; selectedSkill = null;
     $('heroClass').textContent = profile.label;
-    $('playerClassLabel').textContent = profile.label;
     renderSkills(); refreshSkillSelection(); refreshHud();
     toast(`Clase ${profile.label.toLowerCase()} seleccionada.`);
   }
@@ -337,11 +347,11 @@
     refreshHud();
   }
   function respawn(actor) {
-    const [x, y] = findOpen(actor.homeX, actor.homeY);
-    Object.assign(actor, { x, y, hp: actor === player ? player.maxHp : 100, mana: actor === player ? player.maxMana : 0, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null });
+    const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
+    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, skillCooldowns: [0, 0, 0] });
   }
   function selectTarget(actor) {
-    if (!actor || actor === player || !actor.alive) return;
+    if (!actor || actor === player || !actor.alive || !isEnemy(player, actor)) { toast('Seleccioná un rival de la legión contraria.'); return; }
     selected = actor.id; refreshHud();
     const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
     toast(skill?.type === 'heal' ? `${actor.name} seleccionado · hacé clic en tu personaje para curarte.` : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.` : `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.`);
@@ -495,16 +505,19 @@
     }
   }
   function drawCombatEffects(cameraX, cameraY, now) {
-    for (const actor of fighters.slice(1)) {
+    const aimColors = ['#ff685b', '#64d8d0', '#e8b75f'];
+    for (const [index, actor] of fighters.slice(1).entries()) {
       const aim = actor.aim;
       if (!aim) continue;
-      const [sx, sy] = screenTile(aim.x, aim.y, cameraX, cameraY);
+      const [fromX, fromY] = screenTile(aim.fromX, aim.fromY, cameraX, cameraY);
+      const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
-      const pulse = .5 + Math.sin(now / 90) * .16;
+      const color = aimColors[index % aimColors.length], pulse = .5 + Math.sin(now / 90 + aim.phase) * .16;
       ctx.save(); ctx.globalAlpha = .72 + pulse * .28;
-      ctx.strokeStyle = '#ff685b'; ctx.fillStyle = '#ff685b';
-      ctx.lineWidth = Math.max(2, tilePx * .065); ctx.shadowColor = '#f04438'; ctx.shadowBlur = tilePx * .35;
-      ctx.beginPath(); ctx.arc(x, y, tilePx * (.28 + pulse * .035), 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = color; ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(2, tilePx * .055); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .3;
+      ctx.beginPath(); ctx.moveTo(fromX + tilePx / 2, fromY + tilePx / 2); ctx.lineTo(x, y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, tilePx * (.27 + pulse * .035), 0, Math.PI * 2); ctx.stroke();
       const arm = tilePx * .42, gap = tilePx * .17;
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
@@ -520,7 +533,7 @@
       const x = x0 + tilePx / 2 + (x1 - x0) * progress;
       const y = y0 + tilePx / 2 + (y1 - y0) * progress;
       ctx.save(); ctx.globalAlpha = 1 - progress;
-      ctx.fillStyle = effect.kind === 'heal' ? '#9ee68b' : effect.kind === 'mage' ? '#ff9a54' : effect.kind === 'ranger' ? '#c9e177' : '#f4df9b';
+      ctx.fillStyle = effect.kind === 'heal' ? '#9ee68b' : effect.kind === 'mage' ? '#ff9a54' : '#f4df9b';
       ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = tilePx * .55;
       ctx.beginPath(); ctx.arc(x, y, tilePx * (.1 + progress * .23), 0, Math.PI * 2); ctx.fill();
       if (effect.kind !== 'heal') {
@@ -584,9 +597,12 @@
     $('resultSub').textContent = won ? 'El Robledal recuerda tu nombre.' : 'La arena volverá a abrir sus puertas.';
   }
   function resetGame() {
-    for (const actor of fighters) Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: actor === player ? player.maxHp : 100, mana: actor === player ? player.maxMana : 0, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, skillCooldowns: [0, 0, 0] });
+    for (const actor of fighters) {
+      const profile = CLASS_PROFILES[actor.className];
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, skillCooldowns: [0, 0, 0] });
+    }
     floatingTexts.length = 0; spellEffects.length = 0;
-    selected = 'sacredMage'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
+    selected = 'chaoticWarrior'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
     refreshSkillSelection();
     $('resultPanel').classList.add('hidden'); $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
     $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La arena te espera</b><span>—</span> buena suerte, viajero.</div>';
