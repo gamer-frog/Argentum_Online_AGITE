@@ -658,7 +658,6 @@
       const score = $(`score-${actor.id}`);
       if (score) score.textContent = actor.kills;
     }
-    $('progressText').textContent = `${kills} / 5`; $('progressBar').style.width = `${Math.min(100, kills / 5 * 100)}%`;
     $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
     const target = byId[selected]; $('targetName').textContent = target?.alive ? target.name : 'Sin objetivo';
     $('targetStatus').textContent = target?.alive ? `${Math.round(target.hp)}% · ${distance(player, target) <= 1 ? 'AL ALCANCE' : 'FUERA DE ALCANCE'}` : 'Seleccioná un combatiente';
