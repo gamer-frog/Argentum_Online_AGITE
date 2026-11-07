@@ -9,10 +9,14 @@
   const rand = (lo, hi) => lo + Math.random() * (hi - lo);
   const MAP_URL = 'assets/ao/';
   const ACTORS = [
-    { id: 'player', name: 'Viajero del Sur', body: 1, head: 1, x: 48, y: 43 },
-    { id: 'luna', name: 'Luna de Plata', body: 2, head: 2, x: 52, y: 43 },
-    { id: 'bruno', name: 'Bruno Fierro', body: 3, head: 3, x: 50, y: 48 },
-    { id: 'mateo', name: 'Mateo del Monte', body: 1, head: 4, x: 44, y: 46 }
+    { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', x: 43, y: 46 },
+    { id: 'sacredMage', name: 'Mago Sagrado', team: 'sacred', className: 'mage', x: 43, y: 43 },
+    { id: 'sacredCleric', name: 'Clérigo Sagrado', team: 'sacred', className: 'cleric', x: 43, y: 49 },
+    { id: 'sacredPaladin', name: 'Paladín Sagrado', team: 'sacred', className: 'paladin', x: 46, y: 46 },
+    { id: 'chaoticWarrior', name: 'Guerrero Caótico', team: 'chaotic', className: 'warrior', x: 57, y: 46 },
+    { id: 'chaoticMage', name: 'Mago Caótico', team: 'chaotic', className: 'mage', x: 57, y: 43 },
+    { id: 'chaoticCleric', name: 'Clérigo Caótico', team: 'chaotic', className: 'cleric', x: 57, y: 49 },
+    { id: 'chaoticPaladin', name: 'Paladín Caótico', team: 'chaotic', className: 'paladin', x: 54, y: 46 }
   ];
   const HEADINGS = { N: 1, E: 2, S: 3, W: 4 };
   const DELTAS = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
@@ -47,7 +51,7 @@
   let mapData, grhs, characters;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, remaining = 180, gameOver = false, paused = false;
-  let selected = 'luna', selectedSkill = null, kills = 0, currentClass = 'warrior';
+  let selected = 'sacredMage', selectedSkill = null, kills = 0, currentClass = 'warrior';
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
@@ -559,7 +563,10 @@
       button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
     $('playerKills').innerHTML = `${kills} <i>/ 5</i>`; $('rosterPlayerKills').textContent = kills;
-    $('score-luna').textContent = byId.luna.kills; $('score-bruno').textContent = byId.bruno.kills; $('score-mateo').textContent = byId.mateo.kills;
+    for (const actor of fighters) {
+      const score = $(`score-${actor.id}`);
+      if (score) score.textContent = actor.kills;
+    }
     $('progressText').textContent = `${kills} / 5`; $('progressBar').style.width = `${Math.min(100, kills / 5 * 100)}%`;
     $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
     const target = byId[selected]; $('targetName').textContent = target?.alive ? target.name : 'Sin objetivo';
@@ -579,7 +586,7 @@
   function resetGame() {
     for (const actor of fighters) Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: actor === player ? player.maxHp : 100, mana: actor === player ? player.maxMana : 0, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, skillCooldowns: [0, 0, 0] });
     floatingTexts.length = 0; spellEffects.length = 0;
-    selected = 'luna'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
+    selected = 'sacredMage'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
     refreshSkillSelection();
     $('resultPanel').classList.add('hidden'); $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
     $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La arena te espera</b><span>—</span> buena suerte, viajero.</div>';
