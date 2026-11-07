@@ -58,6 +58,7 @@
   const teamScores = { sacred: 0, chaotic: 0 };
   const TEAM_LABELS = { sacred: 'LEGIÓN SAGRADA', chaotic: 'LEGIÓN CAÓTICA' };
   const TEAM_COLORS = { sacred: '#69a9ff', chaotic: '#ff776d' };
+  const TEAM_KILL_GOAL = 5;
   let selected = 'chaoticWarrior', selectedSkill = null, kills = 0, currentClass = 'warrior';
   let placingNpc = false, placementTile = null, pointerCanvas = null;
   const floatingTexts = [], spellEffects = [];
@@ -239,6 +240,7 @@
     if (gameOver || paused || !actor.alive || actor.attackCd > 0) return false;
     const target = targetOverride || byId[selected];
     if (!target || !target.alive || target === actor) { toast('Elegí un combatiente primero.'); return false; }
+    if (!isEnemy(actor, target)) { toast('No podés atacar a un aliado.'); return false; }
     const d = distance(actor, target);
     if (d > 1) { toast('Acercate al objetivo para atacar.'); return false; }
     actor.heading = actorTile(target)[0] < actorTile(actor)[0] ? 'W' : actorTile(target)[0] > actorTile(actor)[0] ? 'E' : actorTile(target)[1] < actorTile(actor)[1] ? 'N' : 'S';
@@ -275,7 +277,7 @@
     actor.aim = null;
     if (!aim) return;
     const target = byId[aim.targetId];
-    if (!actor.alive || !target?.alive) return;
+    if (!actor.alive || !target?.alive || !isEnemy(actor, target)) return;
     const [x, y] = position(target);
     if (Math.hypot(x - aim.cursorX, y - aim.cursorY) > .42) {
       addFloatingTextAt(aim.cursorX, aim.cursorY, x !== aim.x || y !== aim.y ? 'ESQUIVADO' : 'FALLÓ', 'miss');
@@ -313,7 +315,14 @@
       if (aim.remaining <= 0) resolveNpcAim(actor);
     }
   }
+  function isHealSkill(skill) { return skill?.type === 'heal' || skill?.type === 'healAlly'; }
   function isSelfTarget(skill) { return skill?.type === 'heal' || skill?.type === 'remove'; }
+  function canTargetWithSkill(actor, target, skill) {
+    if (!actor || !target || !target.alive) return false;
+    if (skill?.type === 'healAlly') return isAlly(actor, target);
+    if (isSelfTarget(skill)) return target === actor;
+    return isEnemy(actor, target);
+  }
   function selectSkill(index) {
     if (gameOver || paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index];
@@ -327,30 +336,30 @@
       button.setAttribute('aria-pressed', String(slot === selectedSkill));
     });
     const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
-    const hint = skill ? (isSelfTarget(skill) ? 'hacé clic en tu personaje' : 'hacé clic en un rival') : 'Elegí un hechizo y hacé clic en un rival';
+    const hint = skill ? (skill.type === 'healAlly' ? 'hacé clic en un aliado (también podés elegirte)' : isSelfTarget(skill) ? 'hacé clic en tu personaje' : 'hacé clic en un rival') : 'Elegí un hechizo y hacé clic en un rival';
     $('spellHint').textContent = skill ? `${skill.name} listo · ${hint}` : hint;
     document.body.classList.toggle('aiming-spell', Boolean(skill));
   }
   function castSkill(index, targetOverride = null) {
     if (gameOver || paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index], target = targetOverride || byId[selected];
-    const selfTarget = isSelfTarget(skill);
-    if (!skill || !target || !target.alive || (selfTarget ? target !== player : target === player)) {
-      toast(selfTarget ? 'Hacé clic en tu personaje.' : 'Elegí un rival como objetivo.'); return;
+    const selfTarget = isSelfTarget(skill), healAlly = skill?.type === 'healAlly';
+    if (!skill || !canTargetWithSkill(player, target, skill)) {
+      toast(selfTarget ? 'Hacé clic en tu personaje.' : healAlly ? 'Elegí un aliado para sanar.' : 'Elegí un rival como objetivo.'); return;
     }
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
     if ((skill.type === 'damage' || skill.type === 'immobilize') && distance(player, target) > skill.range) { toast(`Acercate; alcance máximo: ${skill.range} casilleros.`); return; }
-    if (skill.type === 'heal' && player.hp >= player.maxHp) { toast('Ya tenés toda la vida.'); return; }
+    if (isHealSkill(skill) && target.hp >= target.maxHp) { toast(`${target.name} ya tiene toda la vida.`); return; }
     if (skill.type === 'remove' && player.immobilized <= 0) { toast('No estás inmovilizado.'); return; }
     player.mana -= skill.cost;
     player.skillCooldowns[index] = selfTarget ? 5 : 2.8 + index * .7;
     const [px, py] = position(player), [tx, ty] = position(target);
-    if (skill.type === 'heal') {
-      const restored = Math.min(skill.heal, player.maxHp - player.hp);
-      player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal');
-      spellEffects.push({ x: px, y: py, tx: px, ty: py, age: 0, duration: .65, kind: 'heal' });
-      toast(`${skill.name}: recuperaste ${restored} de vida.`); tone(520, .15);
+    if (isHealSkill(skill)) {
+      const restored = Math.min(skill.heal, target.maxHp - target.hp);
+      target.hp += restored; target.flash = .2; addFloatingText(target, `+${restored}`, 'heal');
+      spellEffects.push({ x: px, y: py, tx, ty, age: 0, duration: .65, kind: 'heal' });
+      toast(`${skill.name}: ${target === player ? 'recuperaste' : `sanaste a ${target.name} por`} ${restored} de vida.`); tone(520, .15);
     } else if (skill.type === 'remove') {
       player.immobilized = 0;
       addFloatingText(player, 'LIBRE', 'heal');
@@ -416,6 +425,7 @@
     victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null;
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
     attacker.kills++;
+    teamScores[attacker.team]++;
     if (attacker === player) kills++;
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
     line.innerHTML = `<span class="feed-gold">✦</span> <b>${attacker === player ? 'Vos' : names[attacker.id]}</b><span> derrotó a </span><b>${victim === player ? 'vos' : names[victim.id]}</b>`;
@@ -425,7 +435,7 @@
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${names[victim.id]}.` : `${names[victim.id]} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    if (kills >= 5) endMatch(true);
+    if (teamScores[attacker.team] >= TEAM_KILL_GOAL) endMatch(attacker.team === player.team, attacker.team);
     refreshHud();
   }
   function respawn(actor) {
@@ -434,6 +444,11 @@
   }
   function selectTarget(actor) {
     if (!actor || actor === player || !actor.alive) return;
+    const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
+    if (skill ? !canTargetWithSkill(player, actor, skill) : !isEnemy(player, actor)) {
+      toast(skill?.type === 'healAlly' ? 'Elegí un aliado para sanar.' : 'Elegí un rival como objetivo.');
+      return;
+    }
     selected = actor.id; refreshHud();
   }
   function toggleScoreboard(force) {
@@ -451,13 +466,11 @@
       return;
     }
     const skill = CLASS_PROFILES[currentClass].skills[selectedSkill];
-    if (isSelfTarget(skill)) {
-      if (target === player) castSkill(selectedSkill, player);
-      else toast(`${skill.name} se usa sobre tu personaje; hacé clic en vos.`);
+    if (!canTargetWithSkill(player, target, skill)) {
+      toast(isSelfTarget(skill) ? `${skill.name} se usa sobre tu personaje; hacé clic en vos.` : skill.type === 'healAlly' ? 'Elegí un aliado para sanar.' : 'Elegí un rival como objetivo.');
       return;
     }
-    if (target === player) { toast('Elegí un rival como objetivo.'); return; }
-    selected = target.id;
+    if (target !== player) selected = target.id;
     castSkill(selectedSkill, target);
   }
   function canvasPoint(event) {
@@ -530,11 +543,21 @@
         continue;
       }
       if (actor.aim) continue;
-      const heal = profile.skills.find((skill, i) => skill.type === 'heal' && actor.hp < actor.maxHp * .58 && actor.mana >= skill.cost && actor.skillCooldowns[i] <= 0);
-      if (heal && actor.attackCd <= 0) {
-        const index = profile.skills.indexOf(heal), restored = Math.min(heal.heal, actor.maxHp - actor.hp);
-        actor.mana -= heal.cost; actor.hp += restored; actor.skillCooldowns[index] = 6;
-        addFloatingText(actor, `+${restored}`, 'heal'); actor.flash = .2; actor.attackCd = rand(1.5, 2.2);
+      const healOptions = profile.skills.map((skill, index) => ({ skill, index }))
+        .filter(({ skill, index }) => isHealSkill(skill) && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
+      const healTarget = healOptions.length ? fighters
+        .filter(ally => ally.alive && isAlly(actor, ally) && ally.hp < ally.maxHp * .62)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] : null;
+      const healChoice = healTarget && healOptions
+        .filter(({ skill }) => Math.min(skill.heal, healTarget.maxHp - healTarget.hp) > 0)
+        .sort((a, b) => Math.min(b.skill.heal, healTarget.maxHp - healTarget.hp) - Math.min(a.skill.heal, healTarget.maxHp - healTarget.hp))[0];
+      if (healChoice && actor.attackCd <= 0) {
+        const { skill, index } = healChoice, restored = Math.min(skill.heal, healTarget.maxHp - healTarget.hp);
+        actor.mana -= skill.cost; actor.hp += restored; actor.skillCooldowns[index] = 6;
+        addFloatingText(healTarget, `+${restored}`, 'heal'); healTarget.flash = .2;
+        const [fromX, fromY] = position(actor), [toX, toY] = position(healTarget);
+        spellEffects.push({ x: fromX, y: fromY, tx: toX, ty: toY, age: 0, duration: .65, kind: 'heal' });
+        actor.attackCd = rand(1.5, 2.2);
         continue;
       }
       const target = nearestEnemy(actor);
@@ -778,31 +801,39 @@
       button.classList.toggle('cooling', cooldown > 0);
       button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
-    $('playerKills').innerHTML = `${kills} <i>/ 5</i>`; $('rosterPlayerKills').textContent = kills;
+    $('playerKills').textContent = kills; $('rosterPlayerKills').textContent = kills;
     for (const actor of fighters) {
       if (actor === player) continue;
       const score = $(`score-${actor.id}`);
       if (score) score.textContent = actor.kills;
     }
-    $('progressText').textContent = `${kills} / 5`; $('progressBar').style.width = `${Math.min(100, kills / 5 * 100)}%`;
+    const teamScore = teamScores[player.team];
+    $('progressText').textContent = `${TEAM_LABELS[player.team]} · ${teamScore} / ${TEAM_KILL_GOAL}`;
+    $('progressBar').style.width = `${Math.min(100, teamScore / TEAM_KILL_GOAL * 100)}%`;
     $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
     const target = byId[selected]; $('targetName').textContent = target?.alive ? target.name : 'Sin objetivo';
-    $('targetStatus').textContent = target?.alive ? `${Math.round(target.hp)}% · ${distance(player, target) <= 1 ? 'AL ALCANCE' : 'FUERA DE ALCANCE'}` : 'Seleccioná un combatiente';
-    $('attackBtn').disabled = !target?.alive || distance(player, target) > 1 || player.attackCd > 0;
+    $('targetStatus').textContent = target?.alive ? `${Math.round(target.hp)}% · ${isAlly(player, target) ? 'ALIADO' : distance(player, target) <= 1 ? 'AL ALCANCE' : 'FUERA DE ALCANCE'}` : 'Seleccioná un combatiente';
+    $('attackBtn').disabled = !target?.alive || !isEnemy(player, target) || distance(player, target) > 1 || player.attackCd > 0;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('fighter-leading', actor === player && kills >= 3); row.classList.toggle('targeted', actor.id === selected); }
     }
   }
-  function endMatch(won) {
+  function endMatch(_won, winnerTeam = null) {
     if (gameOver) return; gameOver = true;
-    $('resultPanel').classList.remove('hidden'); $('resultTitle').textContent = won ? 'VICTORIA' : 'FIN DE LA RONDA';
+    if (!winnerTeam && teamScores.sacred !== teamScores.chaotic) {
+      winnerTeam = teamScores.sacred > teamScores.chaotic ? 'sacred' : 'chaotic';
+    }
+    const won = winnerTeam === player.team;
+    $('resultPanel').classList.remove('hidden');
+    $('resultTitle').textContent = winnerTeam ? (won ? 'VICTORIA' : 'DERROTA') : 'EMPATE';
     $('resultTitle').style.color = won ? '#e2c47e' : '#c6c7b9';
-    $('resultSub').textContent = won ? 'La arena reconoce tu victoria.' : 'La arena volverá a abrir sus puertas.';
+    $('resultSub').textContent = winnerTeam ? `${TEAM_LABELS[winnerTeam]} ganó ${teamScores[winnerTeam]} a ${teamScores[winnerTeam === 'sacred' ? 'chaotic' : 'sacred']}.` : `Las dos legiones terminaron con ${teamScores.sacred} bajas.`;
   }
   function resetGame() {
     for (const actor of fighters) Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: actor === player ? player.maxHp : actor.maxHp, mana: actor === player ? player.maxMana : actor.maxMana, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, retreatTimer: 0, retreatTargetId: null, skillCooldowns: Array(CLASS_PROFILES[actor.className].skills.length).fill(0) });
     potionInventory.health = 3; potionInventory.mana = 3;
+    teamScores.sacred = 0; teamScores.chaotic = 0;
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
     refreshSkillSelection();
