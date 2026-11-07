@@ -41,6 +41,13 @@ else
   done
 fi
 
+# AO assets are generated locally and gitignored; expose them in the served build
+# whenever the extractor has populated assets/ao/.
+if [[ -d "$PROJECT_DIR/assets/ao" ]]; then
+  run mkdir -p "$STATIC_DIR/assets"
+  run cp -R "$PROJECT_DIR/assets/ao" "$STATIC_DIR/assets/"
+fi
+
 run python3 -c 'import json,sys; json.dump({"project":sys.argv[1],"directory":sys.argv[2]},open(sys.argv[3],"w")); print()' \
   "$PROJECT_DIR" "$STATIC_DIR" "$OPENCODE_WEB_DIR/deployment-output.json"
 echo "Serving $STATIC_DIR on 0.0.0.0:$PORT"

@@ -49,6 +49,8 @@ def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("Usage: extract_ao_assets.py /path/to/ao-cliente")
     source = Path(sys.argv[1]).resolve()
+    if not (source / "LICENSE").is_file() or not (source / "INIT/Creditos.txt").is_file():
+        raise SystemExit("Source must be a complete ao-cliente checkout with LICENSE and INIT/Creditos.txt")
     root = Path(__file__).resolve().parents[1]
     output = root / "assets" / "ao"
     graphics_dir = output / "graphics"
@@ -128,6 +130,29 @@ def main() -> None:
     (output / "map.json").write_text(json.dumps({"width": MAP_SIDE, "height": MAP_SIDE, "tileSize": TILE_SIZE, "tiles": tiles}, separators=(",", ":")))
     (output / "grhs.json").write_text(json.dumps(grhs, separators=(",", ":")))
     (output / "characters.json").write_text(json.dumps({"bodies": selected_bodies, "heads": selected_heads}, separators=(",", ":")))
+
+    try:
+        import subprocess
+        revision = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        revision = "unknown (source is not a Git checkout)"
+    attribution = f"""Argentum Online Libre — local asset extraction
+
+Source repository: https://github.com/ao-libre/ao-cliente
+Source revision: {revision}
+Source files: Mapas/Alkon/Mapa2.map; referenced entries in Graficos/ and INIT/Graficos.ini;
+              character definitions in INIT/Personajes.ini and INIT/Cabezas.ini.
+
+Credits recorded by the source project (INIT/Creditos.txt): maps — ReyarB; graphics
+collaboration — ReyarB, Aizanoth (interface), guidota (logo); indexing — Neo and ReyarB.
+The credits do not map individual extracted graphic sheets to individual creators.
+
+The source repository includes an AGPL-3.0 LICENSE, and the AO Libre whitepaper states
+that its code and resources are released under the GPL. Preserve the upstream LICENSE
+and check any resource-specific notices before redistribution. These generated files
+are local-only and excluded from this repository's Git history (assets/ao/).
+"""
+    (output / "ATTRIBUTION.txt").write_text(attribution, encoding="utf-8")
     print(f"Extracted {MAP_SIDE}x{MAP_SIDE} map, {len(grhs)} Grh records, {len(image_ids)} sheets to {output}")
 
 
