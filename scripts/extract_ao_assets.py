@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Extract the small set of map and sprite data used by the AO browser prototype.
+"""Extract map and sprite data for local use by the AO browser prototype.
 
 Usage: python3 scripts/extract_ao_assets.py /path/to/ao-cliente
-The source client is not bundled; the generated, optimized assets are.
+The source client is not bundled. Only extract and use resources you are
+permitted to use; generated files in assets/ao/ are intentionally gitignored.
 """
 from __future__ import annotations
 

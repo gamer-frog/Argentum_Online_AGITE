@@ -4,7 +4,7 @@ Prototipo web local inspirado en **Argentum Online**. Presenta un mundo explorab
 
 > **Referencia de fidelidad pendiente:** aún no se eligió una versión específica de Argentum Online como referencia. Las decisiones visuales y de mecánicas que dependan de ella quedan abiertas.
 >
-> **Recursos restringidos:** `assets/ao/` contiene datos y gráficos de procedencia pendiente de verificación. No publicar, redistribuir ni integrar esos recursos en una entrega pública hasta confirmar sus licencias y atribuciones. No se presentan como material original del proyecto.
+> **Recursos externos no incluidos:** el prototipo necesita datos y gráficos en `assets/ao/`, pero esa carpeta no se incluye en el repositorio. Su procedencia y permisos están pendientes de verificación; no los publiques ni redistribuyas sin confirmar licencias y atribuciones. No se presentan como material original del proyecto.
 
 ## Ejecutar localmente
 
@@ -45,7 +45,7 @@ El prototipo incluye:
 
 - HTML, CSS y JavaScript vanilla.
 - Canvas 2D para el mundo, personajes y efectos de combate.
-- El prototipo solicita datos JSON e imágenes de `assets/ao/`; su uso está limitado a pruebas locales mientras se verifica la procedencia y los permisos.
+- El prototipo solicita datos JSON e imágenes de `assets/ao/`. Sin esos archivos, el mundo y la partida no pueden cargarse; la carpeta está excluida de Git hasta verificar la procedencia y los permisos.
 - No usa framework, backend ni motor externo.
 
 ## Próximos pasos
