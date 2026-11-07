@@ -30,17 +30,17 @@
   const CLASS_PROFILES = {
     warrior: { label: 'GUERRERO', body: 1, head: 1, hp: 130, mana: 70, skills: [
       { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [25, 34], range: 1 },
-      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32 },
+      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32, cleanse: true },
       { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [35, 44], range: 2 }
     ] },
     mage: { label: 'MAGO', body: 2, head: 2, hp: 90, mana: 130, skills: [
       { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [27, 38], range: 7 },
-      { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36 },
-      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8 }
+      { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true },
+      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8, immobilize: 1.8 }
     ] },
     cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
       { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [24, 34], range: 6 },
-      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40 },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true },
       { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [34, 46], range: 7 }
     ] },
     paladin: { label: 'PALADÍN', body: 1, head: 3, hp: 145, mana: 90, skills: [
@@ -69,7 +69,7 @@
       alive: true, kills: 0,
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
-      skillCooldowns: [0, 0, 0]
+      skillCooldowns: [0, 0, 0], immobilized: 0
     };
   });
   const player = fighters[0];
@@ -161,7 +161,7 @@
   function distance(a, b) { const [ax, ay] = actorTile(a), [bx, by] = actorTile(b); return Math.abs(ax - bx) + Math.abs(ay - by); }
   function occupied(x, y, except) { return fighters.some(actor => actor !== except && actor.alive && actorTile(actor)[0] === x && actorTile(actor)[1] === y); }
   function startStep(actor, dx, dy) {
-    if (!actor.alive || actor.step || (!dx && !dy)) return false;
+    if (!actor.alive || actor.immobilized > 0 || actor.step || (!dx && !dy)) return false;
     if (dx && dy) { if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0; }
     dx = Math.sign(dx); dy = Math.sign(dy);
     const [x, y] = actorTile(actor), nx = x + dx, ny = y + dy;
@@ -176,9 +176,17 @@
     return [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t];
   }
   function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
-  function nearestEnemy(actor) {
-    return fighters.filter(other => isEnemy(actor, other) && other.alive)
-      .sort((a, b) => distance(actor, a) - distance(actor, b))[0] || null;
+  function tacticalEnemy(actor) {
+    const candidates = fighters.filter(other => isEnemy(actor, other) && other.alive);
+    return candidates.sort((a, b) => enemyScore(actor, a) - enemyScore(actor, b))[0] || null;
+  }
+  function enemyScore(actor, target) {
+    const alliesCommitted = fighters.filter(ally => ally !== actor && ally.alive && ally.team === actor.team && (ally.aim?.targetId === target.id || ally.aiTargetId === target.id)).length;
+    return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5;
+  }
+  function tacticalAlly(actor) {
+    return fighters.filter(other => other.alive && other.team === actor.team)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || actor;
   }
   function nextPathStep(actor, target) {
     const [sx, sy] = actorTile(actor), [tx, ty] = actorTile(target);
@@ -265,6 +273,38 @@
       if (actor.aim.remaining <= 0) resolveNpcAim(actor);
     }
   }
+  function npcCastSkill(actor, skill, index, target) {
+    if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
+    actor.mana -= skill.cost;
+    actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 2.8 + index * .7;
+    actor.attackCd = Math.max(actor.attackCd, .55);
+    const [sx, sy] = position(actor), [tx, ty] = position(target);
+    if (skill.type === 'heal') {
+      const restored = Math.min(skill.heal, target.maxHp - target.hp);
+      if (restored > 0) {
+        target.hp += restored; target.flash = .2;
+        addFloatingText(target, `+${restored}`, 'heal');
+      }
+      if (skill.cleanse && target.immobilized > 0) {
+        target.immobilized = 0;
+        addFloatingText(target, 'LIBRE', 'heal');
+      }
+      spellEffects.push({ x: sx, y: sy, tx, ty, age: 0, duration: .65, kind: 'heal' });
+    } else {
+      const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
+      target.hp = Math.max(0, target.hp - damage); target.flash = .28;
+      addFloatingText(target, `-${damage}`, 'damage');
+      spellEffects.push({ x: sx, y: sy, tx, ty, age: 0, duration: .42, kind: actor.className });
+      if (skill.immobilize) {
+        target.immobilized = Math.max(target.immobilized, skill.immobilize);
+        target.step = null; target.stepTime = 0;
+        addFloatingText(target, 'INMOVILIZADO', 'miss');
+      }
+      if (target.hp <= 0) kill(target, actor);
+    }
+    tone(actor.className === 'mage' ? 620 : 340, .13);
+    return true;
+  }
   function selectSkill(index) {
     if (gameOver || paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index];
@@ -295,16 +335,27 @@
     const [px, py] = position(player), [tx, ty] = position(target);
     if (skill.type === 'heal') {
       const restored = Math.min(skill.heal, player.maxHp - player.hp);
-      if (!restored) { player.mana += skill.cost; player.skillCooldowns[index] = 0; toast('Ya tenés toda la vida.'); return; }
-      player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal');
+      if (!restored && !(skill.cleanse && player.immobilized > 0)) { player.mana += skill.cost; player.skillCooldowns[index] = 0; toast('Ya tenés toda la vida.'); return; }
+      if (restored > 0) {
+        player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal');
+      }
+      if (skill.cleanse && player.immobilized > 0) {
+        player.immobilized = 0;
+        addFloatingText(player, 'LIBRE', 'heal');
+      }
       spellEffects.push({ x: px, y: py, tx: px, ty: py, age: 0, duration: .65, kind: 'heal' });
-      toast(`${skill.name}: recuperaste ${restored} de vida.`); tone(520, .15);
+      toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`); tone(520, .15);
     } else {
       const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
       target.hp = Math.max(0, target.hp - damage); target.flash = .28;
       addFloatingText(target, `-${damage}`, 'damage');
       spellEffects.push({ x: px, y: py, tx, ty, age: 0, duration: .42, kind: currentClass });
-      toast(`${skill.name} · ${damage} de daño a ${target.name}.`); tone(currentClass === 'mage' ? 620 : 340, .13);
+      if (skill.immobilize) {
+        target.immobilized = Math.max(target.immobilized, skill.immobilize);
+        target.step = null; target.stepTime = 0;
+        addFloatingText(target, 'INMOVILIZADO', 'miss');
+      }
+      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Inmovilizado.' : ''}`); tone(currentClass === 'mage' ? 620 : 340, .13);
       if (target.hp <= 0) kill(target, player);
     }
     selectedSkill = null; refreshSkillSelection();
@@ -331,7 +382,7 @@
     });
   }
   function kill(victim, attacker) {
-    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null;
+    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
     attacker.kills++;
     if (attacker === player) kills++;
@@ -348,7 +399,7 @@
   }
   function respawn(actor) {
     const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
-    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, skillCooldowns: [0, 0, 0] });
+    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
   }
   function selectTarget(actor) {
     if (!actor || actor === player || !actor.alive || !isEnemy(player, actor)) { toast('Seleccioná un rival de la legión contraria.'); return; }
@@ -397,17 +448,36 @@
   }
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
-      if (!actor.alive || actor.step) continue;
+      if (!actor.alive || actor.step || actor.immobilized > 0) continue;
       actor.aiTimer -= dt;
-      const target = nearestEnemy(actor);
+      if (actor.aiTimer > 0 || actor.aim) continue;
+      actor.aiTimer = .2 + Math.random() * .08;
+
+      const allies = fighters.filter(other => other.alive && other.team === actor.team);
+      const wounded = allies.filter(other => other.hp / other.maxHp < .68 || other.immobilized > 0)
+        .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
+      const healingIndex = CLASS_PROFILES[actor.className].skills.findIndex(skill => skill.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[CLASS_PROFILES[actor.className].skills.indexOf(skill)] <= 0);
+      if (wounded && healingIndex >= 0) {
+        const heal = CLASS_PROFILES[actor.className].skills[healingIndex];
+        if ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0)) {
+          if (npcCastSkill(actor, heal, healingIndex, wounded)) continue;
+        }
+      }
+
+      const target = tacticalEnemy(actor);
       if (!target) continue;
-      if (actor.aim) continue;
-      if (distance(actor, target) <= 1) {
+      actor.aiTargetId = target.id;
+      const profile = CLASS_PROFILES[actor.className];
+      const range = distance(actor, target);
+      const attackSkills = profile.skills.map((skill, index) => ({ skill, index }))
+        .filter(({ skill, index }) => skill.type === 'damage' && range <= skill.range && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
+        .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
+      if (attackSkills.length && npcCastSkill(actor, attackSkills[0].skill, attackSkills[0].index, target)) continue;
+      if (range <= 1) {
         if (actor.attackCd <= 0) beginNpcAim(actor, target);
-      } else if (actor.aiTimer <= 0) {
+      } else {
         const step = nextPathStep(actor, target);
         if (step) startStep(actor, step[0], step[1]);
-        actor.aiTimer = .18;
       }
     }
   }
@@ -417,7 +487,9 @@
     for (const actor of fighters) {
       if (actor.attackCd > 0) actor.attackCd -= dt;
       if (actor.flash > 0) actor.flash -= dt;
-      if (actor === player) actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
+      if (actor.immobilized > 0) actor.immobilized = Math.max(0, actor.immobilized - dt);
+      if (actor.alive) actor.mana = Math.min(actor.maxMana, actor.mana + dt * .8);
+      actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
       if (actor.step) {
         actor.stepTime += dt;
         if (actor.stepTime >= STEP_DURATION) { [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0; }
@@ -485,6 +557,12 @@
     ctx.fillText(label, sx + tilePx / 2, labelY, tilePx * 2.8);
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
     ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    if (actor.immobilized > 0) {
+      ctx.textAlign = 'center'; ctx.font = `700 ${Math.max(12, tilePx * .38)}px sans-serif`;
+      ctx.fillStyle = '#9be8f3'; ctx.shadowColor = '#36b8d5'; ctx.shadowBlur = 8;
+      ctx.fillText(`❄ ${actor.immobilized.toFixed(1)}s`, sx + tilePx / 2, sy - 5);
+      ctx.shadowBlur = 0;
+    }
     if (actor.flash > 0) { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,235,180,${actor.flash * 1.5})`; ctx.fillRect(sx, sy - tilePx, tilePx, tilePx * 2); }
     ctx.restore();
   }
@@ -599,7 +677,7 @@
   function resetGame() {
     for (const actor of fighters) {
       const profile = CLASS_PROFILES[actor.className];
-      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, skillCooldowns: [0, 0, 0] });
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
     }
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
