@@ -2,9 +2,9 @@
 
 Prototipo web local inspirado en **Argentum Online**. Presenta un mundo explorable al centro, controles de personaje y paneles laterales para estado, objetivos, habilidades e interfaces futuras. El combate actual es una arena de prueba 4v4; todavía no es un cliente fiel ni una recreación completa de AO.
 
-> **Referencia de fidelidad pendiente:** aún no se eligió una versión específica de Argentum Online como referencia. Las decisiones visuales y de mecánicas que dependan de ella quedan abiertas.
+> **Referencia de fidelidad:** Argentum Online Libre, cliente oficial de la organización [ao-libre](https://github.com/ao-libre), repositorio [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente) (rama `master`). Ese repositorio incluye el cliente y carpetas de gráficos (`Graficos/`) y mapas (`Mapas/Alkon/`); es la referencia que debemos consultar para recuperar la apariencia auténtica de AO, no reemplazarla con arte genérico.
 >
-> **Recursos externos no incluidos:** el prototipo necesita datos y gráficos en `assets/ao/`, pero esa carpeta no se incluye en el repositorio. Su procedencia y permisos están pendientes de verificación; no los publiques ni redistribuyas sin confirmar licencias y atribuciones. No se presentan como material original del proyecto.
+> **Licencia y recursos:** `ao-cliente` declara licencia AGPL-3.0 para el repositorio, pero eso no confirma por sí solo los derechos/licencias de cada gráfico, mapa u otro recurso incluido. Antes de copiar o redistribuir recursos en esta app, verificar sus avisos, procedencia, atribución y permisos específicos. Los recursos convertidos para este prototipo no están incluidos en Git y se esperan bajo `assets/ao/`.
 
 ## Ejecutar localmente
 
@@ -45,13 +45,13 @@ El prototipo incluye:
 
 - HTML, CSS y JavaScript vanilla.
 - Canvas 2D para el mundo, personajes y efectos de combate.
-- El prototipo solicita datos JSON e imágenes de `assets/ao/`. Sin esos archivos, el mundo y la partida no pueden cargarse; la carpeta está excluida de Git hasta verificar la procedencia y los permisos.
+- El prototipo solicita datos JSON e imágenes de `assets/ao/` (`map.json`, `grhs.json`, `characters.json` y láminas en `graphics/`). Sin esos archivos, el mundo no puede cargarse. Consultar [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente) como fuente de referencia; la carpeta de recursos de este prototipo está excluida de Git hasta documentar y verificar los permisos y atribuciones de los archivos concretos.
 - No usa framework, backend ni motor externo.
 
 ## Próximos pasos
 
-1. Elegir y documentar una versión de AO como referencia de fidelidad.
-2. Verificar procedencia, licencias y atribuciones de cada recurso antes de cualquier distribución pública; sustituir los recursos que no puedan aclararse.
+1. Revisar `Graficos/`, `Mapas/Alkon/` y los datos del cliente en [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente) para adaptar el cargador web a los recursos reales y recuperar la estética auténtica de AO.
+2. Verificar procedencia, licencias y atribuciones de cada recurso concreto antes de copiarlo o distribuirlo; documentar y conservar los avisos aplicables.
 3. Validar movimiento, inmovilización, esquiva e interfaz en navegador, escritorio y móvil.
 4. Diseñar e implementar inventario y equipo solo después de definir el alcance del cliente.
 5. Evaluar funciones en línea únicamente si el prototipo avanza hacia un cliente multijugador.
