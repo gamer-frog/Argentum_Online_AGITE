@@ -51,6 +51,24 @@ El prototipo incluye:
 
 **Aún no implementado:** inventario funcional, equipamiento, objetos, pociones, persistencia, backend y multijugador en red. La UI es una dirección de prototipo, no una afirmación de fidelidad a una versión concreta de AO.
 
+## Pendientes solicitados para el combate de agite
+
+Estos puntos quedan registrados como backlog; todavía no están implementados. Resolverlos gradualmente, validando cada etapa en el navegador y contrastando las reglas con AO Libre antes de presentarlas como fieles al original.
+
+1. **Nombres y apuntado:** quitar “la facción” de los nombres; indicar la orientación sagrada/caótica en la clase (celeste/rojo). Al apuntar, mostrar solo la mira, sin texto “clase apuntando”. El color de la mira debe corresponder al hechizo preparado.
+2. **Lanzamiento legible:** mostrar sobre el personaje el nombre del hechizo que lanza e incorporar animaciones auténticas de hechizos cuando se encuentren y verifiquen recursos compatibles.
+3. **Ritmo y pociones:** ajustar los intervalos de ataques y hechizos a tiempos realistas de AO. Dar pociones rojas y azules ilimitadas para la práctica; beber una poción debe impedir atacar/lanzar durante esa acción, y viceversa.
+4. **Movimiento:** sustituir los desplazamientos torpes de NPC por movimiento fluido y frenético, sin detenerse para apuntar. Los agentes deben variar trayectorias y decisiones en lugar de agruparse quietos junto al rival.
+5. **Roles de clase:** dar tácticas distintas a cada clase y colaboración de equipo: por ejemplo, el mago prioriza distancia y hechizos; clérigo cura/apoya; cada clase usa sus habilidades especializadas. Evitar que el mago se acerque a golpear como táctica habitual.
+6. **Reglas y balance:** permitir lanzar hechizos a cualquier distancia. Balancear los hechizos para que el combo buscado sea letal aproximadamente con un golpe y dos hechizos: mago (Apocalipsis/Juicio Final), paladín (hechizos de paladín), clérigo (Ráfaga y Curar heridas graves/Sanar). Confirmar nombres, daño y tiempos contra la versión de AO Libre elegida.
+7. **Agite, estados y puntería:** hacer de inmovilizar/remover el centro táctico del combate; aprovechar que un rival inmovilizado es más fácil de apuntar y coordinar ataques aliados. Variar los momentos de inmovilización, remoción, curación y ataque. Los agentes deben apuntar mientras se mueven, fallar con frecuencia de forma humana y perseguir objetivos de manera menos predecible.
+8. **Cursores visibles:** mostrar persistentemente en pantalla el cursor/mira de cada jugador como en una pizarra colaborativa, moviéndose mientras intenta apuntar a rivales. Su puntería debe ser imperfecta y mejorar cuando el blanco está inmovilizado.
+9. **Mensajes de estado:** reemplazar “inmovilizado”, “libre”, “fallas” y avisos similares por textos y presentación propios de Argentum, más pequeños; verificar terminología y estilo con una referencia concreta de AO.
+
+### Inventario de importación de AO Libre (por hacer)
+
+Antes de importar más contenido, preparar un inventario verificable del cliente y sus recursos: categoría, ruta/archivo upstream, formato, licencia y atribución, utilidad para este prototipo, estado de extracción e integración, y dependencias o límites técnicos. Revisar al menos gráficos y sprites, animaciones de hechizos, mapas/tiles, datos de personajes y clases, hechizos/efectos, sonidos e interfaz; registrar también qué no se puede importar o redistribuir. Usar como fuente el repositorio y la revisión ya citados arriba, conservar sus licencias/créditos, y priorizar primero los assets necesarios para animaciones de hechizos y presentación de combate. No dar por importado un recurso hasta comprobarlo visualmente en el juego.
+
 ## Tecnologías
 
 - HTML, CSS y JavaScript vanilla.
