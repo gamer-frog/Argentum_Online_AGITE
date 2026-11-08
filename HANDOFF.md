@@ -2,8 +2,8 @@
 
 ## Estado
 - Cierre de la Prioridad 0 documental: inventario verificable del subset AO Libre en `roadmap/inventario-recursos-ao.md`, resumen en README y actualización de créditos/ruta/TODO. No se modificó código de producto.
-- Base al iniciar: `main` en `be3619b`, sincronizada con `origin/main`. Se trabajó directamente en `main`; `git fetch --prune` volvió a confirmar igualdad con `origin/main` antes del checkpoint.
-- Forensis del último muerto (#40): la ref remota `opencode-checkpoints/40` contenía solo metadatos en `.omgithub/checkpoint.json` y `.omgithub/conversation.json`; no había cambios de producto. El tip `6e216f0` se preservó con el tag `graveyard-opencode-checkpoints-40-ref-6e216f0` y la rama se eliminó. El tip `306cac6` ya estaba preservado e integrado en `main`.
+- Base al reanudar: `origin/main` en `7443368`; `main` estaba en `38a6103`, descendiente directo y preservado con `graveyard-opencode-checkpoints-40-tip-38a6103`. Se trabajó directamente en `main`; el tip local solo cambia `.omgithub/checkpoint.json` y `.omgithub/conversation.json`, sin cambios de producto.
+- Forensis del último muerto (#40): el tip `38a6103` contiene solo metadatos de sesión. El tip de producto `306cac6` y la ref anterior `6e216f0` ya están preservados en tags de graveyard; `git fetch --prune` confirmó que no quedan ramas remotas `opencode-checkpoints/*` ni `opencode-resume/*`.
 - Verificación del inventario local: mapa 100×100/10.000 celdas, 424 IDs Grh de mapa, 560 registros Grh (545 estáticos/15 animados), 51 PNG coincidentes con los referenciados, 3 WAV, 3 cuerpos, 4 cabezas y 3 asociaciones de FX. JSON y referencias cruzadas aprobaron; `node --check game.js`, `node --check dist/game.js` y `git diff --check` aprobaron.
 - El preview previo de Chromium (canvas, láminas/WAV solicitados y consola sin errores ni fallos) está resumido en el inventario y `roadmap/boot.md`; no se repitió porque la tarea fue documental. No demuestra fidelidad ni inspección visual recurso por recurso.
 - El checkpoint de este cierre contiene la documentación y los límites de evidencia/licencia; se publicó en `main` mediante push fast-forward.
