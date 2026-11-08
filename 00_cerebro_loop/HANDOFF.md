@@ -12,7 +12,7 @@
 - El merge de `origin/main` (`381af59`) quedó integrado en `4544aa3`; al iniciar este cierre `origin/main...HEAD` era `0 9` y el árbol estaba limpio.
 - Para cumplir la regla del repositorio, el cierre se realiza en la rama local `main`, creada desde el HEAD verificado. El commit documental de cierre se publicará solo como fast-forward a `origin/main`; no se hará force push.
 - `node --check game.js` y `node --check dist/game.js` pasan. La prueba de navegador ejecutó `capture.sh`; `playwright-cli console` reportó `Total messages: 0 (Errors: 0, Warnings: 0)`. Las solicitudes de `map.json`, `grhs.json`, `characters.json` y `spellfx.json` respondieron HTTP 200.
-- Crear `save-000` únicamente después de que el push fast-forward a `main` tenga éxito. No había tags `save-*` al comenzar el BOOT.
+- El tag `save-000` apunta al primer cierre publicado; `save-001` apunta al commit que registra esa publicación. Ambos pushes fueron fast-forward y se confirmaron con `git fetch`.
 
 ## Forensis y próximo paso
 El último estado muerto identificado fue el checkpoint #31 (`711c0d0`): el HANDOFF de esa sesión registra integración de efectos AO, pero el resultado reportó **Build failed**, por lo que no es un save verificado. El checkpoint 39 murió en conflictos documentales; su trabajo completo está preservado en el tag de cementerio y no hubo integración parcial. Tras el checkpoint del BOOT, revisar la cola de `roadmap/` y `todo.md`; si no hay una tarea prioritaria con alcance definido, dejar HANDOFF actualizado y pausar.

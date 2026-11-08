@@ -4,5 +4,5 @@
 - [x] Paso 2: crear los cinco archivos de seguimiento en `00_cerebro_loop/`.
 - [x] Paso 3: intentar merge de checkpoint 39; conflictos add/add documentales, merge abortado y tip preservado con `graveyard-opencode-checkpoints-39`.
 - [x] Paso 4: preservar tips en 51 tags locales `graveyard-boot-*` y eliminar 51 refs remotas; conservar checkpoint 39 como sesión activa. `git fetch --prune` verificado.
-- [x] Paso 5: merge de `origin/main` limpio; validación en Chromium aprobada (capturas desktop/mobile, canvas visible, ocho personajes, recursos HTTP 200 y consola 0 errores/advertencias). Commit de cierre y publicación fast-forward a `main` pendientes.
+- [x] Paso 5: merge de `origin/main` limpio; validación en Chromium aprobada (capturas desktop/mobile, canvas visible, ocho personajes, recursos HTTP 200 y consola 0 errores/advertencias). Cierre publicado mediante fast-forward a `main`; tags `save-000` y `save-001` creados tras verificaciones aprobadas.
 - [ ] Revisar el backlog de producto tras cerrar el BOOT y tomar una sola tarea prioritaria.
