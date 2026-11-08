@@ -1,3 +1,5 @@
 # TODO
 
-- BOOT completado: inventario y limpieza remota verificados, checkpoint 39 preservado, merge de `origin/main` limpio y navegador aprobado (capturas desktop/mobile, consola sin errores ni advertencias). Cierre publicado en `main` mediante fast-forward y guardado en `save-000`/`save-001`; el backlog revisado (`roadmap/` y `todo.md`) no contiene tareas de producto con alcance definido; se pausa sin iniciar cambios ajenos.
+- [x] Continuación documental: clasificar solicitudes recuperables en `roadmap/producto-recuperado.md`, sin tocar código de producto.
+- [x] Verificar y retirar `origin/opencode-checkpoints/40`; preservar su tip exacto en `graveyard-opencode-checkpoints-40-ref-6e216f0`. `git fetch --prune` confirmó cero refs remotas `opencode-checkpoints/*` y `opencode-resume/*`.
+- [ ] Prioridad 0 de `roadmap/producto-recuperado.md`: elaborar inventario verificable de recursos AO Libre antes de importar más contenido.
