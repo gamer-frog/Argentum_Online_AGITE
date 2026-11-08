@@ -1,0 +1,24 @@
+Recursos extraídos automáticamente de Argentum Online Libre.
+
+Origen: https://github.com/ao-libre/ao-cliente (rama master)
+Licencia: AGPL-3.0 (ver "AFFERO GENERAL PUBLIC LICENSE.doc" en el repositorio origen)
+Fecha de extracción: 2026-11-08
+Extractor: scripts/extract_ao_assets.py (checkout del ao-cliente indicado al momento de correr)
+
+Contenido generado:
+- map.json: Mapas/Alkon/Mapa2.map (100x100, bloques con colisión y gráficos por capa)
+- grhs.json: recorte de INIT/Graficos.ini usado por el mapa y los personajes
+- characters.json: indices de INIT/Personajes.ini (cuerpos 1-3) e INIT/Cabezas.ini (cabezas 1-4)
+- graphics/*.png: copia directa de las láminas referenciadas de Graficos/, sin modificaciones
+
+Créditos upstream (INIT/Creditos.txt):
+- Programación: Recox, Jopiortiz, Chots, Cucsifae, FrankoH298, Wyr0X, Shak, Wolftein, Lorwik, MateoMiccino, Lherkiev
+- Colaboración gráfica: ReyarB, Aizanoth (interfaz), guidota (logo)
+- Indexación: Neo, ReyarB
+- Mapas: ReyarB
+
+Condiciones: al redistribuir este contenido (incluso a través de un sitio web), conservar
+la licencia AGPL-3.0 y estos avisos; mantener las láminas originales sin alterar no elimina
+la obligación de compartir las fuentes modificadas si se altera el material.
+ Estos archivos provienen del trabajo de otros; no se reclaman como material original del
+proyecto Argentum Online AGITE.
