@@ -12,8 +12,8 @@ Este documento organiza solicitudes concretas encontradas en `README.md` y en el
 
 ## Prioridad 0 — Recuperar y fijar las referencias
 
-- [ ] **Inventario verificable de importación de AO Libre:** registrar categoría, ruta upstream, formato, licencia/crédito, utilidad, estado de extracción e integración y límites técnicos. Cubrir sprites/gráficos, animaciones y efectos, mapas/tiles, clases/personajes, hechizos, sonidos e interfaz.
-- [ ] Revisar el subset ya integrado frente a ese inventario; separar «presente en el repositorio», «cargado por la app» y «verificado visualmente en juego». No dar un recurso por importado/usable solo porque exista un archivo.
+- [x] **Inventario verificable de importación de AO Libre:** registrar categoría, ruta upstream, formato, licencia/crédito, utilidad, estado de extracción e integración y límites técnicos. Cubrir sprites/gráficos, animaciones y efectos, mapas/tiles, clases/personajes, hechizos, sonidos e interfaz. Ver [`inventario-recursos-ao.md`](inventario-recursos-ao.md); alcance limitado al subset local.
+- [x] Revisar el subset integrado separando «presente en el repositorio», «cargado por la app» y «verificado visualmente en juego». La evidencia confirma carga del canvas/recursos seleccionados, no inspección individual ni fidelidad visual; esos límites están registrados en el inventario.
 - [ ] Auditar licencias y atribuciones antes de añadir o redistribuir recursos; preservar los avisos upstream y las atribuciones por recurso cuando estén disponibles.
 - [ ] Reunir una captura de referencia estable de la interfaz de AO Libre y registrar versión, resolución y procedencia. Las URLs compartidas anteriormente sirven como pistas, no como una referencia visual ya validada ni necesariamente de la misma versión.
 - [ ] Aclarar si aún existe un estado recuperable de la app en el antiguo repositorio `PLAYGROUND`: el historial pide rescatar «todo» y recuperar avances/ruta perdidos, pero no identifica aquí una revisión concreta. No copiar ni descartar código hasta localizar y comparar una fuente verificable.
