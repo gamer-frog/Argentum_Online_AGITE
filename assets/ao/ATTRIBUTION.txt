@@ -1,6 +1,6 @@
 Recursos extraídos automáticamente de Argentum Online Libre.
 
-Origen: https://github.com/ao-libre/ao-cliente (rama master)
+Origen: https://github.com/ao-libre/ao-cliente (revisión 7d32d61759d6b95069aba72ae12bed03c1d13700)
 Licencia: AGPL-3.0 (ver "AFFERO GENERAL PUBLIC LICENSE.doc" en el repositorio origen)
 Fecha de extracción: 2026-11-08
 Extractor: scripts/extract_ao_assets.py (checkout del ao-cliente indicado al momento de correr)
