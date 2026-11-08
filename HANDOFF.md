@@ -6,7 +6,7 @@
 - Forensis del último muerto (#40): la ref remota `opencode-checkpoints/40` contenía solo metadatos en `.omgithub/checkpoint.json` y `.omgithub/conversation.json`; no había cambios de producto. El tip `6e216f0` se preservó con el tag `graveyard-opencode-checkpoints-40-ref-6e216f0` y la rama se eliminó. El tip `306cac6` ya estaba preservado e integrado en `main`.
 - Verificación del inventario local: mapa 100×100/10.000 celdas, 424 IDs Grh de mapa, 560 registros Grh (545 estáticos/15 animados), 51 PNG coincidentes con los referenciados, 3 WAV, 3 cuerpos, 4 cabezas y 3 asociaciones de FX. JSON y referencias cruzadas aprobaron; `node --check game.js`, `node --check dist/game.js` y `git diff --check` aprobaron.
 - El preview previo de Chromium (canvas, láminas/WAV solicitados y consola sin errores ni fallos) está resumido en el inventario y `roadmap/boot.md`; no se repitió porque la tarea fue documental. No demuestra fidelidad ni inspección visual recurso por recurso.
-- El checkpoint de este cierre contiene la documentación y los límites de evidencia/licencia; push fast-forward a `main` pendiente de confirmar.
+- El checkpoint de este cierre contiene la documentación y los límites de evidencia/licencia; se publicó en `main` mediante push fast-forward.
 
 ## Siguiente
 1. Prioridad 0 pendiente: obtener una referencia visual AO estable y realizar auditoría de licencias/atribución específicas por recurso antes de redistribuir o ampliar el subset.
