@@ -5,7 +5,7 @@
 - Paso 1: completado; `git fetch origin` actualizó las refs. Conteo actual: `origin/main`, 29 checkpoints, 23 resumes y 4 deployments.
 - Paso 2: completado; los cinco archivos de seguimiento existen en `00_cerebro_loop/`.
 - Paso 3: el merge de `origin/opencode-checkpoints/39` (`d1eb37f`) se intentó y abortó por conflictos add/add exclusivamente en documentación/seguimiento. El tip quedó preservado con `graveyard-opencode-checkpoints-39`; la ref remota sigue intacta.
-- Paso 4: pendiente. No se han borrado refs remotas; falta confirmar disponibilidad de permisos y asegurar la preservación de todo trabajo exclusivo antes de cualquier borrado.
+- Paso 4: completado. Se borraron 51 refs remotas (checkpoints/resumes) y se preservaron sus tips en 51 tags locales `graveyard-boot-*`; se dejó `origin/opencode-checkpoints/39` como sesión activa. `git fetch --prune` confirmó que es la única ref restante de esos grupos.
 - Paso 5: aún pendiente. Sintaxis y prueba interactiva anteriores pasaron (HTTP 200, canvas y ocho combatientes; panel, ayuda y cambio a MAGO funcionaron), pero no se obtuvieron logs/captura por HTTP 404, así que no se declara consola limpia. Publicación no realizada.
 
 ## Estado Git observado
