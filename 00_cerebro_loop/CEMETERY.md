@@ -1,3 +1,3 @@
 # CEMETERY
 
-Todavía no se ha compostado ni eliminado ninguna rama durante este BOOT. Registrar aquí cualquier rama descartada únicamente después de comprobar que su trabajo está preservado.
+- `origin/opencode-checkpoints/39` (`d1eb37f`): intento de merge en `opencode/42519370341` abortado tras conflictos add/add en los cinco archivos de `00_cerebro_loop/`, `todo.md` y `user-requests.md`. Se preservó el tip completo con el tag local `graveyard-opencode-checkpoints-39`; no se borró la ref remota.

@@ -1,4 +1,5 @@
 # TODO
 
-- [ ] BOOT bloqueado (1 intento): falta autenticación GitHub para borrar refs remotas o publicar; además faltan captura y logs de consola verificables (endpoint de evidencia respondió HTTP 404). No borrar refs ni publicar mientras tanto.
-- [ ] Al resolver el bloqueo, reevaluar las cinco refs contenidas en `origin/main`, completar el gate visual/consola y decidir si `origin/opencode-checkpoints/39` puede avanzar por fast-forward; luego cerrar el BOOT.
+- [ ] BOOT en curso: `origin/opencode-checkpoints/39` no se integró por conflictos add/add documentales; tip resguardado localmente en `graveyard-opencode-checkpoints-39`. No se han borrado refs remotas.
+- [ ] Paso 4: comprobar autenticación y preservar trabajo exclusivo antes de eliminar las refs pedidas; omitir la sesión activa.
+- [ ] Paso 5: mergear `origin/main` tras commit de todos los cambios; conflicto de código implica abortar y tag `pending-boot`. Completar evidencia de navegador/consola (anterior HTTP 404) antes de publicar.
