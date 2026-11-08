@@ -1,20 +1,18 @@
 # HANDOFF
 
 ## Estado del BOOT
-- En pausa: el BOOT está mayormente evaluado; no iniciar desarrollo hasta resolver la limpieza remota y el gate de publicación.
-- Paso 1: completado; `git fetch origin` actualizó las refs. Conteo actual: `origin/main`, 29 checkpoints, 23 resumes y 4 deployments.
-- Paso 2: completado; los cinco archivos de seguimiento existen en `00_cerebro_loop/`.
-- Paso 3: el merge de `origin/opencode-checkpoints/39` (`d1eb37f`) se intentó y abortó por conflictos add/add exclusivamente en documentación/seguimiento. El tip quedó preservado con `graveyard-opencode-checkpoints-39`; la ref remota sigue intacta.
-- Paso 4: completado. Se borraron 51 refs remotas (checkpoints/resumes) y se preservaron sus tips en 51 tags locales `graveyard-boot-*`; se dejó `origin/opencode-checkpoints/39` como sesión activa. `git fetch --prune` confirmó que es la única ref restante de esos grupos.
-- Paso 5: aún pendiente. Sintaxis y prueba interactiva anteriores pasaron (HTTP 200, canvas y ocho combatientes; panel, ayuda y cambio a MAGO funcionaron), pero no se obtuvieron logs/captura por HTTP 404, así que no se declara consola limpia. Publicación no realizada.
+- BOOT completo; los cinco pasos están registrados y verificados. No se inició trabajo de producto durante el BOOT.
+- Paso 1: completado; `git fetch origin` e inventario: 29 checkpoints, 23 resumes y 4 deployments.
+- Paso 2: completado; existen y se revisaron los cinco archivos de seguimiento de `00_cerebro_loop/`.
+- Paso 3: se intentó integrar `origin/opencode-checkpoints/39` (`d1eb37f`), pero el merge dio conflictos add/add solo en archivos de memoria/documentación. Se abortó sin resolución manual y el tip quedó preservado con `graveyard-opencode-checkpoints-39`.
+- Paso 4: completado; se eliminaron 51 refs remotas de checkpoints/resumes y se preservaron sus tips en 51 tags locales `graveyard-boot-*`. Se conservó `origin/opencode-checkpoints/39`; el `fetch --prune` confirmó que es la única ref remota restante de esos grupos.
+- Paso 5: completado; merge de `origin/main` sin conflictos, navegador verificado y cambios de cierre listos para commit/publicación fast-forward. La verificación confirmó HTTP 200 para recursos AO, canvas visible de 713×668, ocho personajes y consola con 0 errores/advertencias. Capturas desktop/mobile en `/tmp/opencode/boot-captures/final-desktop.png` y `final-mobile.png`.
 
-## Estado Git observado
-- HEAD: `9a43e5c` en `opencode/42519370341`; árbol limpio tras el commit inicial del registro BOOT. `origin/main` está en `381af59`; checkpoint 39 en `d1eb37f` y su tip queda fijado por el tag local de cementerio.
-- `origin/main...HEAD`: 1 commit exclusivo de main y 6 exclusivos de HEAD. No se ha intentado todavía el merge de `origin/main`.
-- El intento de merge de checkpoint 39 encontró add/add en `00_cerebro_loop/{CEMETERY,HANDOFF,ROADMAP,TODO,USER_REQUESTS}.md`, `todo.md` y `user-requests.md`; se abortó sin resolver manualmente. `game.js` y `dist/game.js` pasan `node --check` según la verificación previa.
-- `node --check game.js` y `node --check dist/game.js` pasan. No hay tags `save-*`.
-- Cinco refs contenidas en main: checkpoints/16, checkpoints/17, resumes/0da5beeecd535140b0c2, /79e0fbcb7901f50b7f5e y /c2b648408b20d4e160b3. No se borraron refs ni se modificó main.
-- No hacer push ni borrar refs sin autenticación; no publicar hasta completar la revisión visual/consola. Sin force push ni merges ciegos.
+## Estado Git y verificación
+- El merge de `origin/main` (`381af59`) quedó integrado en `4544aa3`; al iniciar este cierre `origin/main...HEAD` era `0 9` y el árbol estaba limpio.
+- Para cumplir la regla del repositorio, el cierre se realiza en la rama local `main`, creada desde el HEAD verificado. El commit documental de cierre se publicará solo como fast-forward a `origin/main`; no se hará force push.
+- `node --check game.js` y `node --check dist/game.js` pasan. La prueba de navegador ejecutó `capture.sh`; `playwright-cli console` reportó `Total messages: 0 (Errors: 0, Warnings: 0)`. Las solicitudes de `map.json`, `grhs.json`, `characters.json` y `spellfx.json` respondieron HTTP 200.
+- Crear `save-000` únicamente después de que el push fast-forward a `main` tenga éxito. No había tags `save-*` al comenzar el BOOT.
 
 ## Forensis y próximo paso
-El último estado muerto identificado es el checkpoint #31 (`711c0d0`): HANDOFF registra integración de efectos AO y el registro de sesión indica **Build failed**, no es un save verificado. El merge del checkpoint 39 terminó abortado en conflictos documentales, con su tip preservado localmente; no hubo integración parcial. Próximo: completar el censo/preservación de refs, intentar la limpieza remota solo si las credenciales lo permiten, luego mergear `origin/main` según las reglas del BOOT y verificar navegador/consola antes de publicar.
+El último estado muerto identificado fue el checkpoint #31 (`711c0d0`): el HANDOFF de esa sesión registra integración de efectos AO, pero el resultado reportó **Build failed**, por lo que no es un save verificado. El checkpoint 39 murió en conflictos documentales; su trabajo completo está preservado en el tag de cementerio y no hubo integración parcial. Tras el checkpoint del BOOT, revisar la cola de `roadmap/` y `todo.md`; si no hay una tarea prioritaria con alcance definido, dejar HANDOFF actualizado y pausar.
