@@ -33,11 +33,11 @@ Abrí <http://localhost:3000>. No abras `index.html` directamente como archivo: 
 - **F o Enter:** atacar al rival cuando esté en un casillero adyacente.
 - **Clic en una habilidad o teclas 1–3:** seleccionarla; luego elegí un rival para una habilidad ofensiva o tu personaje para curarte.
 - **Esquiva:** los NPC anuncian algunos ataques con una línea y una mira; moverte durante el apuntado puede evitar el impacto.
-- **Combatientes:** mostrar u ocultar el marcador. **Esc** cierra el marcador o la guía.
+- **Combatientes:** mostrar u ocultar la lista de combatientes. **Esc** cierra la lista o la guía.
 - **☰:** pausar o reanudar.
 - En pantallas táctiles, usá el pad en pantalla para moverte y el botón **ATACAR** para golpear.
 
-La arena termina al alcanzar **5 bajas** o al agotarse los **3 minutos**. Los ataques y habilidades ofensivas solo pueden dirigirse a rivales. El panel del objetivo muestra su vida, la distancia en casilleros y si el ataque está listo o cuánto falta para recuperarse. Al caer, el aviso central muestra la cuenta regresiva de **2,4 segundos** hasta reaparecer; desaparece si la ronda termina antes.
+La arena 4v4 es local e infinita: no tiene puntuación ni estados de fin de partida. Las bajas aparecen únicamente como avisos informativos y cada combatiente reaparece después de **2,4 segundos**. Los ataques y habilidades ofensivas solo pueden dirigirse a rivales. El panel del objetivo muestra su vida, la distancia en casilleros y si el ataque está listo o cuánto falta para recuperarse.
 
 ## Estado y alcance
 
@@ -45,7 +45,7 @@ El prototipo incluye:
 
 - Mundo central con movimiento cardinal y una arena de combate 4v4 con reaparición.
 - Perfiles de guerrero, mago, clérigo y paladín, con estadísticas y habilidades propias.
-- HUD de vida/maná, selección de objetivo con distancia y disponibilidad del ataque, habilidades, curación, inmovilización, esquiva, bajas y registro de combate.
+- HUD de vida/maná, selección de objetivo con distancia y disponibilidad del ataque, habilidades, curación, inmovilización, esquiva, avisos informativos de bajas y registro de combate.
 - Paneles laterales para personaje y objetivo, más marcadores explícitamente incompletos para inventario y equipo.
 - Diseño adaptable a pantallas pequeñas; los controles táctiles son básicos.
 
@@ -62,10 +62,10 @@ El prototipo incluye:
 
 Fases graduales y verificables. Cada paso se valida en navegador antes de pasar al siguiente, y cada cambio de reglas se contrasta con AO Libre para decidir si es fiel o aproximación.
 
-**Fase 1 — Ronda legible y confiable (ahora)**
-1. Verificar en navegador el flujo completo: mover, seleccionar objetivo (teclado y ciclo), atacar, daño por distancia, morir, reaparecer, fin de ronda por bajas o por tiempo.
-2. Comportamiento de bots 4v4 previsibles: perseguir, atacar al alcance correcto, curar o apoyar según perfil, con dificultad ajustable.
-3. Resumen de ronda: victorias por equipo, bajas individuales y daño causado/recibido, con botón para reiniciar al instante.
+**Fase 1 — Arena libre legible y confiable (ahora)**
+1. Verificar en navegador el flujo completo: mover, seleccionar objetivo (teclado y ciclo), atacar, daño por distancia, caer y reaparecer; la arena debe continuar sin puntuación ni fin de partida.
+2. Mejorar el comportamiento de bots 4v4: perseguir, atacar al alcance correcto, curar o apoyar según perfil, con dificultad ajustable.
+3. Mantener el reinicio como herramienta local de prueba y las notificaciones de baja como información, sin convertirlas en estadísticas de partida.
 
 **Fase 2 — Reglas de AO aproximadas**
 4. Contrastar con AO Libre: paso por casilleros, alcance de ataques, daño de hechizos/ArVersiones si aplica, tiempos de recuperación y dirección cardinal. Marcar cada regla como confirmada o aproximada en el README.
@@ -75,7 +75,7 @@ Fases graduales y verificables. Cada paso se valida en navegador antes de pasar 
 **Fase 3 — Sentirse AO**
 7. Afinar mapa, sprites, animaciones y controles con los recursos originales y su atribución; el prefijo visual de la arena de práctica solo se usa si no hay recursos.
 8. Interfaz de AO: inventario y equipamiento mínimos para la práctica (pociones de vida y mana), chat lateral, sonidos de golpes y hechizos si hay assets.
-9. Escenarios cortos: arenas pequeñas de variedad (1v1, 2v2, 3v3) con selectores y contadores de ronda.
+9. Escenarios de práctica: arenas pequeñas de variedad (1v1, 2v2, 3v3) con selectores de formato.
 
 **Fase 4 — Más allá de la práctica**
 10. Multijugador en red local y persistencia de personaje, solo después de definir el alcance y sostener la fases anteriores.
