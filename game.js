@@ -7,7 +7,19 @@
   const $ = id => document.getElementById(id);
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const rand = (lo, hi) => lo + Math.random() * (hi - lo);
-  const MAP_URL = 'assets/ao/';
+  // Resuelve assets/ao/ relativo a la ubicación de este script: funciona servido
+  // desde la raíz, desde /dist/ o si el despliegue copia dist/ a la raíz.
+  const MAP_CANDIDATES = [];
+  try {
+    if (document.currentScript && document.currentScript.src) {
+      const base = new URL('.', document.currentScript.src).href;
+      for (const candidate of [`${base}assets/ao/`, `${base}../assets/ao/`]) {
+        if (!MAP_CANDIDATES.includes(candidate)) MAP_CANDIDATES.push(candidate);
+      }
+    }
+  } catch { /* sin currentScript; queda el candidato relativo. */ }
+  if (!MAP_CANDIDATES.includes('assets/ao/')) MAP_CANDIDATES.push('assets/ao/');
+  let MAP_URL = MAP_CANDIDATES[0];
   const ACTORS = [
     { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', x: 43, y: 46 },
     { id: 'sacredMage', name: 'Mago Sagrado', team: 'sacred', className: 'mage', x: 43, y: 43 },
@@ -102,12 +114,23 @@
       image.src = `${MAP_URL}graphics/${id}.png`;
     });
   }
+  async function loadData(base) {
+    return Promise.all(['map.json', 'grhs.json', 'characters.json'].map(name => fetch(base + name).then(response => {
+      if (!response.ok) throw new Error(`Could not load ${name} from ${base}: ${response.status}`);
+      return response.json();
+    })));
+  }
   async function loadAssets() {
     try {
-      [mapData, grhs, characters] = await Promise.all(['map.json', 'grhs.json', 'characters.json'].map(name => fetch(MAP_URL + name).then(response => {
-        if (!response.ok) throw new Error(`Could not load ${name}: ${response.status}`);
-        return response.json();
-      })));
+      for (let index = 0; index < MAP_CANDIDATES.length; index++) {
+        try {
+          [mapData, grhs, characters] = await loadData(MAP_CANDIDATES[index]);
+          MAP_URL = MAP_CANDIDATES[index];
+          break;
+        } catch (error) {
+          if (index === MAP_CANDIDATES.length - 1) throw error;
+        }
+      }
       const ids = [...new Set(Object.values(grhs).flatMap(def => def.image ? [def.image] : []))];
       const loaded = await Promise.all(ids.map(loadImage));
       for (const [id, image] of loaded) if (image) images.set(id, image);

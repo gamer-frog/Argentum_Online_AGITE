@@ -55,7 +55,7 @@ El prototipo incluye:
 
 - HTML, CSS y JavaScript vanilla.
 - Canvas 2D para el mundo, personajes y efectos de combate.
-- El prototipo carga datos JSON e imágenes de `assets/ao/` (`map.json`, `grhs.json`, `characters.json` y láminas en `graphics/`), generados con `scripts/extract_ao_assets.py`. La carpeta está excluida de Git; su manifiesto de atribución se genera junto a los recursos.
+- El prototipo carga datos JSON e imágenes de `assets/ao/` (`map.json`, `grhs.json`, `characters.json`, `ATTRIBUTION.txt` y láminas en `graphics/`), generados con `scripts/extract_ao_assets.py` desde un checkout de [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente). El subset se versiona en Git para que la app publicada muestre los gráficos originales; el manifiesto de atribución viaja junto a los recursos y cualquier redistribución debe conservar la licencia AGPL-3.0 upstream y esos avisos.
 - No usa framework, backend ni motor externo.
 
 ## Hoja de ruta para la práctica PvP

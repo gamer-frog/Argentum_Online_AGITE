@@ -9,4 +9,5 @@ screenshots/
 node_modules/
 __pycache__/
 *.py[cod]
-assets/ao/
+# assets/ao/ se versiona: subset real extraído de ao-libre/ao-cliente (GPL) con
+# ATTRIBUTION.txt. Para regenerarlo: python3 scripts/extract_ao_assets.py <checkout>.
