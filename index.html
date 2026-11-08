@@ -22,13 +22,14 @@
       <section class="world-window">
         <div class="world-toolbar">
           <span class="location-mark">⌖</span><strong>ROBLEDAL DE UMBRÍA</strong><span class="toolbar-divider"></span><span>MUNDO · PRUEBA LOCAL</span>
-          <div class="toolbar-actions"><span class="match-state"><i></i> EN CURSO</span><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar partida">NUEVA PARTIDA</button></div>
+          <div class="toolbar-actions"><span class="match-state"><i></i><span id="matchStatus">EN CURSO</span></span><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar partida">NUEVA PARTIDA</button></div>
         </div>
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
-          <div class="game-top-hud"><div class="round-pill"><span>✦</span> ROBLEDAL DE UMBRÍA</div><div class="round-timer"><span>TIEMPO</span><strong id="timer">03:00</strong></div><div class="score-goal">OBJETIVO <b>5 BAJAS</b></div></div>
+          <div class="game-top-hud"><div class="round-pill"><span>✦</span> ROBLEDAL DE UMBRÍA</div><div class="round-timer"><span>TIEMPO</span><strong id="timer">03:00</strong></div><div class="score-goal" aria-label="Puntaje de la ronda: Legión Sagrada contra Legión Caótica"><span>SAG</span><b id="sacredScore">0</b><i>—</i><b id="chaoticScore">0</b><span>CAO</span><small>META 5</small></div></div>
           <div class="kill-feed" id="killFeed"><div class="feed-line"><b>Has llegado al Robledal</b><span>—</span> partida local.</div></div>
+          <div class="respawn-notice hidden" id="respawnNotice" role="status" aria-live="polite"><strong>HAS CAÍDO</strong><span>Reaparecés en <b id="respawnTimer" aria-hidden="true">2.4</b> s</span></div>
           <div class="match-result hidden" id="resultPanel"><div class="result-kicker">FIN DE LA PARTIDA</div><div class="result-title" id="resultTitle">VICTORIA</div><div class="result-sub" id="resultSub">El Robledal recuerda tu nombre.</div><button id="playAgain" type="button">VOLVER A LUCHAR <span>↻</span></button></div>
           <div class="mobile-joystick" id="joystick"><div class="joy-ring"><div class="joy-knob" id="joyKnob"></div></div></div>
           <div class="mobile-cast-hint">MOVER · ATACAR EN EL PANEL</div>
@@ -54,24 +55,18 @@
           <button class="attack-button" id="attackBtn" type="button" title="Ataque cuerpo a cuerpo (F / Enter)"><span>⚔</span><b>ATACAR</b><kbd>F</kbd></button>
         </section>
 
-        <section class="dock-panel skills-panel">
-          <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
-          <div class="spell-loadout" aria-label="Habilidades del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button></div>
-          <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
-        </section>
-
         <section class="dock-panel inventory-panel" aria-label="Inventario (interfaz en desarrollo)">
-          <h2 class="panel-title">INVENTARIO <span class="inventory-capacity">0 / 20</span></h2>
+          <h2 class="panel-title">INVENTARIO · EN DESARROLLO <span class="inventory-capacity">0 / 20</span></h2>
           <div class="inventory-grid" aria-label="Veinte espacios de inventario vacíos">
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
           </div>
-          <p class="inventory-note">Inventario visual · objetos aún no implementados</p>
+          <p class="inventory-note">INTERFAZ PENDIENTE · SIN OBJETOS FUNCIONALES</p>
         </section>
 
-        <section class="dock-panel equipment-panel"><h2 class="panel-title">EQUIPAMIENTO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">Equipo y objetos: pendiente</p></section>
+        <section class="dock-panel equipment-panel" aria-label="Equipamiento (interfaz en desarrollo)"><h2 class="panel-title">EQUIPAMIENTO · EN DESARROLLO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">INTERFAZ PENDIENTE · SIN EQUIPO FUNCIONAL</p></section>
 
         <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
           <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
@@ -89,16 +84,25 @@
       </aside>
     </section>
 
+    <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
+      <div class="spellbar-heading">
+        <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
+        <span class="spellbar-shortcut">ATAJOS · 1 / 2 / 3</span>
+      </div>
+      <div class="spell-loadout" aria-label="Habilidades del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button></div>
+      <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
+    </section>
+
     <footer class="client-footer"><span>ARGENTUM ONLINE · PROTOTIPO DE COMBATE LOCAL</span><span>HOJA DE RUTA: <a href="#roadmap">VER PENDIENTES</a></span></footer>
     <section class="project-roadmap" id="roadmap" aria-labelledby="roadmapTitle">
       <div class="roadmap-heading"><div><div class="roadmap-kicker">ESTADO REAL DEL PROYECTO</div><h1 id="roadmapTitle">Hoja de ruta</h1></div><span class="roadmap-version">PROTOTIPO · FALTAN SISTEMAS CENTRALES</span></div>
-      <p class="roadmap-intro">El objetivo es acercarnos a un clon jugable de Argentum Online, no quedarnos en una arena con estética propia. La interfaz se está reorientando hacia el cliente clásico; esta maqueta todavía no equivale a una interfaz fiel ni implementa todos los sistemas del juego.</p>
+      <p class="roadmap-intro">La meta es construir, por etapas, un cliente web jugable inspirado fielmente en Argentum Online Libre. La prioridad inmediata es que la arena sirva para practicar agite; cada regla y recurso se contrastará con ao-libre/ao-cliente. Esto sigue siendo un prototipo local, no un cliente completo ni multijugador.</p>
       <div class="roadmap-grid">
-        <article class="roadmap-card"><h2>01 · INTERFAZ FIEL AL CLIENTE</h2><ul><li class="in-progress">Rehacer el layout: mundo al centro y paneles de juego a la derecha.</li><li>Replicar ventanas, marcos, tipografía, botones, barras e iconografía de la versión de referencia.</li><li>Paneles funcionales de personaje, atributos, habilidades, inventario y equipamiento.</li><li>Validar proporciones y flujo contra capturas de la versión de AO elegida.</li></ul></article>
-        <article class="roadmap-card"><h2>02 · PERSONAJE E INVENTARIO</h2><ul><li>Objetos apilables, selección, arrastre y uso desde el inventario.</li><li>Equipar y desequipar objetos con cambios visibles en el personaje y sus atributos.</li><li>Pociones y consumibles conectados a vida, maná y estados.</li><li>Persistencia del personaje y sus objetos.</li></ul></article>
-        <article class="roadmap-card"><h2>03 · JUGABILIDAD AO</h2><ul><li>Movimiento, combate, daño y atributos según reglas de la versión elegida.</li><li>Clases, hechizos, habilidades, selección y progreso de personaje.</li><li>NPCs, interacción, objetos del mundo, mapas y zonas.</li><li>Chat, comercio, banco y demás sistemas del cliente en etapas separadas.</li></ul></article>
-        <article class="roadmap-card"><h2>04 · MUNDO Y MULTIJUGADOR</h2><ul><li>Mapas y recursos integrados con escala, capas y animaciones correctas.</li><li>Servidor autoritativo, cuentas y persistencia.</li><li>Multijugador real, sincronización y pruebas de carga.</li><li>Controles y ventanas adaptados a escritorio; móvil se evaluará aparte.</li></ul></article>
-        <article class="roadmap-card roadmap-wide"><h2>05 · RECURSOS Y VALIDACIÓN</h2><ul><li>Identificar la versión de Argentum Online que se va a clonar y documentar las diferencias.</li><li>Verificar procedencia, licencias y atribuciones de cada recurso de <code>assets/ao/</code> antes de redistribuirlos.</li><li>Probar en navegador los flujos principales, tamaños de ventana y controles; registrar lo que realmente funciona.</li></ul></article>
+        <article class="roadmap-card"><h2>01 · BUCLE DE AGITE Y ENTRENAMIENTO</h2><ul><li class="in-progress">Partidas 4v4 con puntaje por legión, límite de bajas y resolución por tiempo.</li><li class="in-progress">Mostrar distancia al objetivo y recuperación del ataque para practicar el ritmo del combate.</li><li>Mejorar la conducta de los bots y ofrecer prácticas cortas repetibles.</li><li>Probar clases y habilidades en escenarios de duelo y equipo antes de ampliar sistemas.</li></ul></article>
+        <article class="roadmap-card"><h2>02 · FIDELIDAD A AO LIBRE</h2><ul><li>Fijar la versión de referencia y documentar sus reglas de movimiento y combate.</li><li>Ajustar mapa, escala, capas, sprites y animaciones usando los recursos originales.</li><li>Acercar ventanas, barras, tipografía y controles al cliente clásico, sin arte genérico.</li><li>Conservar créditos, licencias y procedencia de los recursos.</li></ul></article>
+        <article class="roadmap-card"><h2>03 · COMBATE Y REGLAS</h2><ul><li>Validar paso por casilleros, alcance, daño, tiempos, maná y estados contra AO Libre.</li><li>Completar selección de objetivo, lanzamiento, interrupciones y feedback de combate.</li><li>Equilibrar perfiles y bots para que las prácticas sean útiles, no solo vistosas.</li><li>Separar claramente las reglas confirmadas de las aproximaciones del prototipo.</li></ul></article>
+        <article class="roadmap-card"><h2>04 · HERRAMIENTAS DE PRÁCTICA</h2><ul><li>Configurar duración, meta de bajas, composición de equipos y dificultad de bots.</li><li>Mostrar resumen de ronda y estadísticas personales para comparar intentos.</li><li>Agregar duelos y formatos de equipo cuando el 4v4 sea consistente.</li><li>Guardar preferencias localmente; sin cuentas ni servidor en esta etapa.</li></ul></article>
+        <article class="roadmap-card roadmap-wide"><h2>05 · CLIENTE MÁS AMPLIO · DESPUÉS DEL AGITE</h2><ul><li>Explorar inventario, equipo, objetos y progresión solo con alcance definido.</li><li>Integrar más mapas, NPCs y sistemas del mundo de AO en etapas independientes.</li><li>Evaluar servidor y multijugador real cuando el combate local esté validado.</li><li>Probar en navegador, escritorio y móvil; revisar recursos antes de redistribuirlos.</li></ul></article>
       </div>
     </section>
   </main>
