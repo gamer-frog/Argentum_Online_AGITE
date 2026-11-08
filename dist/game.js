@@ -65,6 +65,12 @@
   const STEP_DURATION = .115;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
+  const NPC_COMBAT_RANGES = {
+    warrior: { min: 1, max: 1 },
+    mage: { min: 4, max: 6 },
+    cleric: { min: 3, max: 5 },
+    paladin: { min: 1, max: 1 }
+  };
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
@@ -82,6 +88,7 @@
       hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana,
       alive: true,
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
+      aiFlankSide: Math.random() < .5 ? -1 : 1,
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
       skillCooldowns: [0, 0, 0], immobilized: 0
     };
@@ -253,27 +260,71 @@
     return fighters.filter(other => other.alive && other.team === actor.team)
       .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || actor;
   }
-  function nextPathStep(actor, target) {
+  function allyPressure(actor, x, y, allies, radius = 1) {
+    return allies.reduce((pressure, ally) => {
+      const [ax, ay] = actorTile(ally), d = Math.abs(ax - x) + Math.abs(ay - y);
+      return pressure + (d === 0 ? 4 : d <= radius ? 2 : d === radius + 1 ? .5 : 0);
+    }, 0);
+  }
+  function nextPathStep(actor, target, minRange, maxRange) {
     const [sx, sy] = actorTile(actor), [tx, ty] = actorTile(target);
-    const queue = [[sx, sy]], first = new Map([[`${sx},${sy}`, null]]);
-    const directions = [[0, -1, 'N'], [1, 0, 'E'], [0, 1, 'S'], [-1, 0, 'W']];
-    while (queue.length) {
-      const [x, y] = queue.shift();
-      if (Math.abs(x - tx) + Math.abs(y - ty) <= 1) {
-        const key = `${x},${y}`, parent = first.get(key);
-        if (!parent) return null;
-        let step = key;
-        while (first.get(step) !== `${sx},${sy}`) step = first.get(step);
-        const [nx, ny] = step.split(',').map(Number);
-        return [nx - sx, ny - sy];
+    const allies = fighters.filter(other => other !== actor && other.alive && other.team === actor.team);
+    const queue = [[sx, sy, 0, 0, 0]], visited = new Set([`${sx},${sy}`]);
+    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    let bestStep = null, bestScore = Infinity, firstGoalDepth = Infinity;
+    for (let head = 0; head < queue.length; head++) {
+      const [x, y, firstDx, firstDy, depth] = queue[head];
+      if (depth > firstGoalDepth + 2) break;
+      const targetDistance = Math.abs(x - tx) + Math.abs(y - ty);
+      if (depth && targetDistance >= minRange && targetDistance <= maxRange) {
+        firstGoalDepth = Math.min(firstGoalDepth, depth);
+        const cross = (tx - x) * firstDy - (ty - y) * firstDx;
+        const flankBias = cross === 0 ? 0 : (Math.sign(cross) === actor.aiFlankSide ? -.45 : .45);
+        const score = depth + allyPressure(actor, x, y, allies) * 1.15 + flankBias + Math.random() * .55;
+        if (score < bestScore) { bestScore = score; bestStep = [firstDx, firstDy]; }
+        continue;
       }
       for (const [dx, dy] of directions) {
         const nx = x + dx, ny = y + dy, key = `${nx},${ny}`;
-        if (first.has(key) || !isOpen(nx, ny) || occupied(nx, ny, actor)) continue;
-        first.set(key, `${x},${y}`); queue.push([nx, ny]);
+        if (visited.has(key) || !isOpen(nx, ny) || occupied(nx, ny, actor)) continue;
+        visited.add(key);
+        queue.push([nx, ny, depth ? firstDx : dx, depth ? firstDy : dy, depth + 1]);
       }
     }
-    return null;
+    return bestStep;
+  }
+  function nextStrafeStep(actor, target, minRange, maxRange) {
+    const [x, y] = actorTile(actor), [tx, ty] = actorTile(target);
+    const allies = fighters.filter(other => other !== actor && other.alive && other.team === actor.team);
+    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    let bestStep = null, bestScore = Infinity;
+    for (const [dx, dy] of directions) {
+      const nx = x + dx, ny = y + dy, keyDistance = Math.abs(nx - tx) + Math.abs(ny - ty);
+      if (!isOpen(nx, ny) || occupied(nx, ny, actor) || keyDistance < minRange || keyDistance > maxRange) continue;
+      const cross = (tx - x) * dy - (ty - y) * dx;
+      const flankBias = cross === 0 ? 0 : (Math.sign(cross) === actor.aiFlankSide ? -1.1 : 1.1);
+      const score = Math.abs(keyDistance - (minRange + maxRange) / 2) * .8
+        + allyPressure(actor, nx, ny, allies) * 1.7 + flankBias + Math.random() * .7;
+      if (score < bestScore) { bestScore = score; bestStep = [dx, dy]; }
+    }
+    return bestStep;
+  }
+  function nextRetreatStep(actor, target, minRange, maxRange) {
+    const [x, y] = actorTile(actor), [tx, ty] = actorTile(target);
+    const currentDistance = Math.abs(x - tx) + Math.abs(y - ty);
+    const allies = fighters.filter(other => other !== actor && other.alive && other.team === actor.team);
+    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    let bestStep = null, bestScore = Infinity;
+    for (const [dx, dy] of directions) {
+      const nx = x + dx, ny = y + dy;
+      if (!isOpen(nx, ny) || occupied(nx, ny, actor)) continue;
+      const nextDistance = Math.abs(nx - tx) + Math.abs(ny - ty);
+      if (nextDistance <= currentDistance) continue;
+      const rangePenalty = nextDistance < minRange ? minRange - nextDistance : nextDistance > maxRange ? nextDistance - maxRange : 0;
+      const score = rangePenalty * 2 + allyPressure(actor, nx, ny, allies) * 1.7 + Math.random() * .25;
+      if (score < bestScore) { bestScore = score; bestStep = [dx, dy]; }
+    }
+    return bestStep;
   }
   function attack(actor = player, targetOverride = null) {
     if (paused || !actor.alive || actor.attackCd > 0) return false;
@@ -529,15 +580,16 @@
     for (const actor of fighters.slice(1)) {
       if (!actor.alive || actor.step || actor.immobilized > 0) continue;
       actor.aiTimer -= dt;
-      if (actor.aiTimer > 0 || actor.aim) continue;
-      actor.aiTimer = .2 + Math.random() * .08;
+      if (actor.aiTimer > 0) continue;
+      actor.aiTimer = .18 + Math.random() * .1;
 
       const allies = fighters.filter(other => other.alive && other.team === actor.team);
       const wounded = allies.filter(other => other.hp / other.maxHp < .68 || other.immobilized > 0)
         .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
-      const healingIndex = CLASS_PROFILES[actor.className].skills.findIndex(skill => skill.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[CLASS_PROFILES[actor.className].skills.indexOf(skill)] <= 0);
+      const profile = CLASS_PROFILES[actor.className];
+      const healingIndex = profile.skills.findIndex((skill, index) => skill.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (wounded && healingIndex >= 0) {
-        const heal = CLASS_PROFILES[actor.className].skills[healingIndex];
+        const heal = profile.skills[healingIndex];
         if ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0)) {
           if (npcCastSkill(actor, heal, healingIndex, wounded)) continue;
         }
@@ -546,17 +598,26 @@
       const target = tacticalEnemy(actor);
       if (!target) continue;
       actor.aiTargetId = target.id;
-      const profile = CLASS_PROFILES[actor.className];
-      const range = distance(actor, target);
+      const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       const attackSkills = profile.skills.map((skill, index) => ({ skill, index }))
-        .filter(({ skill, index }) => skill.type === 'damage' && range <= skill.range && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
+        .filter(({ skill, index }) => skill.type === 'damage' && range >= combatRange.min && range <= skill.range
+          && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
-      if (attackSkills.length && npcCastSkill(actor, attackSkills[0].skill, attackSkills[0].index, target)) continue;
-      if (range <= 1) {
-        if (actor.attackCd <= 0) beginNpcAim(actor, target);
-      } else {
-        const step = nextPathStep(actor, target);
-        if (step) startStep(actor, step[0], step[1]);
+      if (!actor.aim && attackSkills.length && npcCastSkill(actor, attackSkills[0].skill, attackSkills[0].index, target)) continue;
+
+      let step;
+      if (range < combatRange.min) {
+        // If every outward tile is blocked, hold position rather than pathing closer.
+        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max);
+      } else if (range > combatRange.max) {
+        step = nextPathStep(actor, target, combatRange.min, combatRange.max);
+      } else if (Math.random() < .72) {
+        step = nextStrafeStep(actor, target, combatRange.min, combatRange.max);
+      }
+      if (step) {
+        startStep(actor, step[0], step[1]);
+      } else if (!actor.aim && actor.className !== 'mage' && range <= 1 && actor.attackCd <= 0) {
+        beginNpcAim(actor, target);
       }
     }
   }
