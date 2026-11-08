@@ -58,10 +58,26 @@ El prototipo incluye:
 - El prototipo carga datos JSON e imágenes de `assets/ao/` (`map.json`, `grhs.json`, `characters.json` y láminas en `graphics/`), generados con `scripts/extract_ao_assets.py`. La carpeta está excluida de Git; su manifiesto de atribución se genera junto a los recursos.
 - No usa framework, backend ni motor externo.
 
-## Próximos pasos
+## Hoja de ruta para la práctica PvP
 
-1. Validar y ajustar la práctica PvP: lectura del objetivo y alcance, ritmo de ataques, comportamiento de bots y escenarios cortos repetibles.
-2. Contrastar paso por casilleros, alcance, daño, tiempos y habilidades con AO Libre, separando las reglas confirmadas de las aproximaciones.
-3. Afinar mapa, sprites, animaciones y controles con los recursos originales y su atribución.
-4. Probar interfaz y combate en navegador, escritorio y móvil; revisar avisos de recursos antes de redistribuirlos.
-5. Diseñar inventario/equipo y evaluar juego en línea solo después de definir su alcance.
+Fases graduales y verificables. Cada paso se valida en navegador antes de pasar al siguiente, y cada cambio de reglas se contrasta con AO Libre para decidir si es fiel o aproximación.
+
+**Fase 1 — Ronda legible y confiable (ahora)**
+1. Verificar en navegador el flujo completo: mover, seleccionar objetivo (teclado y ciclo), atacar, daño por distancia, morir, reaparecer, fin de ronda por bajas o por tiempo.
+2. Comportamiento de bots 4v4 previsibles: perseguir, atacar al alcance correcto, curar o apoyar según perfil, con dificultad ajustable.
+3. Resumen de ronda: victorias por equipo, bajas individuales y daño causado/recibido, con botón para reiniciar al instante.
+
+**Fase 2 — Reglas de AO aproximadas**
+4. Contrastar con AO Libre: paso por casilleros, alcance de ataques, daño de hechizos/ArVersiones si aplica, tiempos de recuperación y dirección cardinal. Marcar cada regla como confirmada o aproximada en el README.
+5. Infraestructura de aula de práctica (conexión al referente del cliente AO Libre y análisis de datos de hechizos, clases y morfatalidad), registrada en `assets/ao/` con su atribución correspondiente.
+6. Estados de combate fatales: paralizar, inmovilizar, remojar mana. Diferenciar perfiles guerrero/mago/clérigo/paladín en su rol real de equipo.
+
+**Fase 3 — Sentirse AO**
+7. Afinar mapa, sprites, animaciones y controles con los recursos originales y su atribución; el prefijo visual de la arena de práctica solo se usa si no hay recursos.
+8. Interfaz de AO: inventario y equipamiento mínimos para la práctica (pociones de vida y mana), chat lateral, sonidos de golpes y hechizos si hay assets.
+9. Escenarios cortos: arenas pequeñas de variedad (1v1, 2v2, 3v3) con selectores y contadores de ronda.
+
+**Fase 4 — Más allá de la práctica**
+10. Multijugador en red local y persistencia de personaje, solo después de definir el alcance y sostener la fases anteriores.
+
+Cada ítem se entrega pequeño, probado y publicado en `main`, con una etiqueta clara de qué queda pendiente.
