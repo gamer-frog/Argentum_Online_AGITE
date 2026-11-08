@@ -62,15 +62,14 @@
     ] }
   };
   const STEP_DURATION = .115;
-  const MATCH_KILL_LIMIT = 5;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const images = new Map();
   let mapData, grhs, characters;
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
-  let elapsed = 0, remaining = 180, gameOver = false, paused = false;
-  let selected = 'chaoticWarrior', selectedSkill = null, kills = 0, currentClass = 'warrior';
+  let elapsed = 0, paused = false;
+  let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
@@ -80,7 +79,7 @@
     return {
       ...actor, body: profile.body, head: profile.head, homeX: actor.x, homeY: actor.y,
       hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana,
-      alive: true, kills: 0,
+      alive: true,
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
       skillCooldowns: [0, 0, 0], immobilized: 0
@@ -245,7 +244,7 @@
     return null;
   }
   function attack(actor = player, targetOverride = null) {
-    if (gameOver || paused || !actor.alive || actor.attackCd > 0) return false;
+    if (paused || !actor.alive || actor.attackCd > 0) return false;
     const target = targetOverride || byId[selected];
     if (!target || !target.alive || target === actor || !isEnemy(actor, target)) { toast('Elegí un rival de la legión contraria.'); return false; }
     const d = distance(actor, target);
@@ -340,7 +339,7 @@
     return true;
   }
   function selectSkill(index) {
-    if (gameOver || paused || !player.alive) return;
+    if (paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index];
     if (!skill) return;
     selectedSkill = selectedSkill === index ? null : index;
@@ -356,7 +355,7 @@
     $('spellHint').textContent = skill ? `${skill.name} listo · ${skill.type === 'heal' ? 'hacé clic en tu personaje' : 'hacé clic en un rival'}` : 'Elegí un hechizo y hacé clic en un rival';
   }
   function castSkill(index, targetOverride = null) {
-    if (gameOver || paused || !player.alive) return;
+    if (paused || !player.alive) return;
     const skill = CLASS_PROFILES[currentClass].skills[index], target = targetOverride || byId[selected];
     if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
       toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
@@ -415,24 +414,18 @@
       button.title = `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}`;
     });
   }
-  function teamScore(team) {
-    return fighters.reduce((total, actor) => total + (actor.team === team ? actor.kills : 0), 0);
-  }
   function kill(victim, attacker) {
     victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
     if (victim === player) updateRespawnNotice();
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
-    attacker.kills++;
-    if (attacker === player) kills++;
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
     line.innerHTML = `<span class="feed-gold">✦</span> <b>${attacker === player ? 'Vos' : names[attacker.id]}</b><span> derrotó a </span><b>${victim === player ? 'vos' : names[victim.id]}</b>`;
     feed.prepend(line); while (feed.children.length > 3) feed.lastElementChild.remove();
     const log = $('battleLog'), entry = document.createElement('div'); entry.className = 'log-entry';
-    entry.innerHTML = `<span class="log-time">${String(Math.floor(elapsed)).padStart(2, '0')}s</span> ${attacker === player ? '<b>Derrotaste</b>' : `<b>${names[attacker.id]}</b> derrotó a`} ${victim === player ? 'tu personaje' : names[victim.id]}.`;
+    entry.innerHTML = `${attacker === player ? '<b>Derrotaste</b>' : `<b>${names[attacker.id]}</b> derrotó a`} ${victim === player ? 'tu personaje' : names[victim.id]}.`;
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${names[victim.id]}.` : `${names[victim.id]} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    if (teamScore(attacker.team) >= MATCH_KILL_LIMIT) endMatch(attacker.team);
     refreshHud();
   }
   function respawn(actor) {
@@ -443,7 +436,7 @@
   function updateRespawnNotice() {
     const notice = $('respawnNotice');
     if (!notice) return;
-    const show = !player.alive && !gameOver;
+    const show = !player.alive;
     notice.classList.toggle('hidden', !show);
     if (show) $('respawnTimer').textContent = Math.max(0, player.respawn).toFixed(1);
   }
@@ -534,8 +527,8 @@
     }
   }
   function update(dt) {
-    if (!mapData || gameOver || paused) return;
-    elapsed += dt; remaining = Math.max(0, remaining - dt);
+    if (!mapData || paused) return;
+    elapsed += dt;
     for (const actor of fighters) {
       if (actor.attackCd > 0) actor.attackCd -= dt;
       if (actor.flash > 0) actor.flash -= dt;
@@ -554,10 +547,6 @@
     while (floatingTexts.length && floatingTexts[0].age > 1.05) floatingTexts.shift();
     while (spellEffects.length && spellEffects[0].age > spellEffects[0].duration) spellEffects.shift();
     updatePlayer(); updateNpcAims(dt); updateBots(dt);
-    if (remaining <= 0) {
-      const sacredScore = teamScore('sacred'), chaoticScore = teamScore('chaotic');
-      endMatch(sacredScore === chaoticScore ? null : sacredScore > chaoticScore ? 'sacred' : 'chaotic');
-    }
     refreshHud();
   }
 
@@ -758,57 +747,33 @@
       button.classList.toggle('cooling', cooldown > 0);
       button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
-    $('playerKills').textContent = kills; $('rosterPlayerKills').textContent = kills;
-    $('sacredScore').textContent = teamScore('sacred');
-    $('chaoticScore').textContent = teamScore('chaotic');
-    for (const actor of fighters) {
-      const score = $(`score-${actor.id}`);
-      if (score) score.textContent = actor.kills;
-    }
-    $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
-    $('matchStatus').textContent = gameOver ? 'RONDA FINALIZADA' : paused ? 'EN PAUSA' : 'EN CURSO';
+
     const target = byId[selected], targetAlive = target?.alive && isEnemy(player, target);
     $('targetName').textContent = targetAlive ? target.name : 'Sin objetivo';
     if (targetAlive) {
       const targetDistance = distance(player, target);
-      const attackState = !player.alive ? 'REAPARECIENDO' : gameOver ? 'RONDA FINALIZADA' : paused ? 'EN PAUSA' : targetDistance > 1 ? 'FUERA DE ALCANCE' : player.attackCd > 0 ? `ATACÁ EN ${player.attackCd.toFixed(1)}s` : 'AL ALCANCE';
+      const attackState = !player.alive ? 'REAPARECIENDO' : paused ? 'EN PAUSA' : targetDistance > 1 ? 'FUERA DE ALCANCE' : player.attackCd > 0 ? `ATACÁ EN ${player.attackCd.toFixed(1)}s` : 'AL ALCANCE';
       $('targetStatus').textContent = `${Math.round(target.hp)}% · ${targetDistance} casilleros · ${attackState}`;
     } else {
       $('targetStatus').textContent = 'Seleccioná un rival';
     }
-    $('attackBtn').disabled = !targetAlive || !player.alive || gameOver || paused || distance(player, target) > 1 || player.attackCd > 0;
+    $('attackBtn').disabled = !targetAlive || !player.alive || paused || distance(player, target) > 1 || player.attackCd > 0;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
-      if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('fighter-leading', actor === player && kills >= 3); row.classList.toggle('targeted', actor.id === selected); }
+      if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('targeted', actor.id === selected); }
     }
-  }
-  function endMatch(winningTeam) {
-    if (gameOver) return;
-    gameOver = true;
-    updateRespawnNotice();
-    const draw = winningTeam === null;
-    const won = winningTeam === player.team;
-    const winnerScore = winningTeam ? teamScore(winningTeam) : teamScore(player.team);
-    const loserScore = winningTeam ? teamScore(winningTeam === 'sacred' ? 'chaotic' : 'sacred') : teamScore(player.team === 'sacred' ? 'chaotic' : 'sacred');
-    $('resultPanel').classList.remove('hidden');
-    $('resultTitle').textContent = draw ? 'EMPATE' : won ? 'VICTORIA' : 'DERROTA';
-    $('resultTitle').style.color = draw ? '#c6c7b9' : won ? '#e2c47e' : '#d58a78';
-    const duration = Math.floor(elapsed);
-    const durationLabel = `${String(Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}`;
-    const outcome = draw ? 'Las legiones igualaron' : `${winningTeam === 'sacred' ? 'La Legión Sagrada' : 'La Legión Caótica'} gana`;
-    $('resultSub').textContent = `${outcome} ${winnerScore} a ${loserScore} · Tus bajas: ${kills} · Duración: ${durationLabel}.`;
   }
   function resetGame() {
     for (const actor of fighters) {
       const profile = CLASS_PROFILES[actor.className];
-      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, kills: 0, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
     }
     floatingTexts.length = 0; spellEffects.length = 0;
-    selected = 'chaoticWarrior'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
+    selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
     refreshSkillSelection();
-    $('resultPanel').classList.add('hidden'); $('respawnNotice').classList.add('hidden'); $('respawnTimer').textContent = '2.4'; $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
+    $('respawnNotice').classList.add('hidden'); $('respawnTimer').textContent = '2.4'; $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
     $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La arena te espera</b><span>—</span> buena suerte, viajero.</div>';
-    refreshHud(); toast('Nueva ronda · elegí un objetivo y luchá.');
+    refreshHud(); toast('Arena reiniciada · elegí un objetivo y luchá.');
   }
   function togglePause() { paused = !paused; toast(paused ? 'Partida pausada' : 'Partida reanudada'); }
   function actorAtPointer(x, y) {
@@ -859,7 +824,7 @@
     joystick.addEventListener('pointercancel', clearJoystick);
     joystick.addEventListener('lostpointercapture', clearJoystick);
   }
-  $('restartBtn').addEventListener('click', resetGame); $('playAgain').addEventListener('click', resetGame);
+  $('restartBtn').addEventListener('click', resetGame);
   $('soundToggle').addEventListener('click', () => { audioOn = !audioOn; $('soundLabel').textContent = `SONIDO ${audioOn ? 'ON' : 'OFF'}`; $('soundIcon').textContent = audioOn ? '♫' : '♪'; });
   $('helpBtn').addEventListener('click', () => $('helpModal').classList.remove('hidden'));
   $('closeHelp').addEventListener('click', () => $('helpModal').classList.add('hidden'));
