@@ -23,8 +23,8 @@ for asset in index.html styles.css game.js favicon.svg; do
   run cp "$PROJECT_DIR/$asset" "$STATIC_DIR/$asset"
 done
 [[ -d "$PROJECT_DIR/assets/ao" ]] || { echo "Required AO assets missing: $PROJECT_DIR/assets/ao" >&2; exit 1; }
-run mkdir -p "$STATIC_DIR/assets"
-run cp -a "$PROJECT_DIR/assets/ao" "$STATIC_DIR/assets/ao"
+run mkdir -p "$STATIC_DIR/assets/ao"
+run cp -a "$PROJECT_DIR/assets/ao/." "$STATIC_DIR/assets/ao/"
 
 # This project is plain HTML/CSS/JS and has no dependency installation or build step.
 run bash -c 'printf "{\"project\":\"%s\",\"directory\":\"%s\"}\n" "$1" "$2" > "$3/deployment-output.json"' _ "$PROJECT_DIR" "$STATIC_DIR" "$OPENCODE_WEB_DIR"
