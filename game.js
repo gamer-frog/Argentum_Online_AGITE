@@ -20,15 +20,16 @@
   } catch { /* sin currentScript; queda el candidato relativo. */ }
   if (!MAP_CANDIDATES.includes('assets/ao/')) MAP_CANDIDATES.push('assets/ao/');
   let MAP_URL = MAP_CANDIDATES[0];
+  const CHARACTER_LEVEL = 40;
   const ACTORS = [
-    { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', x: 43, y: 46 },
-    { id: 'sacredMage', name: 'Mago Sagrado', team: 'sacred', className: 'mage', x: 43, y: 43 },
-    { id: 'sacredCleric', name: 'Clérigo Sagrado', team: 'sacred', className: 'cleric', x: 43, y: 49 },
-    { id: 'sacredPaladin', name: 'Paladín Sagrado', team: 'sacred', className: 'paladin', x: 46, y: 46 },
-    { id: 'chaoticWarrior', name: 'Guerrero Caótico', team: 'chaotic', className: 'warrior', x: 57, y: 46 },
-    { id: 'chaoticMage', name: 'Mago Caótico', team: 'chaotic', className: 'mage', x: 57, y: 43 },
-    { id: 'chaoticCleric', name: 'Clérigo Caótico', team: 'chaotic', className: 'cleric', x: 57, y: 49 },
-    { id: 'chaoticPaladin', name: 'Paladín Caótico', team: 'chaotic', className: 'paladin', x: 54, y: 46 }
+    { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
+    { id: 'sacredMage', name: 'Mago Sagrado', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
+    { id: 'sacredCleric', name: 'Clérigo Sagrado', team: 'sacred', className: 'cleric', level: CHARACTER_LEVEL, x: 43, y: 49 },
+    { id: 'sacredPaladin', name: 'Paladín Sagrado', team: 'sacred', className: 'paladin', level: CHARACTER_LEVEL, x: 46, y: 46 },
+    { id: 'chaoticWarrior', name: 'Guerrero Caótico', team: 'chaotic', className: 'warrior', level: CHARACTER_LEVEL, x: 57, y: 46 },
+    { id: 'chaoticMage', name: 'Mago Caótico', team: 'chaotic', className: 'mage', level: CHARACTER_LEVEL, x: 57, y: 43 },
+    { id: 'chaoticCleric', name: 'Clérigo Caótico', team: 'chaotic', className: 'cleric', level: CHARACTER_LEVEL, x: 57, y: 49 },
+    { id: 'chaoticPaladin', name: 'Paladín Caótico', team: 'chaotic', className: 'paladin', level: CHARACTER_LEVEL, x: 54, y: 46 }
   ];
   const HEADINGS = { N: 1, E: 2, S: 3, W: 4 };
   const DELTAS = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };

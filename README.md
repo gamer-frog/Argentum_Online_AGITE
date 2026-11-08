@@ -30,7 +30,7 @@ Las tres asociaciones con habilidades del prototipo son aproximaciones para reut
 
 ### Alcance de las reglas de nivel 40
 
-La revisión consultada del servidor es `ao-libre/ao-server` en `ca6ad7ff428a585475373474ec5640eabe05961b`. El análisis fue estático (datos y código; no se ejecutó el servidor): el nivel máximo observado es 55 y la progresión de experiencia hasta nivel 40 usa el multiplicador 1,375. La vida, el maná y los golpes de nivel 40 no son valores únicos: varían por clase, atributos y, para la vida, tiradas aleatorias. Los costos y requisitos de hechizos dependen de los datos del hechizo y de las condiciones de lanzamiento. Por eso las estadísticas, costos y combate de este prototipo siguen siendo valores de práctica aproximados; no se presentan como una simulación exacta de nivel 40.
+La revisión consultada del servidor es `ao-libre/ao-server` en `ca6ad7ff428a585475373474ec5640eabe05961b`. El análisis fue estático (datos y código; no se ejecutó el servidor): el nivel máximo observado es 55 y la progresión de experiencia hasta nivel 40 usa el multiplicador 1,375. El HUD y los ocho combatientes usan el nivel 40 como contexto del escenario. Esto **no** significa que sus estadísticas reproduzcan las de un personaje de nivel 40: la vida, el maná y los golpes varían por clase, atributos y, para la vida, tiradas aleatorias; los costos y requisitos de hechizos dependen de los datos del hechizo y las condiciones de lanzamiento. Los perfiles de vida, maná, costos, daño y combate de este prototipo son valores de práctica aproximados, no calculados a partir de las reglas del servidor ni una simulación exacta de nivel 40.
 
 ## Ejecutar localmente
 
