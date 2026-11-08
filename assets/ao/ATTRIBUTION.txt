@@ -22,3 +22,20 @@ la licencia AGPL-3.0 y estos avisos; mantener las láminas originales sin altera
 la obligación de compartir las fuentes modificadas si se altera el material.
  Estos archivos provienen del trabajo de otros; no se reclaman como material original del
 proyecto Argentum Online AGITE.
+
+Efectos y sonidos de hechizos:
+- Cliente: ao-libre/ao-cliente, revisión
+  7d32d61759d6b95069aba72ae12bed03c1d13700.
+- Datos consultados: INIT/fxs.ini, INIT/Graficos.ini y AUDIO/WAV/{114,16,27}.wav.
+- spellfx.json conserva los IDs de hechizo/FX/animación/sonido y los offsets del FX.
+- audio/*.wav son copias directas; grhs.json y graphics/*.png incluyen las láminas
+  necesarias para renderizar esas animaciones, además de las requeridas por el mapa.
+- Mapeo del prototipo (aproximado, no equivalencia de reglas): Dardo Mágico (hechizo 2,
+  FX 15, Grh 275, WAV 114), Paralizar (hechizo 9, FX 8, Grh 183, WAV 16) y Apocalipsis
+  (hechizo 25, FX 13, Grh 259, WAV 27). La habilidad visual no implica que el daño,
+  alcance, costo o nombre del prototipo coincida con AO.
+- Servidor consultado para análisis estático: ao-libre/ao-server, revisión
+  ca6ad7ff428a585475373474ec5640eabe05961b. No se ejecutó el servidor.
+
+La licencia y atribución de estos recursos siguen siendo las del repositorio upstream;
+conservar este aviso y verificar las condiciones específicas antes de redistribuirlos.

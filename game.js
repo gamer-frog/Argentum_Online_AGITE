@@ -46,12 +46,12 @@
       { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [35, 44], range: 2 }
     ] },
     mage: { label: 'MAGO', body: 2, head: 2, hp: 90, mana: 130, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [27, 38], range: 7 },
+      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [27, 38], range: 7, fxSpellId: 2 },
       { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true },
-      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8, immobilize: 1.8 }
+      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8, immobilize: 1.8, fxSpellId: 9 }
     ] },
     cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [24, 34], range: 6 },
+      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [24, 34], range: 6, fxSpellId: 25 },
       { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true },
       { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [34, 46], range: 7 }
     ] },
@@ -64,8 +64,8 @@
   const STEP_DURATION = .115;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
-  const images = new Map();
-  let mapData, grhs, characters;
+  const images = new Map(), spellSounds = new Map();
+  let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
@@ -130,6 +130,19 @@
           if (index === MAP_CANDIDATES.length - 1) throw error;
         }
       }
+      try {
+        const response = await fetch(MAP_URL + 'spellfx.json');
+        if (response.ok) {
+          const manifest = await response.json();
+          spellFx = manifest.spells || {};
+          for (const [spellId, definition] of Object.entries(spellFx)) {
+            if (!definition.wav) continue;
+            const sound = new Audio(`${MAP_URL}audio/${definition.wav}.wav`);
+            sound.preload = 'auto';
+            spellSounds.set(spellId, sound);
+          }
+        }
+      } catch (_) { /* Authentic effects and sounds are optional. */ }
       const ids = [...new Set(Object.values(grhs).flatMap(def => def.image ? [def.image] : []))];
       const loaded = await Promise.all(ids.map(loadImage));
       for (const [id, image] of loaded) if (image) images.set(id, image);
@@ -177,6 +190,24 @@
       gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
       osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
     } catch (_) { /* Audio is optional. */ }
+  }
+  function playSpellSound(spellId, fallbackFrequency = 340) {
+    if (!audioOn || !audioReady) return;
+    const sound = spellSounds.get(String(spellId));
+    if (!sound) { tone(fallbackFrequency, .13); return; }
+    try {
+      sound.currentTime = 0;
+      const playback = sound.play();
+      if (playback?.catch) playback.catch(() => {});
+    } catch (_) { /* Audio is optional. */ }
+  }
+  function addSpellEffect(x, y, tx, ty, kind, spellId = null) {
+    const definition = spellId == null ? null : spellFx[String(spellId)];
+    const animation = definition?.animation;
+    const animationData = animation == null ? null : grhs[String(animation)];
+    const cycles = Math.max(1, Number(definition?.loops || 0) + 1);
+    const duration = animationData?.speed ? animationData.speed * cycles / 1000 : .5;
+    spellEffects.push({ x, y, tx, ty, age: 0, duration, kind, spellId, definition });
   }
   function findOpen(x, y) {
     if (!mapData) return [x, y];
@@ -322,12 +353,12 @@
         target.immobilized = 0;
         addFloatingText(target, 'LIBRE', 'heal');
       }
-      spellEffects.push({ x: sx, y: sy, tx, ty, age: 0, duration: .65, kind: 'heal' });
+      addSpellEffect(sx, sy, tx, ty, 'heal', skill.fxSpellId);
     } else {
       const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
       target.hp = Math.max(0, target.hp - damage); target.flash = .28;
       addFloatingText(target, `-${damage}`, 'damage');
-      spellEffects.push({ x: sx, y: sy, tx, ty, age: 0, duration: .42, kind: actor.className });
+      addSpellEffect(sx, sy, tx, ty, actor.className, skill.fxSpellId);
       if (skill.immobilize) {
         target.immobilized = Math.max(target.immobilized, skill.immobilize);
         target.step = null; target.stepTime = 0;
@@ -335,7 +366,7 @@
       }
       if (target.hp <= 0) kill(target, actor);
     }
-    tone(actor.className === 'mage' ? 620 : 340, .13);
+    playSpellSound(skill.fxSpellId, actor.className === 'mage' ? 620 : 340);
     return true;
   }
   function selectSkill(index) {
@@ -376,19 +407,21 @@
         player.immobilized = 0;
         addFloatingText(player, 'LIBRE', 'heal');
       }
-      spellEffects.push({ x: px, y: py, tx: px, ty: py, age: 0, duration: .65, kind: 'heal' });
-      toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`); tone(520, .15);
+      addSpellEffect(px, py, px, py, 'heal', skill.fxSpellId);
+      toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`);
+      playSpellSound(skill.fxSpellId, 520);
     } else {
       const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
       target.hp = Math.max(0, target.hp - damage); target.flash = .28;
       addFloatingText(target, `-${damage}`, 'damage');
-      spellEffects.push({ x: px, y: py, tx, ty, age: 0, duration: .42, kind: currentClass });
+      addSpellEffect(px, py, tx, ty, currentClass, skill.fxSpellId);
       if (skill.immobilize) {
         target.immobilized = Math.max(target.immobilized, skill.immobilize);
         target.step = null; target.stepTime = 0;
         addFloatingText(target, 'INMOVILIZADO', 'miss');
       }
-      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Inmovilizado.' : ''}`); tone(currentClass === 'mage' ? 620 : 340, .13);
+      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Inmovilizado.' : ''}`);
+      playSpellSound(skill.fxSpellId, currentClass === 'mage' ? 620 : 340);
       if (target.hp <= 0) kill(target, player);
     }
     selectedSkill = null; refreshSkillSelection();
@@ -554,7 +587,8 @@
     let def = grhs[String(id)];
     if (!def) return null;
     if (def.frames) {
-      const index = animate ? Math.floor(now / Math.max(1, def.speed)) % def.frames.length : 0;
+      const frameDuration = def.speed / def.frames.length;
+      const index = animate && frameDuration > 0 ? Math.floor(now / frameDuration) % def.frames.length : 0;
       def = grhs[String(def.frames[index])];
     }
     if (!def || !def.image) return null;
@@ -695,6 +729,14 @@
       const progress = effect.age / effect.duration;
       const [x0, y0] = screenTile(effect.x, effect.y, cameraX, cameraY);
       const [x1, y1] = screenTile(effect.tx, effect.ty, cameraX, cameraY);
+      const animation = effect.definition?.animation;
+      const animationFrame = animation == null ? null : resolveGrh(animation, effect.age * 1000);
+      if (animationFrame?.image) {
+        const offsetX = (effect.definition.offsetX || 0) * tilePx / 32;
+        const offsetY = (effect.definition.offsetY || 0) * tilePx / 32;
+        drawGrh(animation, x1 + offsetX, y1 + offsetY, effect.age * 1000);
+        continue;
+      }
       const x = x0 + tilePx / 2 + (x1 - x0) * progress;
       const y = y0 + tilePx / 2 + (y1 - y0) * progress;
       ctx.save(); ctx.globalAlpha = 1 - progress;

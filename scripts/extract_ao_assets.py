@@ -3,7 +3,7 @@
 
 Usage: python3 scripts/extract_ao_assets.py /path/to/ao-cliente
 The source client is not bundled. Only extract and use resources you are
-permitted to use; generated files in assets/ao/ are intentionally gitignored.
+permitted to use; generated files in assets/ao/ retain upstream licensing.
 """
 from __future__ import annotations
 
@@ -11,11 +11,18 @@ import json
 import re
 import shutil
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
 TILE_SIZE = 32
 MAP_SIDE = 100
+AO_SERVER_REVISION = "ca6ad7ff428a585475373474ec5640eabe05961b"
+SPELL_FX = {
+    2: {"name": "Dardo Mágico", "fx": 15, "wav": 114, "loops": 2},
+    9: {"name": "Paralizar", "fx": 8, "wav": 16, "loops": 0},
+    25: {"name": "Apocalipsis", "fx": 13, "wav": 27, "loops": 0},
+}
 
 
 def parse_ini(path: Path) -> dict[int, list[int]]:
@@ -52,7 +59,9 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     output = root / "assets" / "ao"
     graphics_dir = output / "graphics"
+    audio_dir = output / "audio"
     graphics_dir.mkdir(parents=True, exist_ok=True)
+    audio_dir.mkdir(parents=True, exist_ok=True)
 
     raw_map = (source / "Mapas/Alkon/Mapa2.map").read_bytes()
     if len(raw_map) < 273 + MAP_SIDE * MAP_SIDE * 5:
@@ -83,6 +92,20 @@ def main() -> None:
         tiles.append(row)
     if cursor != len(raw_map):
         raise SystemExit(f"Map parse ended at {cursor}; file is {len(raw_map)} bytes")
+
+    fx_definitions = parse_character_ini(source / "INIT/fxs.ini", "FX", ["Animacion", "OffsetX", "OffsetY"])
+    selected_fx = {}
+    for spell_id, spell in SPELL_FX.items():
+        definition = fx_definitions.get(spell["fx"])
+        sound = source / "AUDIO" / "WAV" / f"{spell['wav']}.wav"
+        if not definition or not sound.is_file():
+            raise SystemExit(f"Missing FX{spell['fx']} or WAV{spell['wav']} for {spell['name']}")
+        selected_fx[str(spell_id)] = {**spell, **{
+            "animation": definition["Animacion"],
+            "offsetX": definition.get("OffsetX", 0),
+            "offsetY": definition.get("OffsetY", 0),
+        }}
+        roots.add(definition["Animacion"])
 
     bodies = parse_character_ini(source / "INIT/Personajes.ini", "BODY", ["Walk1", "Walk2", "Walk3", "Walk4", "HeadOffsetX", "HeadOffsetY"])
     heads = parse_character_ini(source / "INIT/Cabezas.ini", "HEAD", ["Head1", "Head2", "Head3", "Head4"])
@@ -125,10 +148,19 @@ def main() -> None:
 
     for image_id in sorted(image_ids):
         shutil.copy2(source / "Graficos" / f"{image_id}.png", graphics_dir / f"{image_id}.png")
+    for spell in selected_fx.values():
+        shutil.copy2(source / "AUDIO" / "WAV" / f"{spell['wav']}.wav", audio_dir / f"{spell['wav']}.wav")
+
+    source_revision = subprocess.run(
+        ["git", "-C", str(source), "rev-parse", "HEAD"],
+        check=False, capture_output=True, text=True,
+    )
+    revision = source_revision.stdout.strip() if source_revision.returncode == 0 else "unknown"
     (output / "map.json").write_text(json.dumps({"width": MAP_SIDE, "height": MAP_SIDE, "tileSize": TILE_SIZE, "tiles": tiles}, separators=(",", ":")))
     (output / "grhs.json").write_text(json.dumps(grhs, separators=(",", ":")))
     (output / "characters.json").write_text(json.dumps({"bodies": selected_bodies, "heads": selected_heads}, separators=(",", ":")))
-    print(f"Extracted {MAP_SIDE}x{MAP_SIDE} map, {len(grhs)} Grh records, {len(image_ids)} sheets to {output}")
+    (output / "spellfx.json").write_text(json.dumps({"sourceRevision": revision, "serverRevision": AO_SERVER_REVISION, "spells": selected_fx}, separators=(",", ":")))
+    print(f"Extracted {MAP_SIDE}x{MAP_SIDE} map, {len(grhs)} Grh records, {len(image_ids)} sheets, {len(selected_fx)} spell effects and sounds to {output}")
 
 
 if __name__ == "__main__":
