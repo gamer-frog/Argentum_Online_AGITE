@@ -6,7 +6,7 @@
 - Paso 2: completado; existen y se revisaron los cinco archivos de seguimiento de `00_cerebro_loop/`.
 - Paso 3: se intentó integrar `origin/opencode-checkpoints/39` (`d1eb37f`), pero el merge dio conflictos add/add solo en archivos de memoria/documentación. Se abortó sin resolución manual y el tip quedó preservado con `graveyard-opencode-checkpoints-39`.
 - Paso 4: completado; se eliminaron 51 refs remotas de checkpoints/resumes y se preservaron sus tips en 51 tags locales `graveyard-boot-*`. Se conservó `origin/opencode-checkpoints/39`; el `fetch --prune` confirmó que es la única ref remota restante de esos grupos.
-- Paso 5: completado; merge de `origin/main` sin conflictos, navegador verificado y cambios de cierre listos para commit/publicación fast-forward. La verificación confirmó HTTP 200 para recursos AO, canvas visible de 713×668, ocho personajes y consola con 0 errores/advertencias. Capturas desktop/mobile en `/tmp/opencode/boot-captures/final-desktop.png` y `final-mobile.png`.
+- Paso 5: completado; merge de `origin/main` sin conflictos, navegador verificado y cierre documental publicado por fast-forward a `main`. La verificación confirmó HTTP 200 para recursos AO, canvas visible de 713×668, ocho personajes y consola con 0 errores/advertencias. Capturas desktop/mobile en `/tmp/opencode/boot-captures/final-desktop.png` y `final-mobile.png`.
 
 ## Estado Git y verificación
 - El merge de `origin/main` (`381af59`) quedó integrado en `4544aa3`; al iniciar este cierre `origin/main...HEAD` era `0 9` y el árbol estaba limpio.
