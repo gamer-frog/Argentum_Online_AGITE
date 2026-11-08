@@ -50,10 +50,12 @@
     ] }
   };
   const STEP_DURATION = .115;
+  const MATCH_KILL_LIMIT = 5;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const images = new Map();
   let mapData, grhs, characters;
+  let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, remaining = 180, gameOver = false, paused = false;
   let selected = 'chaoticWarrior', selectedSkill = null, kills = 0, currentClass = 'warrior';
@@ -114,8 +116,17 @@
       fighters.forEach(actor => { [actor.x, actor.y] = findOpen(actor.x, actor.y, actor); actor.homeX = actor.x; actor.homeY = actor.y; });
       refreshHud();
     } catch (error) {
-      console.error(error);
-      toast('No se pudieron cargar los datos del mundo. Revisá que el sitio esté servido por HTTP.');
+      console.warn('No se pudieron cargar los recursos de AO; se inicia una arena de práctica local.', error);
+      fallbackWorld = true;
+      mapData = {
+        width: 100,
+        height: 100,
+        tiles: Array.from({ length: 100 }, () => Array.from({ length: 100 }, () => ({ b: false, g: [0, 0, 0, 0] })))
+      };
+      grhs = {};
+      characters = { bodies: {}, heads: {} };
+      toast('Faltan assets/ao/: arena de práctica visual alternativa.');
+      refreshHud();
     }
   }
   function resize() {
@@ -381,8 +392,12 @@
       button.title = `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}`;
     });
   }
+  function teamScore(team) {
+    return fighters.reduce((total, actor) => total + (actor.team === team ? actor.kills : 0), 0);
+  }
   function kill(victim, attacker) {
     victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
+    if (victim === player) updateRespawnNotice();
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
     attacker.kills++;
     if (attacker === player) kills++;
@@ -394,18 +409,32 @@
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${names[victim.id]}.` : `${names[victim.id]} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    if (kills >= 5) endMatch(true);
+    if (teamScore(attacker.team) >= MATCH_KILL_LIMIT) endMatch(attacker.team);
     refreshHud();
   }
   function respawn(actor) {
     const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
     Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
+    if (actor === player) updateRespawnNotice();
+  }
+  function updateRespawnNotice() {
+    const notice = $('respawnNotice');
+    if (!notice) return;
+    const show = !player.alive && !gameOver;
+    notice.classList.toggle('hidden', !show);
+    if (show) $('respawnTimer').textContent = Math.max(0, player.respawn).toFixed(1);
   }
   function selectTarget(actor) {
     if (!actor || actor === player || !actor.alive || !isEnemy(player, actor)) { toast('Seleccioná un rival de la legión contraria.'); return; }
     selected = actor.id; refreshHud();
     const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
     toast(skill?.type === 'heal' ? `${actor.name} seleccionado · hacé clic en tu personaje para curarte.` : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.` : `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.`);
+  }
+  function cycleEnemyTarget() {
+    const enemies = fighters.filter(actor => actor.alive && isEnemy(player, actor));
+    if (!enemies.length) return;
+    const currentIndex = enemies.findIndex(actor => actor.id === selected);
+    selectTarget(enemies[(currentIndex + 1) % enemies.length]);
   }
   function toggleScoreboard(force) {
     const panel = $('sidePanel'), button = $('scoreboardToggle');
@@ -496,12 +525,16 @@
       }
       if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
     }
+    updateRespawnNotice();
     for (const text of floatingTexts) text.age += dt;
     for (const effect of spellEffects) effect.age += dt;
     while (floatingTexts.length && floatingTexts[0].age > 1.05) floatingTexts.shift();
     while (spellEffects.length && spellEffects[0].age > spellEffects[0].duration) spellEffects.shift();
     updatePlayer(); updateNpcAims(dt); updateBots(dt);
-    if (remaining <= 0) endMatch(false);
+    if (remaining <= 0) {
+      const sacredScore = teamScore('sacred'), chaoticScore = teamScore('chaotic');
+      endMatch(sacredScore === chaoticScore ? null : sacredScore > chaoticScore ? 'sacred' : 'chaotic');
+    }
     refreshHud();
   }
 
@@ -535,13 +568,55 @@
   function drawGround(range, now, cameraX, cameraY) {
     for (let y = range.minY; y <= range.maxY; y++) for (let x = range.minX; x <= range.maxX; x++) {
       const [sx, sy] = screenTile(x, y, cameraX, cameraY), layers = mapData.tiles[y][x].g;
-      if (layers[0]) drawGrh(layers[0], sx, sy, now);
-      if (layers[1]) drawGrh(layers[1], sx, sy, now);
+      if (fallbackWorld) {
+        const variation = (x * 17 + y * 31 + x * y) % 5;
+        ctx.fillStyle = ['#344b32', '#374e34', '#3a5036', '#344a31', '#3b5137'][variation];
+        ctx.fillRect(sx, sy, tilePx + 1, tilePx + 1);
+        ctx.strokeStyle = 'rgba(190,205,130,.055)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(sx + tilePx * .2, sy + tilePx * .72); ctx.lineTo(sx + tilePx * .32, sy + tilePx * .48);
+        ctx.moveTo(sx + tilePx * .72, sy + tilePx * .82); ctx.lineTo(sx + tilePx * .8, sy + tilePx * .65); ctx.stroke();
+      } else {
+        if (layers[0]) drawGrh(layers[0], sx, sy, now);
+        if (layers[1]) drawGrh(layers[1], sx, sy, now);
+      }
     }
+  }
+  function drawFallbackCharacter(actor, sx, sy) {
+    const centerX = sx + tilePx / 2, baseY = sy + tilePx * .88;
+    const sacred = actor.team === 'sacred';
+    const robe = sacred ? '#5277a1' : '#9a4c46';
+    const trim = sacred ? '#d9c17b' : '#d79b65';
+    if (actor === byId[selected]) {
+      ctx.fillStyle = 'rgba(230,194,115,.20)'; ctx.beginPath(); ctx.ellipse(centerX, baseY, tilePx * .38, tilePx * .13, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(245,211,137,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    ctx.save();
+    ctx.fillStyle = 'rgba(10,14,10,.5)'; ctx.beginPath(); ctx.ellipse(centerX, baseY, tilePx * .24, tilePx * .09, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = robe; ctx.beginPath(); ctx.moveTo(centerX - tilePx * .22, baseY - tilePx * .47); ctx.lineTo(centerX + tilePx * .22, baseY - tilePx * .47); ctx.lineTo(centerX + tilePx * .3, baseY - tilePx * .04); ctx.lineTo(centerX - tilePx * .3, baseY - tilePx * .04); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = trim; ctx.fillRect(centerX - tilePx * .21, baseY - tilePx * .11, tilePx * .42, tilePx * .045);
+    ctx.fillStyle = '#d8b68c'; ctx.beginPath(); ctx.arc(centerX, baseY - tilePx * .59, tilePx * .15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = actor.className === 'mage' ? '#3d3158' : '#584334'; ctx.beginPath();
+    ctx.moveTo(centerX - tilePx * .19, baseY - tilePx * .63); ctx.lineTo(centerX, baseY - tilePx * .9); ctx.lineTo(centerX + tilePx * .19, baseY - tilePx * .63); ctx.closePath(); ctx.fill();
+    if (actor.className === 'warrior' || actor.className === 'paladin') {
+      ctx.strokeStyle = '#ded6c2'; ctx.lineWidth = Math.max(1.5, tilePx * .055); ctx.beginPath();
+      ctx.moveTo(centerX + tilePx * .24, baseY - tilePx * .36); ctx.lineTo(centerX + tilePx * .39, baseY - tilePx * .66); ctx.stroke();
+    }
+    const labelY = sy + tilePx + 12, label = actor === player ? 'Viajero del Sur' : actor.name;
+    ctx.textAlign = 'center'; ctx.font = `600 ${Math.max(8, tilePx * .25)}px DM Sans, sans-serif`;
+    ctx.fillStyle = actor === player ? '#f5dc9d' : '#f1ead3'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
+    ctx.fillText(label, centerX, labelY, tilePx * 2.8);
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
+    ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    if (actor.flash > 0) { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,235,180,${actor.flash * 1.5})`; ctx.fillRect(sx, sy - tilePx, tilePx, tilePx * 2); }
+    ctx.restore();
   }
   function drawCharacter(actor, now, cameraX, cameraY) {
     if (!actor.alive) return;
     const [x, y] = position(actor), [sx, sy] = screenTile(x, y, cameraX, cameraY);
+    if (fallbackWorld) {
+      drawFallbackCharacter(actor, sx, sy);
+      return;
+    }
     const body = characters.bodies[String(actor.body)], head = characters.heads[String(actor.head)];
     if (!body || !head) return;
     const facing = HEADINGS[actor.heading], bodyId = body[`Walk${facing}`], headId = head[`Head${facing}`];
@@ -639,6 +714,13 @@
     const range = visibleRange(cx, cy);
     ctx.imageSmoothingEnabled = false;
     drawGround(range, now, cx, cy); drawWorldLayer(range, now, cx, cy); drawCombatEffects(cx, cy, now);
+    if (fallbackWorld) {
+      const message = 'ARENA DE PRÁCTICA · RECURSOS VISUALES AO NO INSTALADOS';
+      ctx.save(); ctx.font = '700 10px DM Sans, sans-serif'; ctx.textAlign = 'left';
+      const width = ctx.measureText(message).width + 20;
+      ctx.fillStyle = 'rgba(17,22,17,.82)'; ctx.fillRect(12, 52, width, 25);
+      ctx.fillStyle = '#e5d5a5'; ctx.fillText(message, 22, 68); ctx.restore();
+    }
   }
   function refreshHud() {
     if (!player) return;
@@ -653,25 +735,45 @@
       button.classList.toggle('cooling', cooldown > 0);
       button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
-    $('playerKills').innerHTML = `${kills} <i>/ 5</i>`; $('rosterPlayerKills').textContent = kills;
+    $('playerKills').textContent = kills; $('rosterPlayerKills').textContent = kills;
+    $('sacredScore').textContent = teamScore('sacred');
+    $('chaoticScore').textContent = teamScore('chaotic');
     for (const actor of fighters) {
       const score = $(`score-${actor.id}`);
       if (score) score.textContent = actor.kills;
     }
     $('timer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
-    const target = byId[selected]; $('targetName').textContent = target?.alive ? target.name : 'Sin objetivo';
-    $('targetStatus').textContent = target?.alive ? `${Math.round(target.hp)}% · ${distance(player, target) <= 1 ? 'AL ALCANCE' : 'FUERA DE ALCANCE'}` : 'Seleccioná un combatiente';
-    $('attackBtn').disabled = !target?.alive || distance(player, target) > 1 || player.attackCd > 0;
+    $('matchStatus').textContent = gameOver ? 'RONDA FINALIZADA' : paused ? 'EN PAUSA' : 'EN CURSO';
+    const target = byId[selected], targetAlive = target?.alive && isEnemy(player, target);
+    $('targetName').textContent = targetAlive ? target.name : 'Sin objetivo';
+    if (targetAlive) {
+      const targetDistance = distance(player, target);
+      const attackState = !player.alive ? 'REAPARECIENDO' : gameOver ? 'RONDA FINALIZADA' : paused ? 'EN PAUSA' : targetDistance > 1 ? 'FUERA DE ALCANCE' : player.attackCd > 0 ? `ATACÁ EN ${player.attackCd.toFixed(1)}s` : 'AL ALCANCE';
+      $('targetStatus').textContent = `${Math.round(target.hp)}% · ${targetDistance} casilleros · ${attackState}`;
+    } else {
+      $('targetStatus').textContent = 'Seleccioná un rival';
+    }
+    $('attackBtn').disabled = !targetAlive || !player.alive || gameOver || paused || distance(player, target) > 1 || player.attackCd > 0;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('fighter-leading', actor === player && kills >= 3); row.classList.toggle('targeted', actor.id === selected); }
     }
   }
-  function endMatch(won) {
-    if (gameOver) return; gameOver = true;
-    $('resultPanel').classList.remove('hidden'); $('resultTitle').textContent = won ? 'VICTORIA' : 'FIN DE LA RONDA';
-    $('resultTitle').style.color = won ? '#e2c47e' : '#c6c7b9';
-    $('resultSub').textContent = won ? 'El Robledal recuerda tu nombre.' : 'La arena volverá a abrir sus puertas.';
+  function endMatch(winningTeam) {
+    if (gameOver) return;
+    gameOver = true;
+    updateRespawnNotice();
+    const draw = winningTeam === null;
+    const won = winningTeam === player.team;
+    const winnerScore = winningTeam ? teamScore(winningTeam) : teamScore(player.team);
+    const loserScore = winningTeam ? teamScore(winningTeam === 'sacred' ? 'chaotic' : 'sacred') : teamScore(player.team === 'sacred' ? 'chaotic' : 'sacred');
+    $('resultPanel').classList.remove('hidden');
+    $('resultTitle').textContent = draw ? 'EMPATE' : won ? 'VICTORIA' : 'DERROTA';
+    $('resultTitle').style.color = draw ? '#c6c7b9' : won ? '#e2c47e' : '#d58a78';
+    const duration = Math.floor(elapsed);
+    const durationLabel = `${String(Math.floor(duration / 60)).padStart(2, '0')}:${String(duration % 60).padStart(2, '0')}`;
+    const outcome = draw ? 'Las legiones igualaron' : `${winningTeam === 'sacred' ? 'La Legión Sagrada' : 'La Legión Caótica'} gana`;
+    $('resultSub').textContent = `${outcome} ${winnerScore} a ${loserScore} · Tus bajas: ${kills} · Duración: ${durationLabel}.`;
   }
   function resetGame() {
     for (const actor of fighters) {
@@ -681,7 +783,7 @@
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; kills = 0; remaining = 180; elapsed = 0; gameOver = false; paused = false; keys.clear();
     refreshSkillSelection();
-    $('resultPanel').classList.add('hidden'); $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
+    $('resultPanel').classList.add('hidden'); $('respawnNotice').classList.add('hidden'); $('respawnTimer').textContent = '2.4'; $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
     $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La arena te espera</b><span>—</span> buena suerte, viajero.</div>';
     refreshHud(); toast('Nueva ronda · elegí un objetivo y luchá.');
   }
@@ -709,7 +811,7 @@
     }
     if (key === 'enter' || key === 'f') { event.preventDefault(); attack(); return; }
     if (['1', '2', '3'].includes(key)) { selectSkill(Number(key) - 1); return; }
-    if (key === 'tab') { event.preventDefault(); const next = fighters.filter(f => f !== player && f.alive); if (next.length) selectTarget(next[(next.findIndex(f => f.id === selected) + 1) % next.length]); return; }
+    if (key === 'tab') { event.preventDefault(); if (!event.repeat) cycleEnemyTarget(); return; }
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
