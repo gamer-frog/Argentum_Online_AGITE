@@ -62,6 +62,11 @@
       { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [34, 44], range: 2 }
     ] }
   };
+  // Acceso defensivo a habilidades: nunca devolver undefined (evita TypeError en .type/.cost).
+  function skillAt(index, className = currentClass) {
+    const skills = CLASS_PROFILES[className]?.skills;
+    return Array.isArray(skills) ? skills[index] ?? null : null;
+  }
   const STEP_DURATION = .115;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
@@ -390,6 +395,8 @@
     }
   }
   function npcCastSkill(actor, skill, index, target) {
+    if (!actor || !skill || !target || !target.alive || !Number.isInteger(index)
+      || !Array.isArray(actor.skillCooldowns) || index < 0 || index >= actor.skillCooldowns.length) return false;
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
     actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 2.8 + index * .7;
@@ -423,7 +430,7 @@
   }
   function selectSkill(index) {
     if (paused || !player.alive) return;
-    const skill = CLASS_PROFILES[currentClass].skills[index];
+    const skill = skillAt(index);
     if (!skill) return;
     selectedSkill = selectedSkill === index ? null : index;
     refreshSkillSelection();
@@ -434,12 +441,13 @@
       button.classList.toggle('active-spell', slot === selectedSkill);
       button.setAttribute('aria-pressed', String(slot === selectedSkill));
     });
-    const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
+    const skill = selectedSkill === null ? null : skillAt(selectedSkill);
     $('spellHint').textContent = skill ? `${skill.name} listo · ${skill.type === 'heal' ? 'hacé clic en tu personaje' : 'hacé clic en un rival'}` : 'Elegí un hechizo y hacé clic en un rival';
   }
   function castSkill(index, targetOverride = null) {
     if (paused || !player.alive) return;
-    const skill = CLASS_PROFILES[currentClass].skills[index], target = targetOverride || byId[selected];
+    const skill = skillAt(index), target = targetOverride || byId[selected];
+    if (!Number.isInteger(index) || index < 0 || !Array.isArray(player.skillCooldowns) || index >= player.skillCooldowns.length) return;
     if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
       toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
     }
@@ -491,12 +499,13 @@
     toast(`Clase ${profile.label.toLowerCase()} seleccionada.`);
   }
   function renderSkills() {
-    CLASS_PROFILES[currentClass].skills.forEach((skill, index) => {
-      const button = document.querySelector(`[data-skill="${index}"]`);
-      button.querySelector('.spell-icon').textContent = skill.icon;
-      button.querySelector('.spell-name').textContent = skill.name;
-      button.querySelector('.spell-cost').textContent = `${skill.cost} maná`;
-      button.title = `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}`;
+    document.querySelectorAll('.spell-slot').forEach((button, index) => {
+      const skill = skillAt(index);
+      button.disabled = !skill;
+      button.querySelector('.spell-icon').textContent = skill?.icon ?? '—';
+      button.querySelector('.spell-name').textContent = skill?.name ?? 'No disponible';
+      button.querySelector('.spell-cost').textContent = skill ? `${skill.cost} maná` : '—';
+      button.title = skill ? `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}` : 'Habilidad no disponible';
     });
   }
   function kill(victim, attacker) {
@@ -528,8 +537,8 @@
   function selectTarget(actor) {
     if (!actor || actor === player || !actor.alive || !isEnemy(player, actor)) { toast('Seleccioná un rival de la legión contraria.'); return; }
     selected = actor.id; refreshHud();
-    const skill = selectedSkill === null ? null : CLASS_PROFILES[currentClass].skills[selectedSkill];
-    toast(skill?.type === 'heal' ? `${actor.name} seleccionado · hacé clic en tu personaje para curarte.` : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.` : `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.`);
+    const skill = selectedSkill === null ? null : skillAt(selectedSkill);
+    toast(skill?.type === 'heal' ? `${actor.name} seleccionado · hacé clic en tu personaje para curarte.` : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.` : skill ? `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.` : 'Elegí un hechizo válido.');
   }
   function cycleEnemyTarget() {
     const enemies = fighters.filter(actor => actor.alive && isEnemy(player, actor));
@@ -587,10 +596,13 @@
       const wounded = allies.filter(other => other.hp / other.maxHp < .68 || other.immobilized > 0)
         .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
       const profile = CLASS_PROFILES[actor.className];
-      const healingIndex = profile.skills.findIndex((skill, index) => skill.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
+      const skills = profile?.skills;
+      if (!Array.isArray(skills)) continue;
+      if (!Array.isArray(actor.skillCooldowns)) continue;
+      const healingIndex = skills.findIndex((skill, index) => skill?.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (wounded && healingIndex >= 0) {
-        const heal = profile.skills[healingIndex];
-        if ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0)) {
+        const heal = skillAt(healingIndex, actor.className);
+        if (heal && ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0))) {
           if (npcCastSkill(actor, heal, healingIndex, wounded)) continue;
         }
       }
@@ -599,8 +611,9 @@
       if (!target) continue;
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
-      const attackSkills = profile.skills.map((skill, index) => ({ skill, index }))
-        .filter(({ skill, index }) => skill.type === 'damage' && range >= combatRange.min && range <= skill.range
+      if (!combatRange) continue;
+      const attackSkills = skills.map((skill, index) => ({ skill, index }))
+        .filter(({ skill, index }) => skill?.type === 'damage' && range >= combatRange.min && range <= skill.range
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
       if (!actor.aim && attackSkills.length && npcCastSkill(actor, attackSkills[0].skill, attackSkills[0].index, target)) continue;
@@ -629,7 +642,7 @@
       if (actor.flash > 0) actor.flash -= dt;
       if (actor.immobilized > 0) actor.immobilized = Math.max(0, actor.immobilized - dt);
       if (actor.alive) actor.mana = Math.min(actor.maxMana, actor.mana + dt * .8);
-      actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
+      if (Array.isArray(actor.skillCooldowns)) actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
       if (actor.step) {
         actor.stepTime += dt;
         if (actor.stepTime >= STEP_DURATION) { [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0; }
@@ -845,11 +858,11 @@
     $('manaBar').style.width = `${player.mana / player.maxMana * 100}%`;
     $('manaValue').textContent = `${Math.floor(player.mana)} / ${player.maxMana}`;
     document.querySelectorAll('.spell-slot').forEach((button, index) => {
-      const skill = CLASS_PROFILES[currentClass].skills[index], cooldown = player.skillCooldowns[index];
-      button.disabled = !player.alive;
-      button.classList.toggle('unavailable', player.mana < skill.cost);
+      const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
+      button.disabled = !player.alive || !skill;
+      button.classList.toggle('unavailable', !skill || player.mana < skill.cost);
       button.classList.toggle('cooling', cooldown > 0);
-      button.querySelector('.spell-cost').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
+      button.querySelector('.spell-cost').textContent = !skill ? '—' : cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
 
     const target = byId[selected], targetAlive = target?.alive && isEnemy(player, target);
