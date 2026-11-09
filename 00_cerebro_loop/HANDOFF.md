@@ -14,5 +14,10 @@
 - Inspección explícita de consola Chromium: 0 errores y 0 advertencias; evento load completado.
 - Chromium remoto quedó cerrado tras la verificación. Sus mensajes de DBus/ALSA al iniciar y cerrar corresponden al entorno headless, no a errores/advertencias de la consola de la página.
 
+## Nacimiento de protocolo (2026-11-09)
+- Se verificó `00_cerebro_loop/`: ya existían `HANDOFF.md`, `ROADMAP.md`, `TODO.md`, `USER_REQUESTS.md` y `CEMETERY.md`; leídos completos. Faltaba `PROTOCOL.md`, creado con el texto autoritativo entregado por el usuario.
+- Navegador base verificado desde `http://127.0.0.1:3000/` con Playwright y Chromium del sistema a viewport 1280×900: HTTP 200, documento completo, canvas 932×775 y cero errores de página/consola. `playwright-cli` no pudo iniciar porque su Chromium administrado no estaba instalado; se resolvió usando `/usr/bin/chromium`.
+- No se encontraron ramas remotas `opencode-checkpoints/*` ni `opencode-resume/*`; no había refs para limpiar. Próximo paso: commit atómico de esta inicialización y push fast-forward a `main`.
+
 ## Forensis y próximo paso
 El último estado muerto identificado fue el checkpoint #31 (`711c0d0`): su HANDOFF registra integración de efectos AO, pero el resultado reportó **Build failed**, por lo que no es un save verificado. El checkpoint 39 murió en conflictos documentales y se preservó con `graveyard-opencode-checkpoints-39`; el checkpoint 40 era solo metadatos y se preservaron ambos tips (`920f4b0`, `306cac6`). La cola de producto sigue vacía; tras el commit y push fast-forward de este cierre, queda en pausa limpia esperando una tarea definida.
