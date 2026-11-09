@@ -24,6 +24,19 @@
           <span class="location-mark">⌖</span><strong>ROBLEDAL DE UMBRÍA</strong><span class="toolbar-divider"></span><span>MUNDO · PRUEBA LOCAL</span>
           <div class="toolbar-actions"><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar la arena">REINICIAR ARENA</button></div>
         </div>
+        <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
+          <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
+            <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b>Viajero del Sur</b><small>TÚ · GUERRERO SAGRADO</small></span></div>
+            <button type="button" class="roster-row" data-fighter="sacredMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b>Mago Sagrado</b><small>MAGO · LEGIÓN SAGRADA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="sacredCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b>Clérigo Sagrado</b><small>CLÉRIGO · LEGIÓN SAGRADA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="sacredPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b>Paladín Sagrado</b><small>PALADÍN · LEGIÓN SAGRADA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticWarrior"><span class="roster-avatar">♞</span><span class="roster-copy"><b>Guerrero Caótico</b><small>GUERRERO · LEGIÓN CAÓTICA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b>Mago Caótico</b><small>MAGO · LEGIÓN CAÓTICA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b>Clérigo Caótico</b><small>CLÉRIGO · LEGIÓN CAÓTICA</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b>Paladín Caótico</b><small>PALADÍN · LEGIÓN CAÓTICA</small></span></button>
+          </div></section>
+          <section class="battle-log"><h2 class="panel-title">REGISTRO DE BATALLA</h2><div id="battleLog" class="log-items"><div class="empty-log">Las acciones aparecerán aquí.</div></div></section>
+        </aside>
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
@@ -67,19 +80,6 @@
 
         <section class="dock-panel equipment-panel" aria-label="Equipamiento (interfaz en desarrollo)"><h2 class="panel-title">EQUIPAMIENTO · EN DESARROLLO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">INTERFAZ PENDIENTE · SIN EQUIPO FUNCIONAL</p></section>
 
-        <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
-          <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
-            <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b>Viajero del Sur</b><small>TÚ · GUERRERO SAGRADO</small></span></div>
-            <button type="button" class="roster-row" data-fighter="sacredMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b>Mago Sagrado</b><small>MAGO · LEGIÓN SAGRADA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="sacredCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b>Clérigo Sagrado</b><small>CLÉRIGO · LEGIÓN SAGRADA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="sacredPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b>Paladín Sagrado</b><small>PALADÍN · LEGIÓN SAGRADA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticWarrior"><span class="roster-avatar">♞</span><span class="roster-copy"><b>Guerrero Caótico</b><small>GUERRERO · LEGIÓN CAÓTICA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b>Mago Caótico</b><small>MAGO · LEGIÓN CAÓTICA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b>Clérigo Caótico</b><small>CLÉRIGO · LEGIÓN CAÓTICA</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b>Paladín Caótico</b><small>PALADÍN · LEGIÓN CAÓTICA</small></span></button>
-          </div></section>
-          <section class="battle-log"><h2 class="panel-title">REGISTRO DE BATALLA</h2><div id="battleLog" class="log-items"><div class="empty-log">Las acciones aparecerán aquí.</div></div></section>
-        </aside>
       </aside>
     </section>
 
