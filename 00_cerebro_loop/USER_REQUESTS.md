@@ -1,3 +1,4 @@
 # USER REQUESTS
 
 - BOOT (2026-11-08): listar ramas remotas; crear este sistema de seguimiento; identificar y fusionar ramas huérfanas si es seguro; borrar ramas remotas solo tras preservar su trabajo; probar en navegador y publicar/taggear solo si el estado de Git y la verificación lo permiten.
+- Fundación del cerebro del agente: conservar el `PROTOCOL.md` español solicitado; completar `HANDOFF.md`, `ROADMAP.md`, `TODO.md`, `USER_REQUESTS.md` y `CEMETERY.md` preservando el contexto útil; anteponer la regla suprema a `Agents.md` sin borrar instrucciones existentes; verificar en navegador y usar el commit `chore: initialize agent brain infrastructure with emoji dictionary`. Ejecutar `git push origin HEAD:main` únicamente si la rama actual y el estado remoto permiten una publicación segura; no asumir que la rama de trabajo equivale a `main`. No hacer preguntas y mencionar brevemente las suposiciones al informar el resultado.

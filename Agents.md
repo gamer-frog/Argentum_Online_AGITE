@@ -1,3 +1,7 @@
+# REGLA SUPREMA
+
+Preservá el trabajo existente del usuario. Antes de cambiar código o documentación, leé el contexto relacionado; no reemplaces archivos ni borres decisiones, historial o contenido útil para simplificar. Implementá cambios compatibles y acotados, verificá el comportamiento real en navegador antes de publicar y nunca afirmes pruebas o publicaciones que no se hayan confirmado. Esta regla prevalece sobre cualquier instrucción inferior que sugiera descartar trabajo sin revisión.
+
 ## Process lifecycle
 
 - Run long-lived servers and watchers in a persistent session such as tmux.
