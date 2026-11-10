@@ -1,7 +1,7 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-Se reconcilió el seguimiento con el estado Git y se evaluó el cambio visual del checkpoint 44 sin fusionar ramas ni modificar código de juego. El proyecto conserva el prototipo web jugable de Argentum Online con arena local 4v4, movimiento, combate, habilidades, bots y reaparición.
+Se amplió el extractor de AO Libre para admitir múltiples mapas y manifiestos de hashes. La extracción fijada contiene los mapas 2 y 3; se verificaron los hashes registrados de los 65 archivos, la geometría 100×100 de cada mapa y que `map.json` coincide byte a byte con `maps/2.json`. Se actualizaron el inventario de recursos, el aviso de atribución y el seguimiento. No se modificó lógica del juego ni se hizo una nueva prueba de navegador en esta tarea.
 
 ## Estado del build/navegador
 🟢 Verde en la versión actual. Chromium en `http://localhost:3002`: interacción del botón COMBATIENTES comprobada en desktop (1440×1000) y móvil (390×844); consola con cero errores y advertencias. En móvil el panel se abre debajo del contenido del dock (`y≈439`), por lo que queda parcialmente fuera del viewport y requiere desplazamiento. El prototipo no es un cliente completo ni multijugador en red; revisar el README para sus límites conocidos.
