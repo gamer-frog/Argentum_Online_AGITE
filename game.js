@@ -404,6 +404,7 @@
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
       const restored = Math.min(skill.heal, target.maxHp - target.hp);
+      if (restored > 0 || (skill.cleanse && target.immobilized > 0)) addFloatingText(actor, skill.name, 'spell');
       if (restored > 0) {
         target.hp += restored; target.flash = .2;
         addFloatingText(target, `+${restored}`, 'heal');
@@ -414,6 +415,7 @@
       }
       addSpellEffect(sx, sy, tx, ty, 'heal', skill.fxSpellId);
     } else {
+      addFloatingText(actor, skill.name, 'spell');
       const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
       target.hp = Math.max(0, target.hp - damage); target.flash = .28;
       addFloatingText(target, `-${damage}`, 'damage');
@@ -460,6 +462,7 @@
     if (skill.type === 'heal') {
       const restored = Math.min(skill.heal, player.maxHp - player.hp);
       if (!restored && !(skill.cleanse && player.immobilized > 0)) { player.mana += skill.cost; player.skillCooldowns[index] = 0; toast('Ya tenés toda la vida.'); return; }
+      addFloatingText(player, skill.name, 'spell');
       if (restored > 0) {
         player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal');
       }
@@ -471,6 +474,7 @@
       toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`);
       playSpellSound(skill.fxSpellId, 520);
     } else {
+      addFloatingText(player, skill.name, 'spell');
       const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
       target.hp = Math.max(0, target.hp - damage); target.flash = .28;
       addFloatingText(target, `-${damage}`, 'damage');
@@ -828,7 +832,8 @@
       const [sx, sy] = screenTile(item.x, item.y, cameraX, cameraY), progress = item.age / 1.05;
       ctx.save(); ctx.globalAlpha = Math.min(1, (1 - progress) * 2.5);
       ctx.textAlign = 'center'; ctx.font = `800 ${Math.max(14, tilePx * .48)}px DM Sans, sans-serif`;
-      ctx.fillStyle = item.kind === 'heal' ? '#9fe58e' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
+      ctx.fillStyle = item.kind === 'spell' ? '#f5e1a6' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
+      if (item.kind === 'spell') ctx.font = `800 ${Math.max(12, tilePx * .4)}px DM Sans, sans-serif`;
       ctx.fillText(item.text, sx + tilePx / 2, sy - tilePx * .18 - progress * tilePx * .8);
       ctx.restore();
     }

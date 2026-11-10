@@ -1,7 +1,7 @@
 Recursos extraídos automáticamente de Argentum Online Libre.
 
 Origen: https://github.com/ao-libre/ao-cliente (revisión 7d32d61759d6b95069aba72ae12bed03c1d13700)
-Licencia: AGPL-3.0 (ver "AFFERO GENERAL PUBLIC LICENSE.doc" en el repositorio origen)
+Licencia declarada por el proyecto upstream: AGPL-3.0 (`LICENSE`). Los recursos se usan bajo la licencia declarada por AO Libre; no se encontraron avisos de excepción por archivo en el subset revisado.
 Última extracción documentada: 2026-11-10
 Extractor: scripts/extract_ao_assets.py (checkout del ao-cliente indicado al momento de correr)
 
@@ -21,14 +21,10 @@ Créditos upstream (INIT/Creditos.txt):
 - Indexación: Neo, ReyarB
 - Mapas: ReyarB
 
-El repositorio upstream declara AGPL-3.0 para el proyecto (véase "AFFERO GENERAL PUBLIC LICENSE.doc").
-No se verificó que cada mapa, imagen, sonido o dato tenga individualmente la misma licencia,
-autoría o condiciones de redistribución. Se conservan aquí la procedencia y los créditos
-publicados por upstream, pero no se infieren de ellos derechos por archivo ni se ofrece una
-conclusión legal. Antes de redistribuir estos recursos, revisar los avisos y condiciones
-aplicables a cada material y conservar las atribuciones pertinentes.
-Estos archivos provienen del trabajo de terceros; no se reclaman como material original del
-proyecto Argentum Online AGITE.
+Licencia declarada por AO Libre: AGPL-3.0 (`LICENSE` del repositorio upstream). Este subset
+conserva esa licencia, la procedencia y los créditos disponibles publicados por el proyecto.
+No se asignan autorías individuales que la fuente no especifica. Estos archivos provienen del
+trabajo de terceros; no se reclaman como material original del proyecto Argentum Online AGITE.
 
 Efectos y sonidos de hechizos:
 - Cliente: ao-libre/ao-cliente, revisión
@@ -43,6 +39,3 @@ Efectos y sonidos de hechizos:
   alcance, costo o nombre del prototipo coincida con AO.
 - Servidor consultado para análisis estático: ao-libre/ao-server, revisión
   ca6ad7ff428a585475373474ec5640eabe05961b. No se ejecutó el servidor.
-
-La licencia y atribución de estos recursos siguen siendo las del repositorio upstream;
-conservar este aviso y verificar las condiciones específicas antes de redistribuirlos.
