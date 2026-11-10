@@ -40,7 +40,6 @@
     arrowleft: [-1, 0], a: [-1, 0]
   };
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
-  const TEAM_NAME_COLORS = { sacred: '#66ccff', chaotic: '#ff5b5b' };
   const CLASS_PROFILES = {
     warrior: { label: 'GUERRERO', body: 1, head: 1, hp: 130, mana: 70, skills: [
       { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [25, 34], range: 1 },
@@ -528,7 +527,7 @@
     refreshHud();
   }
   function respawn(actor) {
-    const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor === player ? currentClass : actor.className];
+    const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
     Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
     if (actor === player) updateRespawnNotice();
   }
@@ -729,7 +728,7 @@
     }
     const labelY = sy + tilePx + 12, label = actor === player ? 'Viajero del Sur' : actor.name;
     ctx.textAlign = 'center'; ctx.font = `600 ${Math.max(8, tilePx * .25)}px DM Sans, sans-serif`;
-    ctx.fillStyle = TEAM_NAME_COLORS[actor.team] || '#f1ead3'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
+    ctx.fillStyle = actor === player ? '#f5dc9d' : '#f1ead3'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, centerX, labelY, tilePx * 2.8);
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
     ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
@@ -754,7 +753,7 @@
     drawGrh(headId, sx + (body.HeadOffsetX || 0) * tilePx / 32, sy + (body.HeadOffsetY || 0) * tilePx / 32, now, false);
     const labelY = sy + tilePx + 12, label = actor === player ? 'Viajero del Sur' : actor.name;
     ctx.save(); ctx.textAlign = 'center'; ctx.font = `600 ${Math.max(8, tilePx * .25)}px DM Sans, sans-serif`;
-    ctx.fillStyle = TEAM_NAME_COLORS[actor.team] || '#f1ead3'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
+    ctx.fillStyle = actor === player ? '#f5dc9d' : '#f1ead3'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, sx + tilePx / 2, labelY, tilePx * 2.8);
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
     ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
@@ -833,7 +832,7 @@
       const [sx, sy] = screenTile(item.x, item.y, cameraX, cameraY), progress = item.age / 1.05;
       ctx.save(); ctx.globalAlpha = Math.min(1, (1 - progress) * 2.5);
       ctx.textAlign = 'center'; ctx.font = `800 ${Math.max(14, tilePx * .48)}px DM Sans, sans-serif`;
-      ctx.fillStyle = item.kind === 'spell' ? '#b8b8b8' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
+      ctx.fillStyle = item.kind === 'spell' ? '#f5e1a6' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
       if (item.kind === 'spell') ctx.font = `800 ${Math.max(12, tilePx * .4)}px DM Sans, sans-serif`;
       ctx.fillText(item.text, sx + tilePx / 2, sy - tilePx * .18 - progress * tilePx * .8);
       ctx.restore();
