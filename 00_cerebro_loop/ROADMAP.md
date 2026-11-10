@@ -15,4 +15,6 @@
 - [x] Reconciliar la divergencia con `origin/main`: revisar el único cambio funcional (cuatro pins del workflow), crear el merge local `00bc34b` y alinear `.github/workflows/opencode.yml` con `origin/main`. Revalidar interacción móvil; preservar `Agents.md`.
 - [x] Revisar `LICENSE` y `INIT/Creditos.txt` del checkout upstream fijado; conservar la licencia AGPL-3.0 declarada, procedencia y créditos disponibles en el inventario y aviso de atribución.
 - [x] Comprometer extracción y documentación en `445a51e` y `59aff65`; comprobar `origin/main` con `git ls-remote` (sigue en `fae9f146`) y confirmar que ambos commits son locales. No se hizo push; `Agents.md` continúa excluido.
+- [x] Verificación visual de habilidades: Rayo y curación en desktop/móvil, con textos flotantes de daño y curación confirmados en capturas y consolas limpias.
 - [ ] Producto: elegir una referencia visual AO estable y validarla; ver `roadmap/producto-recuperado.md` e `inventario-recursos-ao.md`.
+- [ ] Corregir la pérdida de la clase elegida al reaparecer (HP/maná vuelven a los del guerrero); validar en navegador antes de publicar.
