@@ -67,7 +67,7 @@
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
   }
-  const STEP_DURATION = .115;
+  const STEP_DURATION = .095;
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const NPC_COMBAT_RANGES = {
