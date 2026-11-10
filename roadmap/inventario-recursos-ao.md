@@ -22,7 +22,7 @@
 ## Procedencia, crédito y licencia
 
 - La procedencia, revisión y créditos generales recuperados de `INIT/Creditos.txt` se conservan en [`../assets/ao/ATTRIBUTION.txt`](../assets/ao/ATTRIBUTION.txt). Ese archivo acredita, entre otros, mapas a ReyarB y enumera colaboradores gráficos, pero **no asigna autoría individual a cada PNG/Grh**.
-- El repositorio upstream incluye licencia AGPL-3.0 y el whitepaper citado por el proyecto describe el código y los recursos con licencia GPL. El subset no contiene una investigación de licencia por archivo ni prueba de que cada medio tenga idéntica concesión. Antes de redistribuir, conservar los avisos upstream y revisar la licencia/condiciones de los recursos concretos; este inventario no sustituye asesoramiento legal.
+- El checkout fijado contiene `LICENSE` con el texto estándar AGPL-3.0, el badge de licencia del proyecto en `README.md` y el crédito de `INIT/Creditos.txt` que indica que Argentum Online fue liberado bajo AGPL. Los créditos atribuyen áreas generales —incluidos mapas a ReyarB y colaboración gráfica a varias personas—, no cada archivo del subset. El aviso del subset conserva esta licencia declarada y la procedencia; no se encontraron avisos de excepción por archivo en las rutas revisadas. El documento adicional `AFFERO GENERAL PUBLIC LICENSE.doc` está presente, pero no se verificó independientemente por ser un documento binario antiguo.
 - Los PNG y WAV son copias upstream; JSON son datos derivados/recortados por el extractor. No se declara que los recursos sean obra original de este prototipo.
 - `assets/ao/manifest.json` registra el repositorio y revisión declarados, los mapas y sus hashes SHA-256 de origen/salida, y hashes SHA-256 de los 65 archivos generados enumerados. Reproducción ejecutada desde la raíz: `python3 scripts/extract_ao_assets.py /ruta/al/ao-cliente --map 2 --map 3`. El manifiesto declara la revisión esperada y observada `7d32d61759d6b95069aba72ae12bed03c1d13700`; sus hashes y la igualdad byte a byte `map.json`/`maps/2.json` fueron comprobados. Los hashes verifican identidad de bytes, no licencia, autoría ni fidelidad visual.
 
@@ -30,6 +30,6 @@
 
 1. Obtener y fijar una referencia visual estable del cliente (versión, resolución y procedencia) y comparar capturas con la misma composición.
 2. Probar en navegador cada una de las tres animaciones y sonidos, documentando pantalla, objetivo, offsets y resultado; no extrapolar esa prueba al resto del catálogo.
-3. Completar la auditoría de condiciones de redistribución y créditos específicos por recurso cuando la fuente los proporcione.
+3. Al incorporar recursos adicionales, registrar su procedencia, licencia declarada y créditos disponibles en la fuente; no inferir autorías individuales que no estén documentadas.
 4. Decidir qué otros mapas, personajes, GUI, iconos y sonidos hacen falta antes de ampliar el extractor. No ampliar el subset por inercia.
 5. Mantener fuera del inventario de recursos importados las clases, estadísticas y reglas aproximadas hasta verificarlas contra datos/código de la revisión elegida.
