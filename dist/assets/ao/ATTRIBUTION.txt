@@ -2,14 +2,18 @@ Recursos extraídos automáticamente de Argentum Online Libre.
 
 Origen: https://github.com/ao-libre/ao-cliente (revisión 7d32d61759d6b95069aba72ae12bed03c1d13700)
 Licencia: AGPL-3.0 (ver "AFFERO GENERAL PUBLIC LICENSE.doc" en el repositorio origen)
-Fecha de extracción: 2026-11-08
+Última extracción documentada: 2026-11-10
 Extractor: scripts/extract_ao_assets.py (checkout del ao-cliente indicado al momento de correr)
 
-Contenido generado:
-- map.json: Mapas/Alkon/Mapa2.map (100x100, bloques con colisión y gráficos por capa)
-- grhs.json: recorte de INIT/Graficos.ini usado por el mapa y los personajes
-- characters.json: indices de INIT/Personajes.ini (cuerpos 1-3) e INIT/Cabezas.ini (cabezas 1-4)
-- graphics/*.png: copia directa de las láminas referenciadas de Graficos/, sin modificaciones
+Contenido generado en la extracción de mapas 2 y 3:
+- maps/2.json y maps/3.json: Mapas/Alkon/Mapa2.map y Mapa3.map (100x100 cada uno, bloques con colisión y gráficos por capa).
+- map.json: copia de compatibilidad de maps/2.json; es el mapa que consume actualmente la app. La extracción del mapa 3 no significa que la app lo cargue.
+- grhs.json: recorte de INIT/Graficos.ini, con 671 registros (656 estáticos, 15 animados) necesarios para mapas, personajes y efectos.
+- characters.json: índices de INIT/Personajes.ini (cuerpos 1-3) e INIT/Cabezas.ini (cabezas 1-4).
+- graphics/*.png: 56 copias directas de las láminas referenciadas de Graficos/, sin modificaciones.
+- audio/*.wav: tres copias directas de los sonidos referenciados por las asociaciones de efectos descritas abajo.
+- spellfx.json: asociaciones seleccionadas de FX, animación y sonido; no representa un catálogo completo.
+- manifest.json: procedencia declarada, revisión, mapas y hashes SHA-256 de los 65 archivos generados enumerados. Reproducción: `python3 scripts/extract_ao_assets.py /ruta/al/ao-cliente --map 2 --map 3`. Los hashes fueron verificados localmente; acreditan identidad de bytes, no derechos ni fidelidad visual.
 
 Créditos upstream (INIT/Creditos.txt):
 - Programación: Recox, Jopiortiz, Chots, Cucsifae, FrankoH298, Wyr0X, Shak, Wolftein, Lorwik, MateoMiccino, Lherkiev
@@ -17,10 +21,13 @@ Créditos upstream (INIT/Creditos.txt):
 - Indexación: Neo, ReyarB
 - Mapas: ReyarB
 
-Condiciones: al redistribuir este contenido (incluso a través de un sitio web), conservar
-la licencia AGPL-3.0 y estos avisos; mantener las láminas originales sin alterar no elimina
-la obligación de compartir las fuentes modificadas si se altera el material.
- Estos archivos provienen del trabajo de otros; no se reclaman como material original del
+El repositorio upstream declara AGPL-3.0 para el proyecto (véase "AFFERO GENERAL PUBLIC LICENSE.doc").
+No se verificó que cada mapa, imagen, sonido o dato tenga individualmente la misma licencia,
+autoría o condiciones de redistribución. Se conservan aquí la procedencia y los créditos
+publicados por upstream, pero no se infieren de ellos derechos por archivo ni se ofrece una
+conclusión legal. Antes de redistribuir estos recursos, revisar los avisos y condiciones
+aplicables a cada material y conservar las atribuciones pertinentes.
+Estos archivos provienen del trabajo de terceros; no se reclaman como material original del
 proyecto Argentum Online AGITE.
 
 Efectos y sonidos de hechizos:
