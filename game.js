@@ -40,26 +40,38 @@
     arrowleft: [-1, 0], a: [-1, 0]
   };
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
+  // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
+  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b', LIGHT_AIM_COLOR = '#f4df9b';
+  const FIRE_AIM_COLOR = '#ff9a54', SHOCK_AIM_COLOR = '#64d8d0', DEFAULT_AIM_COLOR = '#e8b75f';
+  // Escala Imperium AO (nivel 40): el guerrero es el de más vida y NO tiene maná; el combo golpe+hechizo+hechizo mata.
+  const MELEE_DAMAGE = { warrior: [85, 105], paladin: [75, 95], mage: [45, 60], cleric: [50, 65] };
+  const MANA_REGEN = 6;
+  // Skin por clase y facción: [body, head] humanos (raza humana por ahora).
+  const FACTION_LOOKS = {
+    sacred: { warrior: [1, 1], mage: [2, 2], cleric: [2, 4], paladin: [1, 3] },
+    chaotic: { warrior: [3, 2], mage: [2, 1], cleric: [2, 3], paladin: [3, 4] }
+  };
   const CLASS_PROFILES = {
-    warrior: { label: 'GUERRERO', body: 1, head: 1, hp: 130, mana: 70, skills: [
-      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [38, 50], range: 1 },
-      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32, cleanse: true },
-      { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [50, 64], range: 2 }
+    warrior: { label: 'GUERRERO', hp: 380, mana: 0, skills: [
+      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 0, damage: [105, 125], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 0, heal: 115, aimColor: HEAL_AIM_COLOR },
+      { name: 'Carga', icon: '➤', type: 'damage', cost: 0, damage: [125, 145], range: 2, aimColor: MELEE_AIM_COLOR }
     ] },
-    mage: { label: 'MAGO', body: 2, head: 2, hp: 90, mana: 130, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [40, 54], range: 7, fxSpellId: 2 },
-      { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true },
-      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [55, 70], range: 8, immobilize: 1.8, fxSpellId: 9 }
+    mage: { label: 'MAGO', hp: 260, mana: 1400, skills: [
+      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 230, damage: [100, 120], range: 7, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
+      { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
-    cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [36, 48], range: 6, fxSpellId: 25 },
-      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true },
-      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [50, 64], range: 7 }
+    cleric: { label: 'CLÉRIGO', hp: 300, mana: 1200, skills: [
+      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 230, damage: [95, 115], range: 6, fxSpellId: 25, aimColor: LIGHT_AIM_COLOR },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 220, heal: 120, aimColor: HEAL_AIM_COLOR },
+      { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
+      { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
-    paladin: { label: 'PALADÍN', body: 1, head: 3, hp: 145, mana: 90, skills: [
-      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [39, 51], range: 1 },
-      { name: 'Plegaria', icon: '✚', type: 'heal', cost: 20, heal: 34 },
-      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [49, 63], range: 2 }
+    paladin: { label: 'PALADÍN', hp: 330, mana: 1000, skills: [
+      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 40, damage: [110, 130], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
+      { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] }
   };
   // Acceso defensivo a habilidades: nunca devolver undefined (evita TypeError en .type/.cost).
@@ -67,7 +79,7 @@
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
   }
-  const STEP_DURATION = .095;
+  const STEP_DURATION = .24; // Velocidad real de AO: ~4 casilleros/seg (entre la caminata clásica y el agite frenético).
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const NPC_COMBAT_RANGES = {
@@ -79,29 +91,37 @@
   // Pociones de práctica ilimitadas: beber ocupa al personaje e impide atacar/lanzar; las acciones también impiden beber.
   const POTION_DURATION = 1.1, POTION_HP_SHARE = .4, POTION_MANA_SHARE = .45;
   const CAST_RECOVERY = .9;
-  // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
-  const SPELL_AIM_COLORS = { 2: '#ff9a54', 9: '#64d8d0', 25: '#f4df9b' };
-  const MELEE_AIM_COLOR = '#ff685b', DEFAULT_AIM_COLOR = '#e8b75f', HEAL_AIM_COLOR = '#9ee68b';
+  // Apoyo aliado (backlog 10): solo magos y clérigos asisten a otros aliados, con demora ocasional; nunca es instantáneo.
+  const SUPPORT_CLASSES = new Set(['mage', 'cleric']);
+  const SUPPORT_DELAY = { cleanse: [.5, 1.2], salvage: [.3, .7], heal: [.9, 1.8] };
+  const SUPPORT_CLASS_HP = .68, SUPPORT_SALVAGE_HP = .34;
+  // Nadie lanza hechizos fuera de su visión: ~el área del personaje en pantalla.
+  const SPELL_VISION_RANGE = 11;
+  // Autocuidado: solo se planta a curarse si de verdad está herido (nada de curarse por curar).
+  const SELF_CARE_HP = .5;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
   let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
+  let mouseTile = null; // Casilla bajo el cursor: alimenta la mira en vivo del hechizo preparado.
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
   let joystickKey = null;
   const fighters = ACTORS.map((actor, index) => {
     const profile = CLASS_PROFILES[actor.className];
+    const [body, head] = FACTION_LOOKS[actor.team]?.[actor.className] ?? [1, 1];
     return {
-      ...actor, body: profile.body, head: profile.head, homeX: actor.x, homeY: actor.y,
+      ...actor, body, head, homeX: actor.x, homeY: actor.y,
       hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana,
       alive: true,
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
       aiFlankSide: Math.random() < .5 ? -1 : 1,
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
-      skillCooldowns: [0, 0, 0], immobilized: 0, potionCd: 0, castCd: 0
+      skillCooldowns: [0, 0, 0, 0], immobilized: 0, potionCd: 0, castCd: 0, supportTask: null,
+      movePlan: null, strafeTimer: 0
     };
   });
   const player = fighters[0];
@@ -250,8 +270,28 @@
     const [x, y] = actorTile(actor), nx = x + dx, ny = y + dy;
     if (!isOpen(nx, ny) || occupied(nx, ny, actor)) return false;
     actor.heading = dx < 0 ? 'W' : dx > 0 ? 'E' : dy < 0 ? 'N' : 'S';
-    actor.step = { from: [x, y], to: [nx, ny] }; actor.stepTime = 0;
+    // Cada casillero dura un poco distinto (solo NPCs): sin ese jitter el bot camina en metrónomo.
+    const duration = actor === player ? STEP_DURATION : STEP_DURATION * rand(.82, 1.22);
+    actor.step = { from: [x, y], to: [nx, ny], duration }; actor.stepTime = 0;
     return true;
+  }
+  // Plan de movimiento de NPC: rachas de 2–4 casilleros encadenados y un freno natural entre rachas.
+  function npcPlanStep(actor) {
+    const plan = actor.movePlan;
+    if (!plan) return;
+    plan.steps = (plan.steps ?? 0) + 1;
+    // Rachas de 2–4 casilleros encadenados con un freno apenas perceptible entre rachas.
+    if (plan.steps >= (plan.burst ?? (plan.burst = 2 + Math.floor(Math.random() * 3)))) {
+      actor.movePlan = null; actor.aiTimer = rand(.05, .16); return;
+    }
+    const target = byId[plan.targetId], combatRange = NPC_COMBAT_RANGES[actor.className];
+    if (!target?.alive || !combatRange) { actor.movePlan = null; return; }
+    const range = distance(actor, target);
+    let step = null;
+    if (plan.kind === 'retreat') step = range < combatRange.min ? nextRetreatStep(actor, target, combatRange.min, combatRange.max) : null;
+    else if (plan.kind === 'path') step = range > combatRange.max ? nextPathStep(actor, target, combatRange.min, combatRange.max) : null;
+    else if (plan.kind === 'strafe') step = range >= combatRange.min && range <= combatRange.max ? nextStrafeStep(actor, target, combatRange.min, combatRange.max) : null;
+    if (!step || !startStep(actor, step[0], step[1])) { actor.movePlan = null; actor.aiTimer = rand(.04, .12); }
   }
   function position(actor) {
     if (!actor.step) return [actor.x, actor.y];
@@ -313,9 +353,9 @@
       const nx = x + dx, ny = y + dy, keyDistance = Math.abs(nx - tx) + Math.abs(ny - ty);
       if (!isOpen(nx, ny) || occupied(nx, ny, actor) || keyDistance < minRange || keyDistance > maxRange) continue;
       const cross = (tx - x) * dy - (ty - y) * dx;
-      const flankBias = cross === 0 ? 0 : (Math.sign(cross) === actor.aiFlankSide ? -1.1 : 1.1);
-      const score = Math.abs(keyDistance - (minRange + maxRange) / 2) * .8
-        + allyPressure(actor, nx, ny, allies) * 1.7 + flankBias + Math.random() * .7;
+      const flankBias = cross === 0 ? 0 : (Math.sign(cross) === actor.aiFlankSide ? -.9 : .9);
+      const score = Math.abs(keyDistance - (minRange + maxRange) / 2) * .32
+        + allyPressure(actor, nx, ny, allies) * 1.7 + flankBias + Math.random() * .5;
       if (score < bestScore) { bestScore = score; bestStep = [dx, dy]; }
     }
     return bestStep;
@@ -363,26 +403,36 @@
   function addFloatingTextAt(x, y, text, kind) {
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
-  function beginNpcAim(actor, target, spell = null, retries = 0) {
-    const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
+  function beginNpcAim(actor, target, spell = null, retries = 0, tile = null) {
+    const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
+    actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
+    // Tiempos random: cada apuntado tarda distinto (hechizos 0,38–0,62 s; golpes 0,36–0,52 s).
+    const base = spell ? rand(.38, .62) : rand(.36, .52);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
-    const duration = NPC_AIM_DURATION * Math.pow(.68, retries);
-    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
+    const duration = base * Math.pow(.68, retries);
+    actor.aim = { targetId: target?.id ?? null, tile: tile ?? null, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
     // El primer intento usa el ritmo normal; un reintento encadenado mantiene la mira viva sin pausa larga.
     actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
   }
   function resolveNpcAim(actor) {
     const aim = actor.aim;
     actor.aim = null;
-    if (!aim) return;
+    if (!aim || !actor.alive) return;
+    // Tiro a casilla (click en el suelo): pega a quien esté parado ahí, o erra.
+    if (aim.tile) { resolveTileAim(actor, aim); return; }
     const target = byId[aim.targetId];
-    if (!actor.alive || !target?.alive) return;
+    if (!target?.alive) return;
+    // Revalido la visión al resolver: si el blanco salió del área en pantalla durante la mira, no hay lanzamiento.
+    if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
+    const skill = aim.spell?.skill ?? null;
+    // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
+    if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
       // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
-      if ((aim.retries ?? 0) < 2 && isEnemy(actor, target) && distance(actor, target) <= 12) {
+      if ((aim.retries ?? 0) < 2 && (actor.castCd ?? 0) <= 0 && isEnemy(actor, target) && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
       }
       return;
@@ -391,7 +441,8 @@
     if (aim.spell) {
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
-        addFloatingTextAt(aim.x, aim.y, 'falló', 'status');
+        // Errar un hechizo es fallo del lanzador, no esquiva del blanco.
+        addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
         return;
       }
       npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
@@ -402,20 +453,38 @@
       return;
     }
     actor.flash = .1;
-    const damage = Math.ceil(rand(11, 18)); target.hp = Math.max(0, target.hp - damage); target.flash = .22;
+    const [lo, hi] = MELEE_DAMAGE[actor.className] ?? [11, 18];
+    const damage = Math.ceil(rand(lo, hi)); target.hp = Math.max(0, target.hp - damage); target.flash = .22;
     addFloatingText(target, `-${damage}`, 'damage');
     tone(155 + Math.random() * 50, .07);
+    // El golpe también deja su intervalo antes de volver a actuar o lanzar.
+    actor.attackCd = Math.max(actor.attackCd, .5);
+    actor.castCd = Math.max(actor.castCd ?? 0, .45);
     if (target.hp <= 0) kill(target, actor);
     refreshHud();
   }
+  // Resolución de un tiro a casilla libre: mismo telegrama humano (puede errar) y golpea a quien esté ahí.
+  function resolveTileAim(actor, aim) {
+    const skill = aim.spell?.skill ?? null;
+    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    const [ax, ay] = actorTile(actor);
+    if (Math.abs(ax - aim.x) + Math.abs(ay - aim.y) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
+    if (Math.random() > .82) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    const victim = fighters.find(other => other.alive && actorTile(other)[0] === aim.x && actorTile(other)[1] === aim.y) ?? null;
+    if (!victim) { addFloatingTextAt(aim.x, aim.y, 'al vacío', 'status'); return; }
+    npcCastSkill(actor, skill, aim.spell.index, victim);
+  }
   function updateNpcAims(dt) {
-    for (const actor of fighters.slice(1)) {
+    // El jugador también apunta: misma telegrafía, mismo corte si lo congelan.
+    for (const actor of fighters) {
       if (!actor.aim) continue;
+      // Congelado a mitad de lanzamiento: el hechizo se corta (salvo Remover Parálisis, que sirve justo para eso).
+      if (actor.immobilized > 0 && actor.aim.spell?.skill?.type !== 'cleanse') { actor.aim = null; continue; }
       actor.aim.remaining -= dt;
       const target = byId[actor.aim.targetId];
+      const progress = clamp(1 - actor.aim.remaining / (actor.aim.duration || NPC_AIM_DURATION), 0, 1);
       if (target?.alive) {
         const [tx, ty] = actorTile(target);
-        const progress = clamp(1 - actor.aim.remaining / (actor.aim.duration || NPC_AIM_DURATION), 0, 1);
         if (target.immobilized > 0) {
           // Blanco inmovilizado: la mira se fija limpia sobre la casilla, sin temblar.
           actor.aim.cursorX = tx; actor.aim.cursorY = ty;
@@ -423,6 +492,10 @@
           actor.aim.cursorX = tx + Math.sin(elapsed * 15 + actor.aim.phase) * (1 - progress) * .18;
           actor.aim.cursorY = ty + Math.cos(elapsed * 13 + actor.aim.phase) * (1 - progress) * .18;
         }
+      } else if (actor.aim.tile) {
+        // Tiro a casilla: la mira tiembla sobre el punto y se asienta con el progreso.
+        actor.aim.cursorX = actor.aim.x + Math.sin(elapsed * 15 + actor.aim.phase) * (1 - progress) * .18;
+        actor.aim.cursorY = actor.aim.y + Math.cos(elapsed * 13 + actor.aim.phase) * (1 - progress) * .18;
       }
       if (actor.aim.remaining <= 0) resolveNpcAim(actor);
     }
@@ -432,34 +505,51 @@
       || !Array.isArray(actor.skillCooldowns) || index < 0 || index >= actor.skillCooldowns.length) return false;
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
-    actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 4.2 + index * .8;
-    actor.attackCd = Math.max(actor.attackCd, .55);
+    actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : skill.type === 'cleanse' ? 2.5 : skill.type === 'immobilize' ? 3.5 : 4.2 + index * .8;
+    // Intervalo global de lanzamiento: nadie encadena hechizos ni golpes al instante.
+    actor.attackCd = Math.max(actor.attackCd, CAST_RECOVERY);
+    actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
       const restored = Math.min(skill.heal, target.maxHp - target.hp);
-      if (restored > 0 || (skill.cleanse && target.immobilized > 0)) addFloatingText(actor, skill.name, 'spell');
+      if (restored > 0) addFloatingText(actor, skill.name, 'spell');
       if (restored > 0) {
         target.hp += restored; target.flash = .2;
         addFloatingText(target, `+${restored}`, 'heal');
       }
-      if (skill.cleanse && target.immobilized > 0) {
-        target.immobilized = 0;
-        addFloatingText(target, 'Removida', 'status');
-      }
       addSpellEffect(sx, sy, tx, ty, 'heal', skill.fxSpellId);
-    } else {
-      addFloatingText(actor, skill.name, 'spell');
-      const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
-      target.hp = Math.max(0, target.hp - damage); target.flash = .28;
-      addFloatingText(target, `-${damage}`, 'damage');
-      addSpellEffect(sx, sy, tx, ty, actor.className, skill.fxSpellId);
-      if (skill.immobilize) {
-        target.immobilized = Math.max(target.immobilized, skill.immobilize);
-        target.step = null; target.stepTime = 0;
-        addFloatingText(target, 'Paralizado', 'status');
-      }
-      if (target.hp <= 0) kill(target, actor);
+      if (restored > 0) playSpellSound(skill.fxSpellId, 340);
+      return restored > 0;
     }
+    if (skill.type === 'cleanse') {
+      if (target.immobilized <= 0) {
+        // Nada que remover: devolvemos el maná (uso fallido).
+        actor.mana += skill.cost;
+        actor.skillCooldowns[index] = 0;
+        return false;
+      }
+      target.immobilized = 0;
+      addFloatingText(actor, skill.name, 'spell');
+      addFloatingText(target, 'Removida', 'status');
+      addSpellEffect(sx, sy, tx, ty, 'heal', skill.fxSpellId);
+      playSpellSound(skill.fxSpellId, 520);
+      return true;
+    }
+    if (skill.type === 'immobilize') {
+      addFloatingText(actor, skill.name, 'spell');
+      target.immobilized = Math.max(target.immobilized, skill.immobilize);
+      target.step = null; target.stepTime = 0;
+      addFloatingText(target, 'Paralizado', 'status');
+      addSpellEffect(sx, sy, tx, ty, actor.className, skill.fxSpellId);
+      playSpellSound(skill.fxSpellId, 620);
+      return true;
+    }
+    addFloatingText(actor, skill.name, 'spell');
+    const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
+    target.hp = Math.max(0, target.hp - damage); target.flash = .28;
+    addFloatingText(target, `-${damage}`, 'damage');
+    addSpellEffect(sx, sy, tx, ty, actor.className, skill.fxSpellId);
+    if (target.hp <= 0) kill(target, actor);
     playSpellSound(skill.fxSpellId, actor.className === 'mage' ? 620 : 340);
     return true;
   }
@@ -469,7 +559,10 @@
     if (!skill) return;
     selectedSkill = selectedSkill === index ? null : index;
     refreshSkillSelection();
-    toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${skill.type === 'heal' ? 'hacé clic en tu personaje para curarte.' : 'elegí un rival en el campo.'}`);
+    const usage = skill.type === 'heal' ? 'hacé clic en tu personaje o un aliado para curar.'
+      : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado.'
+      : 'elegí un rival en el campo.';
+    toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${usage}`);
   }
   function refreshSkillSelection() {
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, slot) => {
@@ -477,7 +570,10 @@
       button.setAttribute('aria-pressed', String(slot === selectedSkill));
     });
     const skill = selectedSkill === null ? null : skillAt(selectedSkill);
-    $('spellHint').textContent = skill ? `${skill.name} listo · ${skill.type === 'heal' ? 'hacé clic en tu personaje' : 'hacé clic en un rival'}` : 'Elegí un hechizo y hacé clic en un rival';
+    const hint = skill
+      ? `${skill.name} listo · ${skill.type === 'damage' || skill.type === 'immobilize' ? 'hacé clic en un rival' : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado' : 'hacé clic en tu personaje o un aliado'}`
+      : 'Elegí un hechizo y hacé clic en un rival';
+    $('spellHint').textContent = hint;
   }
   function refreshPotions() {
     document.querySelectorAll('.spell-slot[data-potion]').forEach(button => {
@@ -492,56 +588,54 @@
     if (paused || !player.alive) return;
     const skill = skillAt(index), target = targetOverride || byId[selected];
     if (!Number.isInteger(index) || index < 0 || !Array.isArray(player.skillCooldowns) || index >= player.skillCooldowns.length) return;
+    if (!skill) return;
     if ((player.potionCd ?? 0) > 0) { toast('Estás bebiendo una poción; esperá para lanzar.'); return; }
-    if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
-      toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
+    if ((player.castCd ?? 0) > 0) { toast(`Intervalo de lanzamiento: esperá ${(player.castCd).toFixed(1)}s.`); return; }
+    if (player.attackCd > 0) { toast('Terminá el golpe antes de lanzar.'); return; }
+    if (player.aim) return;
+    const wantsAlly = skill.type === 'heal' || skill.type === 'cleanse';
+    if (!target || !target.alive || (wantsAlly ? isEnemy(player, target) : (target === player || !isEnemy(player, target)))) {
+      toast(wantsAlly
+        ? (skill.type === 'cleanse' ? 'Hacé clic en tu personaje o en un aliado paralizado.' : 'Hacé clic en tu personaje o un aliado para curar.')
+        : 'Elegí un rival como objetivo.');
+      return;
+    }
+    // Nadie lanza fuera de su visión: el área del personaje en pantalla es el límite.
+    if (distance(player, target) > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
+    if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
+    // El jugador también apunta: la mira se ve igual que la de los bots y el hechizo recién sale al resolver.
+    beginNpcAim(player, target, { skill, index });
+    player.castCd = Math.max(player.castCd ?? 0, CAST_RECOVERY);
+    selectedSkill = null; refreshSkillSelection();
+  }
+  // Lanzamiento a casilla (click en el suelo): el hechizo viaja a ese punto y pega a quien esté parado ahí.
+  function castSkillAtTile(index, tile) {
+    if (paused || !player.alive) return;
+    const skill = skillAt(index);
+    if (!skill) return;
+    if ((player.potionCd ?? 0) > 0) { toast('Estás bebiendo una poción; esperá para lanzar.'); return; }
+    if ((player.castCd ?? 0) > 0) { toast(`Intervalo de lanzamiento: esperá ${(player.castCd).toFixed(1)}s.`); return; }
+    if (player.attackCd > 0) { toast('Terminá el golpe antes de lanzar.'); return; }
+    if (player.aim) return;
+    if (skill.type === 'heal' || skill.type === 'cleanse') {
+      toast(skill.type === 'cleanse' ? 'La remoción necesita a tu personaje o un aliado paralizado como objetivo.' : 'La cura necesita a tu personaje o un aliado como objetivo.');
+      return;
     }
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
-    // Los hechizos se lanzan a cualquier distancia: el alcance clásico queda como referencia, no como límite.
-    player.mana -= skill.cost;
-    player.skillCooldowns[index] = skill.type === 'heal' ? 5 : 2.8 + index * .7;
-    const [px, py] = position(player), [tx, ty] = position(target);
-    if (skill.type === 'heal') {
-      const restored = Math.min(skill.heal, player.maxHp - player.hp);
-      if (!restored && !(skill.cleanse && player.immobilized > 0)) { player.mana += skill.cost; player.skillCooldowns[index] = 0; toast('Ya tenés toda la vida.'); return; }
-      addFloatingText(player, skill.name, 'spell');
-      if (restored > 0) {
-        player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal');
-      }
-      if (skill.cleanse && player.immobilized > 0) {
-        player.immobilized = 0;
-        addFloatingText(player, 'Removida', 'status');
-      }
-      addSpellEffect(px, py, px, py, 'heal', skill.fxSpellId);
-      toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`);
-      playSpellSound(skill.fxSpellId, 520);
-    } else {
-      addFloatingText(player, skill.name, 'spell');
-      const damage = Math.ceil(rand(skill.damage[0], skill.damage[1]));
-      target.hp = Math.max(0, target.hp - damage); target.flash = .28;
-      addFloatingText(target, `-${damage}`, 'damage');
-      addSpellEffect(px, py, tx, ty, currentClass, skill.fxSpellId);
-      if (skill.immobilize) {
-        target.immobilized = Math.max(target.immobilized, skill.immobilize);
-        target.step = null; target.stepTime = 0;
-        addFloatingText(target, 'Paralizado', 'status');
-      }
-      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Paralizado.' : ''}`);
-      playSpellSound(skill.fxSpellId, currentClass === 'mage' ? 620 : 340);
-      if (target.hp <= 0) kill(target, player);
-    }
-    selectedSkill = null; refreshSkillSelection();
-    // El lanzamiento ocupa al personaje: recupera antes de atacar o beber otra poción.
+    const [px, py] = actorTile(player), [tx, ty] = tile;
+    if (Math.abs(px - tx) + Math.abs(py - ty) > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    beginNpcAim(player, null, { skill, index }, 0, tile);
     player.castCd = Math.max(player.castCd ?? 0, CAST_RECOVERY);
-    player.attackCd = Math.max(player.attackCd, CAST_RECOVERY);
-    refreshHud();
+    selectedSkill = null; refreshSkillSelection();
   }
   function drinkPotion(kind) {
     if (paused || !player.alive) return;
     const red = kind === 'red';
     if ((player.potionCd ?? 0) > 0) { toast('Todavía estás bebiendo la poción.'); return; }
     if (player.attackCd > 0 || (player.castCd ?? 0) > 0) { toast('Terminá el golpe o hechizo antes de beber.'); return; }
+    if (!red && player.maxMana === 0) { toast('El guerrero no usa maná: bebé una poción roja.'); return; }
     const restored = red
       ? Math.min(Math.ceil(player.maxHp * POTION_HP_SHARE), player.maxHp - player.hp)
       : Math.min(Math.ceil(player.maxMana * POTION_MANA_SHARE), player.maxMana - player.mana);
@@ -558,10 +652,11 @@
   function applyClass(className) {
     currentClass = className in CLASS_PROFILES ? className : 'warrior';
     const profile = CLASS_PROFILES[currentClass];
-    player.body = profile.body; player.head = profile.head;
+    const [lookBody, lookHead] = FACTION_LOOKS[player.team]?.[currentClass] ?? [1, 1];
+    player.body = lookBody; player.head = lookHead;
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
-    player.skillCooldowns = [0, 0, 0]; selectedSkill = null;
+    player.skillCooldowns = [0, 0, 0, 0]; selectedSkill = null;
     player.potionCd = 0; player.castCd = 0;
     $('heroClass').textContent = profile.label;
     const selfTag = document.querySelector('.self-row .roster-copy small');
@@ -575,12 +670,14 @@
       button.disabled = !skill;
       button.querySelector('.spell-icon').textContent = skill?.icon ?? '—';
       button.querySelector('.spell-name').textContent = skill?.name ?? 'No disponible';
-      button.querySelector('.spell-cost').textContent = skill ? `${skill.cost} maná` : '—';
-      button.title = skill ? `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : 'Daño · cualquier distancia'}` : 'Habilidad no disponible';
+      const costLabel = skill?.cost > 0 ? `${skill.cost} maná` : 'sin coste';
+      button.querySelector('.spell-cost').textContent = skill ? costLabel : '—';
+      const typeHint = skill?.type === 'heal' ? 'Restaura vida' : skill?.type === 'cleanse' ? 'Remueve la parálisis' : skill?.type === 'immobilize' ? 'Paraliza al objetivo' : 'Daño · dentro de tu visión';
+      button.title = skill ? `${skill.name} · ${costLabel} · ${typeHint}` : 'Habilidad no disponible';
     });
   }
   function kill(victim, attacker) {
-    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
+    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0; victim.supportTask = null; victim.movePlan = null;
     if (victim === player) updateRespawnNotice();
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
@@ -595,7 +692,7 @@
   }
   function respawn(actor) {
     const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
-    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
+    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     if (actor === player) updateRespawnNotice();
   }
   function updateRespawnNotice() {
@@ -609,7 +706,10 @@
     if (!actor || actor === player || !actor.alive || !isEnemy(player, actor)) { toast('Seleccioná un rival de la legión contraria.'); return; }
     selected = actor.id; refreshHud();
     const skill = selectedSkill === null ? null : skillAt(selectedSkill);
-    toast(skill?.type === 'heal' ? `${actor.name} seleccionado · hacé clic en tu personaje para curarte.` : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.` : skill ? `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.` : 'Elegí un hechizo válido.');
+    const supportive = skill?.type === 'heal' || skill?.type === 'cleanse';
+    toast(supportive ? `${actor.name} seleccionado · con el hechizo preparado, hacé clic sobre un aliado para aplicarlo.`
+      : selectedSkill === null ? `${actor.name} seleccionado · acercate y atacá con F.`
+      : skill ? `${actor.name} seleccionado · ${skill.name} listo para lanzar desde el campo.` : 'Elegí un hechizo válido.');
   }
   function cycleEnemyTarget() {
     const enemies = fighters.filter(actor => actor.alive && isEnemy(player, actor));
@@ -651,61 +751,150 @@
     if (joystickKey) keys.add(joystickKey);
   }
   function updatePlayer() {
-    if (player.step) return;
+    if (player.step || player.aim) return; // Apuntar es plantarse: el caster no camina con el hechizo en la mano.
     // Use only the most recently pressed direction: holding two keys never creates a diagonal.
     const key = [...keys].reverse().find(pressed => PLAYER_DIRECTIONS[pressed]);
     if (key) startStep(player, ...PLAYER_DIRECTIONS[key]);
   }
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
-      if (!actor.alive || actor.step || actor.immobilized > 0) continue;
+      if (!actor.alive || actor.step) continue;
+      // Apuntar es plantarse: nadie camina mientras tiene la mira activa.
+      if (actor.aim) continue;
+      if (actor.immobilized > 0) {
+        // Congelado: solo puede intentar remover su propia parálisis, como en AO.
+        const selfCleanse = (CLASS_PROFILES[actor.className]?.skills ?? []).findIndex(skill => skill?.type === 'cleanse');
+        if (selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
+          beginNpcAim(actor, actor, { skill: CLASS_PROFILES[actor.className].skills[selfCleanse], index: selfCleanse });
+        }
+        continue;
+      }
+      // El intervalo de lanzamiento solo prohíbe lanzar: caminar y esquivar sigue (nadie se queda quieto).
+      const recovering = (actor.castCd ?? 0) > 0;
       actor.aiTimer -= dt;
       if (actor.aiTimer > 0) continue;
-      actor.aiTimer = .18 + Math.random() * .1;
+      const tick = .12 + Math.random() * .08;
+      actor.aiTimer = tick;
 
       const allies = fighters.filter(other => other.alive && other.team === actor.team);
-      const wounded = allies.filter(other => other.hp / other.maxHp < .68 || other.immobilized > 0)
-        .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
       const profile = CLASS_PROFILES[actor.className];
       const skills = profile?.skills;
       if (!Array.isArray(skills)) continue;
       if (!Array.isArray(actor.skillCooldowns)) continue;
+      // Remover parálisis primero: un aliado congelado pierde varios turnos, es lo más urgente.
+      const cleanseIndex = skills.findIndex((skill, index) => skill?.type === 'cleanse' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
+      if (cleanseIndex >= 0 && !recovering && !actor.supportTask) {
+        const frozen = allies.find(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE);
+        if (frozen) {
+          const delay = rand(SUPPORT_DELAY.cleanse[0], SUPPORT_DELAY.cleanse[1]);
+          actor.supportTask = { allyId: frozen.id, kind: 'cleanse', timer: delay, delay, tries: 0 };
+        }
+      }
       const healingIndex = skills.findIndex((skill, index) => skill?.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (wounded && healingIndex >= 0) {
+      if (!recovering && healingIndex >= 0) {
         const heal = skillAt(healingIndex, actor.className);
-        if (heal && ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0))) {
-          if (npcCastSkill(actor, heal, healingIndex, wounded)) continue;
+        if (heal) {
+          const candidates = allies
+            .filter(other => other.hp < other.maxHp && other.hp / other.maxHp < SUPPORT_CLASS_HP && distance(actor, other) <= SPELL_VISION_RANGE)
+            .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+          const wounded = candidates[0] ?? null;
+          if (wounded === actor) {
+            // Autocuidado: solo si de verdad está herido; curarse por curar plantado en un rincón no.
+            if (actor.hp / actor.maxHp < SELF_CARE_HP) {
+              beginNpcAim(actor, actor, { skill: heal, index: healingIndex });
+              continue;
+            }
+          } else if (wounded && SUPPORT_CLASSES.has(actor.className) && !actor.supportTask) {
+            // Apoyo a un aliado: intención demorada, visible como anillo verde sobre el aliado.
+            const kind = wounded.hp / wounded.maxHp < SUPPORT_SALVAGE_HP ? 'salvage' : 'heal';
+            const [lo, hi] = SUPPORT_DELAY[kind] ?? SUPPORT_DELAY.heal;
+            const delay = rand(lo, hi);
+            actor.supportTask = { allyId: wounded.id, kind, timer: delay, delay, tries: 0 };
+          }
         }
       }
 
       const target = tacticalEnemy(actor);
-      if (!target) continue;
+      // Nadie se queda quieto jamás: con blanco lo persigue (el agite nunca para); sin blancos vivos vuelve a su puesto.
+      if (!target) {
+        actor.aiTargetId = null; actor.movePlan = null;
+        const homeStep = nextPathStep(actor, { x: actor.homeX, y: actor.homeY }, 0, 2);
+        if (homeStep) startStep(actor, homeStep[0], homeStep[1]);
+        continue;
+      }
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
+      // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
+      const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
+      if (freezeIndex >= 0 && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
+        beginNpcAim(actor, target, { skill: skillAt(freezeIndex, actor.className), index: freezeIndex });
+        continue;
+      }
+
       const attackSkills = skills.map((skill, index) => ({ skill, index }))
         .filter(({ skill, index }) => skill?.type === 'damage'
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
-      if (!actor.aim && attackSkills.length) {
+      if (!recovering && !actor.aim && actor.attackCd <= 0 && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, { skill: attackSkills[0].skill, index: attackSkills[0].index });
         continue;
       }
 
-      let step;
+      // Agite frenético: nunca se queda quieto; en el anillo baila (flanquea) y a veces se reacomoda.
+      let step, plan = null;
       if (range < combatRange.min) {
-        // If every outward tile is blocked, hold position rather than pathing closer.
-        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max);
+        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max); plan = 'retreat';
       } else if (range > combatRange.max) {
-        step = nextPathStep(actor, target, combatRange.min, combatRange.max);
-      } else if (Math.random() < .72) {
-        step = nextStrafeStep(actor, target, combatRange.min, combatRange.max);
+        step = nextPathStep(actor, target, combatRange.min, combatRange.max); plan = 'path';
+      } else {
+        actor.flankTimer = (actor.flankTimer ?? rand(1.2, 2.6)) - tick;
+        if (actor.flankTimer <= 0) {
+          actor.flankTimer = rand(1.2, 2.6);
+          if (Math.random() < .4) actor.aiFlankSide *= -1; // Cambia de flanco de vez en cuando.
+        }
+        if (Math.random() < .12) { step = nextPathStep(actor, target, combatRange.min, combatRange.max); plan = 'path'; }
+        else { step = nextStrafeStep(actor, target, combatRange.min, combatRange.max); plan = 'strafe'; }
       }
+      actor.movePlan = plan && step ? { kind: plan, targetId: target.id } : null;
       if (step) {
         startStep(actor, step[0], step[1]);
-      } else if (!actor.aim && actor.className !== 'mage' && range <= 1 && actor.attackCd <= 0) {
+      } else if (!recovering && !actor.aim && actor.className !== 'mage' && range <= 1 && actor.attackCd <= 0) {
         beginNpcAim(actor, target);
       }
+    }
+  }
+  function updateNpcSupport(dt) {
+    // El apoyo demorado resuelve solo: vence el plazo, se revalida la necesidad y recién ahí se lanza.
+    for (const actor of fighters.slice(1)) {
+      const task = actor.supportTask;
+      if (!task) continue;
+      task.timer -= dt;
+      if (task.timer > 0) continue;
+      if ((actor.castCd ?? 0) > 0) { task.timer = .3; continue; } // Espera el intervalo de lanzamiento antes de apuntar la ayuda.
+      actor.supportTask = null;
+      if (!actor.alive || actor.immobilized > 0) continue;
+      const ally = byId[task.allyId];
+      if (!ally?.alive) continue;
+      const profileSkills = CLASS_PROFILES[actor.className]?.skills ?? [];
+      const skillIndex = task.kind === 'cleanse'
+        ? profileSkills.findIndex(skill => skill?.type === 'cleanse')
+        : profileSkills.findIndex(skill => skill?.type === 'heal');
+      const skill = skillIndex >= 0 ? skillAt(skillIndex, actor.className) : null;
+      if (!skill) continue;
+      const stillNeeded = task.kind === 'cleanse' ? ally.immobilized > 0
+        : ally.hp < ally.maxHp && ally.hp / ally.maxHp < SUPPORT_CLASS_HP;
+      if (!stillNeeded) continue;
+      // Revalido la visión al vencer el plazo: si el aliado salió del área en pantalla, no se lanza a ciegas.
+      if (distance(actor, ally) > SPELL_VISION_RANGE) continue;
+      if (actor.mana < skill.cost || (Array.isArray(actor.skillCooldowns) && actor.skillCooldowns[skillIndex] > 0)) {
+        // Con tope de reintentos: si no puede, suelta la tarea y vuelve a moverse en vez de quedarse plantado.
+        task.tries = (task.tries ?? 0) + 1;
+        if (task.tries > 3) { actor.supportTask = null; actor.aiTimer = rand(.4, 1); continue; }
+        actor.supportTask = task; task.timer = .5; continue;
+      }
+      // Toda ayuda se apunta: telégrafo verde sobre el aliado y recién entonces el hechizo.
+      beginNpcAim(actor, ally, { skill, index: skillIndex });
     }
   }
   function update(dt) {
@@ -715,13 +904,17 @@
       if (actor.attackCd > 0) actor.attackCd -= dt;
       if (actor.flash > 0) actor.flash -= dt;
       if (actor.immobilized > 0) actor.immobilized = Math.max(0, actor.immobilized - dt);
-      if (actor.alive) actor.mana = Math.min(actor.maxMana, actor.mana + dt * .8);
+      if (actor.alive) actor.mana = Math.min(actor.maxMana, actor.mana + dt * MANA_REGEN);
       if (actor.potionCd > 0) actor.potionCd = Math.max(0, actor.potionCd - dt);
       if (actor.castCd > 0) actor.castCd = Math.max(0, actor.castCd - dt);
       if (Array.isArray(actor.skillCooldowns)) actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
       if (actor.step) {
         actor.stepTime += dt;
-        if (actor.stepTime >= STEP_DURATION) { [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0; }
+        if (actor.stepTime >= STEP_DURATION) {
+          [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0;
+          // Encadenado del siguiente paso sin pausa: así caminan los NPCs como una persona, no a tirones.
+          if (actor !== player && !actor.aim) npcPlanStep(actor);
+        }
       }
       if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
     }
@@ -730,7 +923,7 @@
     for (const effect of spellEffects) effect.age += dt;
     while (floatingTexts.length && floatingTexts[0].age > 1.05) floatingTexts.shift();
     while (spellEffects.length && spellEffects[0].age > spellEffects[0].duration) spellEffects.shift();
-    updatePlayer(); updateNpcAims(dt); updateBots(dt);
+    updatePlayer(); updateNpcSupport(dt); updateNpcAims(dt); updateBots(dt);
     refreshHud();
   }
 
@@ -803,7 +996,12 @@
     ctx.fillStyle = actor.team === 'sacred' ? '#7ec8ff' : '#ff8274'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, centerX, labelY, tilePx * 2.8);
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
-    ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    ctx.fillStyle = actor.hp / actor.maxHp > .3 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    // Maná debajo de la vida: barra azul con el maná actual del personaje (el guerrero no tiene).
+    if ((actor.maxMana ?? 0) > 0) {
+      ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 8, tilePx * .72, 3);
+      ctx.fillStyle = '#5aa7d8'; ctx.fillRect(sx + tilePx * .14, labelY + 8, tilePx * .72 * clamp((actor.mana ?? 0) / (actor.maxMana || 1), 0, 1), 3);
+    }
     if (actor.flash > 0) { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,235,180,${actor.flash * 1.5})`; ctx.fillRect(sx, sy - tilePx, tilePx, tilePx * 2); }
     ctx.restore();
   }
@@ -828,7 +1026,12 @@
     ctx.fillStyle = actor.team === 'sacred' ? '#7ec8ff' : '#ff8274'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, sx + tilePx / 2, labelY, tilePx * 2.8);
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72, 3);
-    ctx.fillStyle = actor.hp > 35 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    ctx.fillStyle = actor.hp / actor.maxHp > .3 ? '#8bb46c' : '#c96152'; ctx.fillRect(sx + tilePx * .14, labelY + 3, tilePx * .72 * actor.hp / actor.maxHp, 3);
+    // Maná debajo de la vida: barra azul con el maná actual del personaje (el guerrero no tiene).
+    if ((actor.maxMana ?? 0) > 0) {
+      ctx.fillStyle = 'rgba(13,16,12,.82)'; ctx.fillRect(sx + tilePx * .14, labelY + 8, tilePx * .72, 3);
+      ctx.fillStyle = '#5aa7d8'; ctx.fillRect(sx + tilePx * .14, labelY + 8, tilePx * .72 * clamp((actor.mana ?? 0) / (actor.maxMana || 1), 0, 1), 3);
+    }
     if (actor.immobilized > 0) {
       ctx.textAlign = 'center'; ctx.font = `700 ${Math.max(12, tilePx * .38)}px sans-serif`;
       ctx.fillStyle = '#9be8f3'; ctx.shadowColor = '#36b8d5'; ctx.shadowBlur = 8;
@@ -855,14 +1058,15 @@
     }
   }
   function drawCombatEffects(cameraX, cameraY, now) {
-    for (const actor of fighters.slice(1)) {
+    // La mira del jugador se dibuja igual que la de los bots: línea, anillo y cruz.
+    for (const actor of fighters) {
       const aim = actor.aim;
       if (!aim) continue;
       const [fromX, fromY] = screenTile(aim.fromX, aim.fromY, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
-      // Mira sin texto: el color comunica qué se prepara (hechizo por FX, rojo para golpe).
-      const color = aim.spell ? (SPELL_AIM_COLORS[aim.spell.skill?.fxSpellId] ?? DEFAULT_AIM_COLOR) : MELEE_AIM_COLOR;
+      // Mira sin texto: el color comunica qué hechizo/golpe viene (aimColor por habilidad, rojo para golpes).
+      const color = aim.spell?.skill?.aimColor ?? MELEE_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 90 + aim.phase) * .16;
       ctx.save(); ctx.globalAlpha = .72 + pulse * .28;
       ctx.strokeStyle = color; ctx.fillStyle = color;
@@ -881,18 +1085,45 @@
       }
       ctx.restore();
     }
-    // Mira del jugador: anillo punteado sobre el objetivo con el color del hechizo preparado.
+    // Mira en vivo del hechizo preparado: línea del personaje al cursor, misma estética que la mira de los bots.
     const readySkill = selectedSkill === null ? null : skillAt(selectedSkill);
-    const readyTarget = readySkill ? byId[selected] : null;
-    if (readySkill && readyTarget?.alive && readyTarget !== player) {
-      const [px, py] = position(readyTarget), [tsx, tsy] = screenTile(px, py, cameraX, cameraY);
-      const x = tsx + tilePx / 2, y = tsy + tilePx / 2;
-      const color = readySkill.type === 'heal' ? HEAL_AIM_COLOR : SPELL_AIM_COLORS[readySkill.fxSpellId] ?? DEFAULT_AIM_COLOR;
+    if (readySkill && player.alive && !paused && mouseTile) {
+      const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
+      const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
+      const x = msx + tilePx / 2, y = msy + tilePx / 2, lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
+      const color = readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
-      ctx.save(); ctx.globalAlpha = .5 + pulse * .35; ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, tilePx * .05);
-      ctx.setLineDash([tilePx * .16, tilePx * .12]);
+      ctx.save(); ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(2, tilePx * .05); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .25;
+      ctx.beginPath(); ctx.moveTo(lineX, lineY); ctx.lineTo(x, y); ctx.stroke();
+      ctx.setLineDash([tilePx * .14, tilePx * .1]);
       ctx.beginPath(); ctx.arc(x, y, tilePx * (.3 + pulse * .04), 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]); ctx.restore();
+      ctx.setLineDash([]);
+      const arm = tilePx * .3, gap = tilePx * .12;
+      ctx.beginPath();
+      ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
+      ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      ctx.restore();
+    }
+    // Apoyo aliado pendiente: anillo verde punteado que se cierra sobre el aliado mientras llega la ayuda.
+    for (const actor of fighters.slice(1)) {
+      const task = actor.supportTask;
+      if (!task) continue;
+      const ally = byId[task.allyId];
+      if (!ally?.alive) continue;
+      const [ax, ay] = position(ally), [tsx, tsy] = screenTile(ax, ay, cameraX, cameraY);
+      const x = tsx + tilePx / 2, y = tsy + tilePx / 2;
+      const progress = clamp(1 - task.timer / (task.delay || 1), 0, 1);
+      ctx.save(); ctx.globalAlpha = .38 + progress * .5;
+      ctx.strokeStyle = HEAL_AIM_COLOR; ctx.fillStyle = HEAL_AIM_COLOR; ctx.lineWidth = Math.max(2, tilePx * .05);
+      ctx.setLineDash([tilePx * .14, tilePx * .1]);
+      ctx.beginPath(); ctx.arc(x, y, tilePx * (.34 - progress * .1), 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      const arm = tilePx * .16, gap = tilePx * .055;
+      ctx.beginPath();
+      ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
+      ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      ctx.restore();
     }
     for (const effect of spellEffects) {
       const progress = effect.age / effect.duration;
@@ -952,14 +1183,14 @@
     if (!player) return;
     $('healthBar').style.width = `${player.hp / player.maxHp * 100}%`;
     $('healthValue').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-    $('manaBar').style.width = `${player.mana / player.maxMana * 100}%`;
-    $('manaValue').textContent = `${Math.floor(player.mana)} / ${player.maxMana}`;
+    $('manaBar').style.width = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
+    $('manaValue').textContent = player.maxMana ? `${Math.floor(player.mana)} / ${player.maxMana}` : '—';
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
       button.disabled = !player.alive || !skill;
       button.classList.toggle('unavailable', !skill || player.mana < skill.cost);
       button.classList.toggle('cooling', cooldown > 0);
-      button.querySelector('.spell-cost').textContent = !skill ? '—' : cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
+      button.querySelector('.spell-cost').textContent = !skill ? '—' : cooldown > 0 ? `${cooldown.toFixed(1)}s` : skill.cost > 0 ? `${skill.cost} maná` : 'sin coste';
     });
     refreshPotions();
 
@@ -981,7 +1212,7 @@
   function resetGame() {
     for (const actor of fighters) {
       const profile = CLASS_PROFILES[actor.className];
-      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     }
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
@@ -991,6 +1222,13 @@
     refreshHud(); toast('Arena reiniciada · elegí un objetivo y luchá.');
   }
   function togglePause() { paused = !paused; toast(paused ? 'Partida pausada' : 'Partida reanudada'); }
+  function tileAtPointer(px, py) {
+    if (!mapData) return null;
+    const [cx, cy] = position(player);
+    const tx = Math.floor(cx + (px - W / 2 + tilePx / 2) / tilePx), ty = Math.floor(cy + (py - H / 2 + tilePx / 2) / tilePx);
+    if (tx < 0 || ty < 0 || ty >= mapData.tiles.length || tx >= mapData.tiles[ty].length) return null;
+    return [tx, ty];
+  }
   function actorAtPointer(x, y) {
     const [cx, cy] = position(player), range = visibleRange(cx, cy); let best = null, bestScore = Infinity;
     for (const actor of fighters) {
@@ -1007,25 +1245,37 @@
     audioReady = true; const key = event.key.toLowerCase();
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) event.preventDefault();
     if (key === 'escape') {
+      if (selectedSkill !== null) { selectedSkill = null; refreshSkillSelection(); toast('Hechizo desarmado.'); return; }
       if (!$('helpModal').classList.contains('hidden')) $('helpModal').classList.add('hidden');
       else if (!$('sidePanel').classList.contains('hidden')) toggleScoreboard(false);
       else togglePause();
       return;
     }
     if (key === 'enter' || key === 'f') { event.preventDefault(); attack(); return; }
-    if (['1', '2', '3'].includes(key)) { selectSkill(Number(key) - 1); return; }
-    if (key === '4') { event.preventDefault(); drinkPotion('red'); return; }
-    if (key === '5') { event.preventDefault(); drinkPotion('blue'); return; }
+    if (['1', '2', '3', '4'].includes(key)) { selectSkill(Number(key) - 1); return; }
+    if (key === '5') { event.preventDefault(); drinkPotion('red'); return; }
+    if (key === '6') { event.preventDefault(); drinkPotion('blue'); return; }
     if (key === 'tab') { event.preventDefault(); if (!event.repeat) cycleEnemyTarget(); return; }
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
   window.addEventListener('blur', () => { keys.clear(); clearJoystick(); });
-  canvas.addEventListener('pointerdown', event => {
-    const rect = canvas.getBoundingClientRect(), target = actorAtPointer(event.clientX - rect.left, event.clientY - rect.top);
-    if (target) handleCanvasTarget(target);
+  canvas.addEventListener('pointermove', event => {
+    const rect = canvas.getBoundingClientRect();
+    mouseTile = tileAtPointer(event.clientX - rect.left, event.clientY - rect.top);
   });
-  canvas.addEventListener('contextmenu', event => event.preventDefault());
+  canvas.addEventListener('pointerleave', () => { mouseTile = null; });
+  canvas.addEventListener('pointerdown', event => {
+    const rect = canvas.getBoundingClientRect(), px = event.clientX - rect.left, py = event.clientY - rect.top;
+    const target = actorAtPointer(px, py);
+    if (target) { handleCanvasTarget(target); return; }
+    // Click en el suelo con hechizo preparado: lanza a esa casilla (le pega a quien esté ahí, o erra).
+    if (selectedSkill !== null) { const tile = tileAtPointer(px, py); if (tile) castSkillAtTile(selectedSkill, tile); }
+  });
+  canvas.addEventListener('contextmenu', event => {
+    event.preventDefault();
+    if (selectedSkill !== null) { selectedSkill = null; refreshSkillSelection(); toast('Hechizo desarmado.'); }
+  });
   $('attackBtn').addEventListener('click', () => attack());
   $('classSelect').addEventListener('change', event => applyClass(event.target.value));
   document.querySelectorAll('.spell-slot[data-skill]').forEach(button => button.addEventListener('click', () => selectSkill(Number(button.dataset.skill))));
@@ -1048,6 +1298,18 @@
   $('closeHelp').addEventListener('click', () => $('helpModal').classList.add('hidden'));
   $('helpModal').addEventListener('click', event => { if (event.target === $('helpModal')) $('helpModal').classList.add('hidden'); });
   $('menuBtn').addEventListener('click', togglePause);
+  // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
+  window.AO_DEBUG = () => ({
+    elapsed: Number(elapsed.toFixed(2)), paused,
+    texts: floatingTexts.map(text => text.text),
+    fighters: fighters.map(actor => ({
+      id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
+      x: actor.x, y: actor.y, stepping: Boolean(actor.step),
+      immobilized: Number(actor.immobilized.toFixed(2)), alive: actor.alive,
+      aiming: Boolean(actor.aim), aimSpell: actor.aim?.spell?.skill?.name ?? null, aimColor: actor.aim?.spell?.skill?.aimColor ?? null, aimTargetId: actor.aim?.targetId ?? null,
+      support: actor.supportTask ? { kind: actor.supportTask.kind, ally: actor.supportTask.allyId, timer: Number(actor.supportTask.timer.toFixed(2)) } : null
+    }))
+  });
   let previous = performance.now();
   function loop(now) { const dt = Math.min(.05, (now - previous) / 1000); previous = now; update(dt); draw(); requestAnimationFrame(loop); }
   renderSkills(); refreshHud(); loadAssets(); requestAnimationFrame(loop);
