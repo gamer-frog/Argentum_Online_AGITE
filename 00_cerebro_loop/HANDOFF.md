@@ -1,13 +1,13 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-2026-11-11 · GAUNTLET LOOP v6.0 · Iteración 4 [B]: nombres sin facción + mira sin texto + textos AO. Nombres propios (Thalira, Bendrick, Aldric, Drakar, Morvath, Valthor, Grimwald) en ACTORS, roster, HUD y feed, con color celeste/rojo por bando (`.name-sacred`/`.name-chaotic`); la etiqueta del propio jugador se actualiza al cambiar clase. Mira de NPC sin texto "APUNTANDO", coloreada por hechizo (`SPELL_AIM_COLORS` por FX) o roja para golpe; anillo punteado del jugador con color del hechizo preparado (verde curas). Textos flotantes AO más pequeños: "Paralizado", "Removida", "esquivó", "falló". Fix adicional: targetStatus mostraba HP absoluta con % (112%) en vez del porcentaje real. Verificado en Chromium: consola 0 errores, canvas pintado, color enemigo rgb(229,122,109), mira con habilidad seleccionada sin errores.
+2026-11-11 · GAUNTLET LOOP v6.0 · Iteración 5 [B]: cursores persistentes de NPC + puntería contra inmovilizados. Al esquivar el blanco la casilla apuntada, el NPC encadena hasta 2 re-apuntados (mira persistente) con duración acelerada ×0,68 por reintento y attackCd reducido a la mitad en reintentos; contra blancos inmovilizados la mira se fija sin temblar y el render agrega un disco interior de "lock" (acierto casi seguro). Regresión detectada y corregida en la misma iteración: los reintentos de duración fija frenaron el ritmo (0 muertes en 20 s); con la mira acelerada el combate volvió a producir muertes (1 en 24 s) y el jugador quieto sobrevive. Verificado en Chromium: consola 0 errores, canvas pintado, feed activo.
 
 ## Estado del build/navegador
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; el juego es jugable: mover, seleccionar objetivo (Tab/clic), atacar (F), habilidades 1–3, esquiva, pausa y reinicio. Los bots combaten activamente (el jugador recibe daño si no se mueve).
 
 ## PRÓXIMO PASO INMEDIATO
-🚀 Iteración 5 [B] — Cursores/miras persistentes de cada NPC mientras intenta apuntar y puntería imperfecta que mejora contra blancos inmovilizados (backlog 8): hoy la mira existe durante el telégrafo; falta que los NPCs mantengan la mira mientras persiguen (no solo al disparar) y que el bono de puntería contra inmovilizados sea visible para el jugador. Después: apoyo aliado con demora ocasional y validación de playtest. La cola completa vive en `ROADMAP.md`.
+🚀 Iteración 6 [B] — Apoyo aliado con demora ocasional (backlog 10): remoción de parálisis y salvataje por parte de magos y clérigos, no instantáneo (los aliados tardan en decidir ayudar y a veces no llegan). Después: validación de playtest del ritmo de bots y ajustes de balance resultantes. La cola completa vive en `ROADMAP.md`.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.

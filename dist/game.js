@@ -363,11 +363,14 @@
   function addFloatingTextAt(x, y, text, kind) {
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
-  function beginNpcAim(actor, target, spell = null) {
+  function beginNpcAim(actor, target, spell = null, retries = 0) {
     const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
-    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, remaining: NPC_AIM_DURATION, spell };
-    actor.attackCd = rand(.85, 1.15);
+    // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
+    const duration = NPC_AIM_DURATION * Math.pow(.68, retries);
+    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
+    // El primer intento usa el ritmo normal; un reintento encadenado mantiene la mira viva sin pausa larga.
+    actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
   }
   function resolveNpcAim(actor) {
     const aim = actor.aim;
@@ -378,6 +381,10 @@
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
+      // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
+      if ((aim.retries ?? 0) < 2 && isEnemy(actor, target) && distance(actor, target) <= 12) {
+        beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
+      }
       return;
     }
     // Hechizos con telégrafo apuntado: aciertan casi siempre, pero un blanco libre en movimiento puede hacerlos fallar de forma humana.
@@ -407,9 +414,15 @@
       actor.aim.remaining -= dt;
       const target = byId[actor.aim.targetId];
       if (target?.alive) {
-        const [tx, ty] = actorTile(target), progress = clamp(1 - actor.aim.remaining / NPC_AIM_DURATION, 0, 1);
-        actor.aim.cursorX = tx + Math.sin(elapsed * 15 + actor.aim.phase) * (1 - progress) * .18;
-        actor.aim.cursorY = ty + Math.cos(elapsed * 13 + actor.aim.phase) * (1 - progress) * .18;
+        const [tx, ty] = actorTile(target);
+        const progress = clamp(1 - actor.aim.remaining / (actor.aim.duration || NPC_AIM_DURATION), 0, 1);
+        if (target.immobilized > 0) {
+          // Blanco inmovilizado: la mira se fija limpia sobre la casilla, sin temblar.
+          actor.aim.cursorX = tx; actor.aim.cursorY = ty;
+        } else {
+          actor.aim.cursorX = tx + Math.sin(elapsed * 15 + actor.aim.phase) * (1 - progress) * .18;
+          actor.aim.cursorY = ty + Math.cos(elapsed * 13 + actor.aim.phase) * (1 - progress) * .18;
+        }
       }
       if (actor.aim.remaining <= 0) resolveNpcAim(actor);
     }
@@ -860,6 +873,12 @@
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
       ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      // Blanco inmovilizado: disco interior marca la mira fijada (puntería casi segura).
+      const aimTarget = byId[aim.targetId];
+      if (aimTarget?.alive && aimTarget.immobilized > 0) {
+        ctx.globalAlpha = .3;
+        ctx.beginPath(); ctx.arc(x, y, tilePx * .19, 0, Math.PI * 2); ctx.fill();
+      }
       ctx.restore();
     }
     // Mira del jugador: anillo punteado sobre el objetivo con el color del hechizo preparado.
