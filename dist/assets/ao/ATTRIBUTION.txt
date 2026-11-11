@@ -1,7 +1,9 @@
 Recursos extraídos automáticamente de Argentum Online Libre.
 
 Origen: https://github.com/ao-libre/ao-cliente (revisión 7d32d61759d6b95069aba72ae12bed03c1d13700)
-Licencia: AGPL-3.0 (ver "AFFERO GENERAL PUBLIC LICENSE.doc" en el repositorio origen)
+Licencia del repositorio upstream: AGPL-3.0 (LICENSE en la revisión indicada).
+Alcance de licencia de medios: no verificado por archivo; esta licencia de repositorio
+no basta por sí sola para confirmar que cada PNG/WAV/dato tenga términos idénticos.
 Fecha de extracción: 2026-11-08
 Extractor: scripts/extract_ao_assets.py (checkout del ao-cliente indicado al momento de correr)
 
@@ -17,11 +19,16 @@ Créditos upstream (INIT/Creditos.txt):
 - Indexación: Neo, ReyarB
 - Mapas: ReyarB
 
-Condiciones: al redistribuir este contenido (incluso a través de un sitio web), conservar
-la licencia AGPL-3.0 y estos avisos; mantener las láminas originales sin alterar no elimina
-la obligación de compartir las fuentes modificadas si se altera el material.
- Estos archivos provienen del trabajo de otros; no se reclaman como material original del
-proyecto Argentum Online AGITE.
+Procedencia y cautela de redistribución:
+- INIT/Creditos.txt acredita los mapas a ReyarB y enumera colaboradores gráficos, pero no
+  asigna autoría ni condiciones individuales a cada lámina o sonido.
+- La licencia AGPL-3.0 del repositorio y los créditos upstream se conservan como avisos de
+  procedencia; no se concluye aquí que cada medio tenga idéntica licencia o permiso.
+- Antes de añadir o redistribuir un recurso, confirmar sus condiciones aplicables y preservar
+  los avisos correspondientes. Este archivo registra procedencia; no concede derechos ni es
+  asesoramiento legal.
+- Estos archivos provienen del trabajo de terceros; no se reclaman como material original del
+  proyecto Argentum Online AGITE.
 
 Efectos y sonidos de hechizos:
 - Cliente: ao-libre/ao-cliente, revisión
@@ -37,5 +44,6 @@ Efectos y sonidos de hechizos:
 - Servidor consultado para análisis estático: ao-libre/ao-server, revisión
   ca6ad7ff428a585475373474ec5640eabe05961b. No se ejecutó el servidor.
 
-La licencia y atribución de estos recursos siguen siendo las del repositorio upstream;
-conservar este aviso y verificar las condiciones específicas antes de redistribuirlos.
+La atribución disponible y las condiciones por archivo no están completamente determinadas
+por las fuentes revisadas. Conservar este aviso no sustituye la verificación de permisos
+específicos para los medios antes de futuras redistribuciones.
