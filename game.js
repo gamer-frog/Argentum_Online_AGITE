@@ -42,24 +42,24 @@
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
   const CLASS_PROFILES = {
     warrior: { label: 'GUERRERO', body: 1, head: 1, hp: 130, mana: 70, skills: [
-      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [25, 34], range: 1 },
+      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [38, 50], range: 1 },
       { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32, cleanse: true },
-      { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [35, 44], range: 2 }
+      { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [50, 64], range: 2 }
     ] },
     mage: { label: 'MAGO', body: 2, head: 2, hp: 90, mana: 130, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [27, 38], range: 7, fxSpellId: 2 },
+      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [40, 54], range: 7, fxSpellId: 2 },
       { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true },
-      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [39, 51], range: 8, immobilize: 1.8, fxSpellId: 9 }
+      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [55, 70], range: 8, immobilize: 1.8, fxSpellId: 9 }
     ] },
     cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [24, 34], range: 6, fxSpellId: 25 },
+      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [36, 48], range: 6, fxSpellId: 25 },
       { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true },
-      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [34, 46], range: 7 }
+      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [50, 64], range: 7 }
     ] },
     paladin: { label: 'PALADÍN', body: 1, head: 3, hp: 145, mana: 90, skills: [
-      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [26, 36], range: 1 },
+      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [39, 51], range: 1 },
       { name: 'Plegaria', icon: '✚', type: 'heal', cost: 20, heal: 34 },
-      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [34, 44], range: 2 }
+      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [49, 63], range: 2 }
     ] }
   };
   // Acceso defensivo a habilidades: nunca devolver undefined (evita TypeError en .type/.cost).
@@ -360,10 +360,10 @@
   function addFloatingTextAt(x, y, text, kind) {
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
-  function beginNpcAim(actor, target) {
+  function beginNpcAim(actor, target, spell = null) {
     const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
-    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, remaining: NPC_AIM_DURATION };
+    actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, remaining: NPC_AIM_DURATION, spell };
     actor.attackCd = rand(.85, 1.15);
   }
   function resolveNpcAim(actor) {
@@ -375,6 +375,16 @@
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'ESQUIVADO', 'miss');
+      return;
+    }
+    // Hechizos con telégrafo apuntado: aciertan casi siempre, pero un blanco libre en movimiento puede hacerlos fallar de forma humana.
+    if (aim.spell) {
+      const accuracy = target.immobilized > 0 ? 1 : .82;
+      if (Math.random() > accuracy) {
+        addFloatingTextAt(aim.x, aim.y, 'FALLÓ', 'miss');
+        return;
+      }
+      npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
       return;
     }
     if (Math.random() > NPC_MELEE_ACCURACY) {
@@ -406,7 +416,7 @@
       || !Array.isArray(actor.skillCooldowns) || index < 0 || index >= actor.skillCooldowns.length) return false;
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
-    actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 2.8 + index * .7;
+    actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 4.2 + index * .8;
     actor.attackCd = Math.max(actor.attackCd, .55);
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
@@ -472,7 +482,7 @@
     }
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
-    if (skill.type === 'damage' && distance(player, target) > skill.range) { toast(`Acercate; alcance máximo: ${skill.range} casilleros.`); return; }
+    // Los hechizos se lanzan a cualquier distancia: el alcance clásico queda como referencia, no como límite.
     player.mana -= skill.cost;
     player.skillCooldowns[index] = skill.type === 'heal' ? 5 : 2.8 + index * .7;
     const [px, py] = position(player), [tx, ty] = position(target);
@@ -548,7 +558,7 @@
       button.querySelector('.spell-icon').textContent = skill?.icon ?? '—';
       button.querySelector('.spell-name').textContent = skill?.name ?? 'No disponible';
       button.querySelector('.spell-cost').textContent = skill ? `${skill.cost} maná` : '—';
-      button.title = skill ? `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : `Alcance ${skill.range}`}` : 'Habilidad no disponible';
+      button.title = skill ? `${skill.name} · ${skill.cost} maná · ${skill.type === 'heal' ? 'Restaura vida' : 'Daño · cualquier distancia'}` : 'Habilidad no disponible';
     });
   }
   function kill(victim, attacker) {
@@ -656,10 +666,13 @@
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
       const attackSkills = skills.map((skill, index) => ({ skill, index }))
-        .filter(({ skill, index }) => skill?.type === 'damage' && range >= combatRange.min && range <= skill.range
+        .filter(({ skill, index }) => skill?.type === 'damage'
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
-      if (!actor.aim && attackSkills.length && npcCastSkill(actor, attackSkills[0].skill, attackSkills[0].index, target)) continue;
+      if (!actor.aim && attackSkills.length) {
+        beginNpcAim(actor, target, { skill: attackSkills[0].skill, index: attackSkills[0].index });
+        continue;
+      }
 
       let step;
       if (range < combatRange.min) {

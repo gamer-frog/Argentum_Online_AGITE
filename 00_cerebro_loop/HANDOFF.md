@@ -1,13 +1,13 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-2026-11-11 · GAUNTLET LOOP v6.0 · Iteración 2 [B]: pociones de práctica. Teclas 4/5 y botones en la barra inferior (`potion-slot` roja/azul, íconos 🧪/💧). Beber dura 1,1 s (`POTION_DURATION`) y durante esa acción el ataque y el lanzamiento quedan bloqueados (`attackCd`/`castCd`); un golpe o hechizo reciente también impide beber. La roja restaura 40% de la vida máxima y la azul 45% del maná máximo, siempre con tope en el recurso. Lanzar un hechizo ahora impone una recuperación de 0,9 s que también bloquea el ataque (ritmo más realista). Verificado en Chromium: consola 0 errores, cura con tope (+52 y +28 en vida), cooldown visible en el slot, botón de ataque deshabilitado durante la bebida y guards de recursos llenos.
+2026-11-11 · GAUNTLET LOOP v6.0 · Iteración 3 [B]: hechizos a cualquier distancia + balance de combo. Se quitó el gate de alcance del lanzamiento del jugador (verificado: "Golpe poderoso" lanzado a ~7-8 casilleros, daño 46, mana 70→56) y del filtro de bots. Daños rebalanceados para combo letal (golpe + dos hechizos ≈ 113-124 vs vidas 90-145). Corrección de emergencia incluida: el casting instantáneo de 4 bots fundía al jugador en 2-3 s, así que los hechizos de NPC ahora pasan por el telégrafo de apuntado existente (0,58 s, esquivable al moverse, 82% de acierto contra blancos en movimiento y casi seguro contra inmovilizados) y los cooldowns de hechizo subieron a 4,2 s+. Verificado en Chromium: jugador de pie sobrevive 12 s en su base, bots combaten activos, consola 0 errores.
 
 ## Estado del build/navegador
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; el juego es jugable: mover, seleccionar objetivo (Tab/clic), atacar (F), habilidades 1–3, esquiva, pausa y reinicio. Los bots combaten activamente (el jugador recibe daño si no se mueve).
 
 ## PRÓXIMO PASO INMEDIATO
-🚀 Iteración 3 [B] — Hechizos a cualquier distancia y balance de combo (backlog README ítem 6): quitar la restricción de alcance del lanzamiento del jugador, permitir el lanzamiento a cualquier distancia y rebalancear daño para que un golpe + dos hechizos del mismo luchador sea aproximadamente letal. Después: nombres sin facción/mira sin texto/textos AO más pequeños, cursores persistentes, apoyo aliado ocasional. La cola completa vive en `ROADMAP.md`.
+🚀 Iteración 4 [B] — Nombres sin facción, mira sin texto y textos de estado estilo AO (backlog README ítems 1 y 9): quitar "Sagrado/Caótico" de los nombres (la orientación ya la indica el color celeste/rojo), mostrar solo la mira al apuntar sin el texto "APUNTANDO", color de la mira según el hechizo preparado y reemplazar "INMOVILIZADO/LIBRE/ESQUIVADO/FALLÓ" por textos propios más pequeños. Después: cursores persistentes y apoyo aliado ocasional. La cola completa vive en `ROADMAP.md`.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.

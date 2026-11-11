@@ -17,8 +17,8 @@
 Orden derivado de "Pendientes solicitados para el combate de agite" del README; cada ítem se verifica en navegador y se publica en `main` antes de pasar al siguiente.
 
 - [x] Pociones rojas y azules ilimitadas para práctica: beber bloquea atacar/lanzar durante la acción y viceversa (backlog 3). Verificado en Chromium: teclas 4/5 y botones, cura con tope en vida máxima, candado de acción mutuo y cooldown visible en el slot.
-- [ ] Hechizos a cualquier distancia y ritmo realista: el lanzamiento comparte candado de acción con el ataque (backlog 3/6).
-- [ ] Balance de combo: un golpe + dos hechizos del mismo luchador aproximadamente letal (backlog 6).
+- [x] Hechizos a cualquier distancia y ritmo realista: el lanzamiento comparte candado de acción con el ataque (backlog 3/6). Verificado en Chromium: "Golpe poderoso" (alcance clásico 1) lanzado a ~7-8 casilleros con daño 46; los bots también lanzan a cualquier distancia, ahora con mira/telégrafo de 0,58 s esquivable y fallo humano (82% contra blancos en movimiento, ~100% contra inmovilizados), cooldowns de hechizo 4,2 s+.
+- [x] Balance de combo: un golpe + dos hechizos del mismo luchador aproximadamente letal (backlog 6). Daños ajustados (guerrero 38-50/50-64, mago 40-54/55-70, clérigo 36-48/50-64, paladín 39-51/49-63): combo total ≈ 113-124 contra vidas de 90-145; letal contra magos/clérigos y casi letal contra guerrero/paladín. Pendiente confirmar nombres/daños/tiempos contra AO Libre.
 - [ ] Nombres sin facción, mira sin texto con color según el hechizo preparado y textos de estado propios de AO, más pequeños (backlog 1/9).
 - [ ] Cursores/miras persistentes de cada NPC mientras intenta apuntar; puntería imperfecta que mejora contra blancos inmovilizados (backlog 8).
 - [ ] Apoyo aliado con demora ocasional: remoción de parálisis y salvataje por parte de magos y clérigos, no instantáneo (backlog 10).
