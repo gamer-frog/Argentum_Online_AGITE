@@ -9,5 +9,17 @@
 - [x] Continuación BOOT 2026-11-08: preservar `306cac6` con `graveyard-opencode-checkpoints-40-tip-306cac6`, integrarlo por fast-forward y eliminar `opencode-checkpoints/40`; `git fetch --prune`/`git ls-remote` confirman cero refs remotas checkpoints/resumes.
 - [x] Fundación del cerebro: conservar y completar `PROTOCOL.md`, actualizar el handoff y anteponer la regla suprema a `Agents.md` sin eliminar las instrucciones existentes.
 - [x] Verificación de la fundación: iniciar el prototipo en `localhost:3002`, inspeccionar canvas/escena, probar controles básicos y confirmar cero errores/advertencias de consola en Chromium.
-- [ ] Cierre de esta subtarea: completar los registros de seguimiento, revisar captura/diff y comprobar si commit y publicación a `main` son seguros desde la rama actual.
-- [ ] Producto: elegir una referencia visual AO estable y completar la auditoría de licencias/atribución por recurso antes de ampliar o redistribuir assets; ver `roadmap/producto-recuperado.md` e `inventario-recursos-ao.md`.
+- [x] Cierre de esta subtarea (2026-11-11): registros de seguimiento completos, verificación en Chromium en `http://localhost:3002` (canvas pintado, combate activo, consola 0 errores/0 advertencias) y publicación segura a `main` con fast-forward.
+- [x] Producto: referencia AO estable fijada en README (`ao-libre/ao-cliente` revisión `7d32d61`), atribución versionada en `assets/ao/ATTRIBUTION.txt` e inventario por categoría en `roadmap/inventario-recursos-ao.md`. La auditoría por recurso individual queda documentada como cautela antes de redistribuir; no se presume licencia por archivo no verificada.
+
+## Cola de producto activa (backlog de agite del README)
+
+Orden derivado de "Pendientes solicitados para el combate de agite" del README; cada ítem se verifica en navegador y se publica en `main` antes de pasar al siguiente.
+
+- [ ] Pociones rojas y azules ilimitadas para práctica: beber bloquea atacar/lanzar durante la acción y viceversa (backlog 3).
+- [ ] Hechizos a cualquier distancia y ritmo realista: el lanzamiento comparte candado de acción con el ataque (backlog 3/6).
+- [ ] Balance de combo: un golpe + dos hechizos del mismo luchador aproximadamente letal (backlog 6).
+- [ ] Nombres sin facción, mira sin texto con color según el hechizo preparado y textos de estado propios de AO, más pequeños (backlog 1/9).
+- [ ] Cursores/miras persistentes de cada NPC mientras intenta apuntar; puntería imperfecta que mejora contra blancos inmovilizados (backlog 8).
+- [ ] Apoyo aliado con demora ocasional: remoción de parálisis y salvataje por parte de magos y clérigos, no instantáneo (backlog 10).
+- [ ] Validación en playtest del ritmo de bots y ajustes de balance resultantes (backlog 4/5/7).

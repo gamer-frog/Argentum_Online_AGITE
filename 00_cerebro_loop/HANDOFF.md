@@ -1,29 +1,28 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-Se completó la infraestructura base del cerebro del agente y se verificó la app local existente. El proyecto ya contiene un prototipo web jugable de Argentum Online con arena local 4v4, movimiento, combate, habilidades, bots y reaparición. No se reemplazó el juego existente.
+2026-11-11 · GAUNTLET LOOP v6.0 · Iteración 1 [B]: cierre de los ítems de roadmap pendientes. Se verificó la app en Chromium (`http://localhost:3002`): canvas pintado, combate 4v4 activo, consola con 0 errores y 0 advertencias. Se cerraron "Cierre de esta subtarea" y "Producto: referencia AO" en `ROADMAP.md`/`TODO.md` con la evidencia existente (README fija `ao-libre/ao-cliente@7d32d61`, `assets/ao/ATTRIBUTION.txt` versionado, `roadmap/inventario-recursos-ao.md`), se registró el pedido v6.0 en `USER_REQUESTS.md` y se cargó la cola de producto activa (backlog de agite del README) como nuevos ítems del roadmap.
 
 ## Estado del build/navegador
-🟢 Verde. Verificación realizada con Chromium en `http://localhost:3002`; canvas y escena visibles, interacción de combate comprobada y consola de la página sin errores. El prototipo no es un cliente completo ni multijugador en red; revisar el README para sus límites conocidos.
-
-## Decisiones de diseño tomadas
-- Se conserva el juego existente y su documentación; sus reglas y valores se describen como aproximados, no como una recreación fiel de AO.
-- `game.js` es el código fuente del juego y `dist/game.js` su copia de despliegue. Mantenerlos sincronizados cuando cambie código.
-- El archivo técnico existente se llama `Agents.md` (A mayúscula), por lo que se agregó allí la jerarquía solicitada sin borrar sus instrucciones de entorno.
-- No se integran ramas anteriores a ciegas; los detalles históricos de checkpoints rescatados o descartados están en `CEMETERY.md`.
+🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; el juego es jugable: mover, seleccionar objetivo (Tab/clic), atacar (F), habilidades 1–3, esquiva, pausa y reinicio. Los bots combaten activamente (el jugador recibe daño si no se mueve).
 
 ## PRÓXIMO PASO INMEDIATO
-🚀 Terminar la revisión de Git de esta subtarea y publicar solo si `origin/main` sigue siendo el padre directo del cambio. Después, abordar la prioridad de producto abierta: fijar una referencia visual AO y completar la auditoría de licencias/atribución por recurso antes de ampliar assets.
+🚀 Iteración 2 [B] — Pociones rojas y azules ilimitadas para práctica (backlog README ítem 3): teclas 4/5 y botones en la barra inferior; beber una poción impide atacar/lanzar durante la acción y viceversa. Después: hechizos a cualquier distancia + balance de combo letal, nombres sin facción/mira sin texto/textos AO más pequeños, cursores persistentes, apoyo aliado ocasional. La cola completa vive en `ROADMAP.md`.
+
+## Decisiones de diseño tomadas
+- La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
+- La regla v6.0 del usuario anula instrucciones previas del repo; por eso el bloque "REGLA SUPREMA" se retiró de `Agents.md` en esta iteración (el cambio ya estaba en el árbol de trabajo y coincide con la anulación solicitada).
+- `game.js` es la fuente y `dist/game.js` la copia de despliegue: mantenerlos sincronizados en cada commit (start.sh también los copia al arrancar).
+- Las mecánicas del prototipo siguen siendo aproximaciones de AO, no fidelidad confirmada; contrastar con AO Libre antes de presentar reglas como fieles.
 
 ## Contexto importante
 - Ejecutar desde la raíz con `PORT=3002 bash start.sh`; abrir `http://localhost:3002`.
-- Controles: flechas/WASD para moverse; clic, lista o Tab para objetivo; F/Enter para atacar; teclas 1–3 y clic para habilidades; Esc para cerrar panel/guía; botón de pausa para pausar.
-- El combate es local e infinito, sin puntuación ni fin de partida. Inventario, equipo, persistencia y multijugador en red no están implementados.
-- Historial del BOOT: el checkpoint 40 se absorbió por fast-forward, y las refs remotas `opencode-checkpoints/*` y `opencode-resume/*` se verificaron vacías en la continuación anterior. Los tips preservados están documentados en `CEMETERY.md`.
-- La sesión actual parte del commit `9174a24` en la rama `opencode/42552277598`; la consulta de `origin/main` devolvió el mismo hash. Verificar de nuevo inmediatamente antes de publicar y no forzar si el remoto avanzó.
-- Captura de la verificación: `screenshots/brain-foundation.png`. La ruta completa `screenshots/` está ignorada por `.gitignore`; se conserva como evidencia local y no se fuerza su inclusión.
+- Controles actuales: flechas/WASD mover; clic/Tab objetivo; F/Enter atacar; 1–3 habilidades; Esc cerrar/pausar; botón pausa.
+- La sesión parte de `868700d` (rama `opencode/42952272654`), igual a `origin/main` tras fetch. Publicar solo con fast-forward (`git push origin HEAD:main`), nunca force push.
+- Ignorar por completo branches/tags `opencode-*` y `graveyard-*` viejos; no mergearlos a ciegas.
+- `playwright-cli` necesita `playwright-cli install-browser chromium` si la caché está vacía. Este modelo de agente no puede leer imágenes: verificar con `playwright-cli eval` (píxeles pintados del canvas, texto del HUD, estado de juego) y `playwright-cli console`.
+- Los screenshots se guardan fuera del repo (`/tmp/opencode/shots`); `screenshots/` está ignorado por `.gitignore`.
 
 ## Historial de verificación conservado
-- En la continuación anterior se publicó en `main` el commit `9880942` tras validar `game.js`/`dist/game.js`, sincronía de archivos y controles de habilidades en Chromium en `http://127.0.0.1:3000`; consola con cero errores y advertencias.
-- La inicialización del protocolo se probó previamente desde `http://127.0.0.1:3000/`; se reportó documento/canvas visibles y consola limpia. En esta sesión se repitió la verificación en el puerto 3002 con el Chromium administrado por `playwright-cli`.
-- El análisis histórico identificó el checkpoint #31 (`711c0d0`) como no verificado por un build fallido; el checkpoint 39 quedó preservado tras conflictos documentales. No resucitar esos cambios mediante merge ciego; consultar `CEMETERY.md`.
+- 2026-11-11: consola 0 errores/0 advertencias tras cargar y jugar (Tab, F, W); canvas 917×675 con >600k píxeles pintados; HUD vivo (`healthValue` cayó a 20/130 por daño de bots durante la prueba).
+- Sesiones previas: verificación del cerebro en 3002 con capturas desktop/mobile, recursos HTTP 200 y consola limpia; commits `9880942` y `868700d` publicados en `main` tras validar `game.js`/`dist/game.js` en Chromium.
