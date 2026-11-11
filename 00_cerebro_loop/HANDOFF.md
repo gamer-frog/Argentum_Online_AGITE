@@ -17,7 +17,7 @@
 
 ## Contexto importante
 - Ejecutar desde la raíz con `PORT=3002 bash start.sh`; abrir `http://localhost:3002`.
-- Controles actuales: flechas/WASD mover; clic/Tab objetivo; F/Enter atacar; 1-4 hechizos (mira en vivo hasta el click, click en suelo = tiro a casilla); 5-6 pociones; Esc/click-derecho desarma el hechizo; Esc cerrar/pausar; botón pausa.
+- Controles actuales: flechas/WASD mover; clic/Tab objetivo; F/Enter/ESPACIO atacar; 1-4 hechizos (mira en vivo hasta el click, click en suelo = tiro a casilla, lanzar NO frena el movimiento); E arma Inmovilizar; Q arma Remover Parálisis; 5-6 pociones; Esc/click-derecho desarma el hechizo; Esc cerrar/pausar; botón pausa.
 - La sesión parte de `868700d` (rama `opencode/42952272654`), igual a `origin/main` tras fetch. Publicar solo con fast-forward (`git push origin HEAD:main`), nunca force push.
 - Ignorar por completo branches/tags `opencode-*` y `graveyard-*` viejos; no mergearlos a ciegas.
 - `playwright-cli` necesita `playwright-cli install-browser chromium` si la caché está vacía. Este modelo de agente no puede leer imágenes: verificar con `playwright-cli eval` (píxeles pintados del canvas, texto del HUD, estado de juego) y `playwright-cli console`.
