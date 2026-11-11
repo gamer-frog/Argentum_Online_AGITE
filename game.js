@@ -23,13 +23,13 @@
   const CHARACTER_LEVEL = 40;
   const ACTORS = [
     { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
-    { id: 'sacredMage', name: 'Mago Sagrado', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
-    { id: 'sacredCleric', name: 'Clérigo Sagrado', team: 'sacred', className: 'cleric', level: CHARACTER_LEVEL, x: 43, y: 49 },
-    { id: 'sacredPaladin', name: 'Paladín Sagrado', team: 'sacred', className: 'paladin', level: CHARACTER_LEVEL, x: 46, y: 46 },
-    { id: 'chaoticWarrior', name: 'Guerrero Caótico', team: 'chaotic', className: 'warrior', level: CHARACTER_LEVEL, x: 57, y: 46 },
-    { id: 'chaoticMage', name: 'Mago Caótico', team: 'chaotic', className: 'mage', level: CHARACTER_LEVEL, x: 57, y: 43 },
-    { id: 'chaoticCleric', name: 'Clérigo Caótico', team: 'chaotic', className: 'cleric', level: CHARACTER_LEVEL, x: 57, y: 49 },
-    { id: 'chaoticPaladin', name: 'Paladín Caótico', team: 'chaotic', className: 'paladin', level: CHARACTER_LEVEL, x: 54, y: 46 }
+    { id: 'sacredMage', name: 'Thalira', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
+    { id: 'sacredCleric', name: 'Bendrick', team: 'sacred', className: 'cleric', level: CHARACTER_LEVEL, x: 43, y: 49 },
+    { id: 'sacredPaladin', name: 'Aldric', team: 'sacred', className: 'paladin', level: CHARACTER_LEVEL, x: 46, y: 46 },
+    { id: 'chaoticWarrior', name: 'Drakar', team: 'chaotic', className: 'warrior', level: CHARACTER_LEVEL, x: 57, y: 46 },
+    { id: 'chaoticMage', name: 'Morvath', team: 'chaotic', className: 'mage', level: CHARACTER_LEVEL, x: 57, y: 43 },
+    { id: 'chaoticCleric', name: 'Valthor', team: 'chaotic', className: 'cleric', level: CHARACTER_LEVEL, x: 57, y: 49 },
+    { id: 'chaoticPaladin', name: 'Grimwald', team: 'chaotic', className: 'paladin', level: CHARACTER_LEVEL, x: 54, y: 46 }
   ];
   const HEADINGS = { N: 1, E: 2, S: 3, W: 4 };
   const DELTAS = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
@@ -79,6 +79,9 @@
   // Pociones de práctica ilimitadas: beber ocupa al personaje e impide atacar/lanzar; las acciones también impiden beber.
   const POTION_DURATION = 1.1, POTION_HP_SHARE = .4, POTION_MANA_SHARE = .45;
   const CAST_RECOVERY = .9;
+  // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
+  const SPELL_AIM_COLORS = { 2: '#ff9a54', 9: '#64d8d0', 25: '#f4df9b' };
+  const MELEE_AIM_COLOR = '#ff685b', DEFAULT_AIM_COLOR = '#e8b75f', HEAL_AIM_COLOR = '#9ee68b';
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
@@ -374,21 +377,21 @@
     if (!actor.alive || !target?.alive) return;
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
-      addFloatingTextAt(aim.x, aim.y, 'ESQUIVADO', 'miss');
+      addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
       return;
     }
     // Hechizos con telégrafo apuntado: aciertan casi siempre, pero un blanco libre en movimiento puede hacerlos fallar de forma humana.
     if (aim.spell) {
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
-        addFloatingTextAt(aim.x, aim.y, 'FALLÓ', 'miss');
+        addFloatingTextAt(aim.x, aim.y, 'falló', 'status');
         return;
       }
       npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
       return;
     }
     if (Math.random() > NPC_MELEE_ACCURACY) {
-      addFloatingTextAt(aim.x, aim.y, 'FALLÓ', 'miss');
+      addFloatingTextAt(aim.x, aim.y, 'falló', 'status');
       return;
     }
     actor.flash = .1;
@@ -428,7 +431,7 @@
       }
       if (skill.cleanse && target.immobilized > 0) {
         target.immobilized = 0;
-        addFloatingText(target, 'LIBRE', 'heal');
+        addFloatingText(target, 'Removida', 'status');
       }
       addSpellEffect(sx, sy, tx, ty, 'heal', skill.fxSpellId);
     } else {
@@ -440,7 +443,7 @@
       if (skill.immobilize) {
         target.immobilized = Math.max(target.immobilized, skill.immobilize);
         target.step = null; target.stepTime = 0;
-        addFloatingText(target, 'INMOVILIZADO', 'miss');
+        addFloatingText(target, 'Paralizado', 'status');
       }
       if (target.hp <= 0) kill(target, actor);
     }
@@ -495,7 +498,7 @@
       }
       if (skill.cleanse && player.immobilized > 0) {
         player.immobilized = 0;
-        addFloatingText(player, 'LIBRE', 'heal');
+        addFloatingText(player, 'Removida', 'status');
       }
       addSpellEffect(px, py, px, py, 'heal', skill.fxSpellId);
       toast(`${skill.name}: ${restored ? `recuperaste ${restored} de vida` : 'eliminaste la inmovilización'}.`);
@@ -509,9 +512,9 @@
       if (skill.immobilize) {
         target.immobilized = Math.max(target.immobilized, skill.immobilize);
         target.step = null; target.stepTime = 0;
-        addFloatingText(target, 'INMOVILIZADO', 'miss');
+        addFloatingText(target, 'Paralizado', 'status');
       }
-      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Inmovilizado.' : ''}`);
+      toast(`${skill.name} · ${damage} de daño a ${target.name}.${skill.immobilize ? ' Paralizado.' : ''}`);
       playSpellSound(skill.fxSpellId, currentClass === 'mage' ? 620 : 340);
       if (target.hp <= 0) kill(target, player);
     }
@@ -548,6 +551,8 @@
     player.skillCooldowns = [0, 0, 0]; selectedSkill = null;
     player.potionCd = 0; player.castCd = 0;
     $('heroClass').textContent = profile.label;
+    const selfTag = document.querySelector('.self-row .roster-copy small');
+    if (selfTag) selfTag.textContent = `TÚ · ${profile.label}`;
     renderSkills(); refreshSkillSelection(); refreshHud();
     toast(`Clase ${profile.label.toLowerCase()} seleccionada.`);
   }
@@ -837,14 +842,15 @@
     }
   }
   function drawCombatEffects(cameraX, cameraY, now) {
-    const aimColors = ['#ff685b', '#64d8d0', '#e8b75f'];
-    for (const [index, actor] of fighters.slice(1).entries()) {
+    for (const actor of fighters.slice(1)) {
       const aim = actor.aim;
       if (!aim) continue;
       const [fromX, fromY] = screenTile(aim.fromX, aim.fromY, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
-      const color = aimColors[index % aimColors.length], pulse = .5 + Math.sin(now / 90 + aim.phase) * .16;
+      // Mira sin texto: el color comunica qué se prepara (hechizo por FX, rojo para golpe).
+      const color = aim.spell ? (SPELL_AIM_COLORS[aim.spell.skill?.fxSpellId] ?? DEFAULT_AIM_COLOR) : MELEE_AIM_COLOR;
+      const pulse = .5 + Math.sin(now / 90 + aim.phase) * .16;
       ctx.save(); ctx.globalAlpha = .72 + pulse * .28;
       ctx.strokeStyle = color; ctx.fillStyle = color;
       ctx.lineWidth = Math.max(2, tilePx * .055); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .3;
@@ -854,9 +860,20 @@
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
       ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
-      ctx.shadowBlur = 4; ctx.textAlign = 'center'; ctx.font = `700 ${Math.max(9, tilePx * .27)}px DM Sans, sans-serif`;
-      ctx.fillStyle = '#fff0d4'; ctx.fillText(`${actor.name.split(' ')[0]} · APUNTANDO`, x, sy - 4);
       ctx.restore();
+    }
+    // Mira del jugador: anillo punteado sobre el objetivo con el color del hechizo preparado.
+    const readySkill = selectedSkill === null ? null : skillAt(selectedSkill);
+    const readyTarget = readySkill ? byId[selected] : null;
+    if (readySkill && readyTarget?.alive && readyTarget !== player) {
+      const [px, py] = position(readyTarget), [tsx, tsy] = screenTile(px, py, cameraX, cameraY);
+      const x = tsx + tilePx / 2, y = tsy + tilePx / 2;
+      const color = readySkill.type === 'heal' ? HEAL_AIM_COLOR : SPELL_AIM_COLORS[readySkill.fxSpellId] ?? DEFAULT_AIM_COLOR;
+      const pulse = .5 + Math.sin(now / 120) * .2;
+      ctx.save(); ctx.globalAlpha = .5 + pulse * .35; ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, tilePx * .05);
+      ctx.setLineDash([tilePx * .16, tilePx * .12]);
+      ctx.beginPath(); ctx.arc(x, y, tilePx * (.3 + pulse * .04), 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
     }
     for (const effect of spellEffects) {
       const progress = effect.age / effect.duration;
@@ -885,9 +902,11 @@
     for (const item of floatingTexts) {
       const [sx, sy] = screenTile(item.x, item.y, cameraX, cameraY), progress = item.age / 1.05;
       ctx.save(); ctx.globalAlpha = Math.min(1, (1 - progress) * 2.5);
-      ctx.textAlign = 'center'; ctx.font = `800 ${Math.max(14, tilePx * .48)}px DM Sans, sans-serif`;
-      ctx.fillStyle = item.kind === 'spell' ? '#c3c6c8' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'mana' ? '#9fd8ee' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
-      if (item.kind === 'spell') ctx.font = `800 ${Math.max(12, tilePx * .4)}px DM Sans, sans-serif`;
+      ctx.textAlign = 'center';
+      if (item.kind === 'status') ctx.font = `700 ${Math.max(9, tilePx * .26)}px DM Sans, sans-serif`;
+      else if (item.kind === 'spell') ctx.font = `800 ${Math.max(12, tilePx * .4)}px DM Sans, sans-serif`;
+      else ctx.font = `800 ${Math.max(14, tilePx * .48)}px DM Sans, sans-serif`;
+      ctx.fillStyle = item.kind === 'spell' ? '#c3c6c8' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'mana' ? '#9fd8ee' : item.kind === 'status' ? '#e8d9a8' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
       ctx.fillText(item.text, sx + tilePx / 2, sy - tilePx * .18 - progress * tilePx * .8);
       ctx.restore();
     }
@@ -930,7 +949,7 @@
     if (targetAlive) {
       const targetDistance = distance(player, target);
       const attackState = !player.alive ? 'REAPARECIENDO' : paused ? 'EN PAUSA' : targetDistance > 1 ? 'FUERA DE ALCANCE' : player.attackCd > 0 ? `ATACÁ EN ${player.attackCd.toFixed(1)}s` : 'AL ALCANCE';
-      $('targetStatus').textContent = `${Math.round(target.hp)}% · ${targetDistance} casilleros · ${attackState}`;
+      $('targetStatus').textContent = `${Math.max(0, Math.round(target.hp / (target.maxHp || 1) * 100))}% · ${targetDistance} casilleros · ${attackState}`;
     } else {
       $('targetStatus').textContent = 'Seleccioná un rival';
     }
