@@ -22,14 +22,14 @@
   let MAP_URL = MAP_CANDIDATES[0];
   const CHARACTER_LEVEL = 40;
   const ACTORS = [
-    { id: 'player', name: 'Viajero del Sur', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
-    { id: 'sacredMage', name: 'Thalira', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
-    { id: 'sacredCleric', name: 'Bendrick', team: 'sacred', className: 'cleric', level: CHARACTER_LEVEL, x: 43, y: 49 },
-    { id: 'sacredPaladin', name: 'Aldric', team: 'sacred', className: 'paladin', level: CHARACTER_LEVEL, x: 46, y: 46 },
-    { id: 'chaoticWarrior', name: 'Drakar', team: 'chaotic', className: 'warrior', level: CHARACTER_LEVEL, x: 57, y: 46 },
-    { id: 'chaoticMage', name: 'Morvath', team: 'chaotic', className: 'mage', level: CHARACTER_LEVEL, x: 57, y: 43 },
-    { id: 'chaoticCleric', name: 'Valthor', team: 'chaotic', className: 'cleric', level: CHARACTER_LEVEL, x: 57, y: 49 },
-    { id: 'chaoticPaladin', name: 'Grimwald', team: 'chaotic', className: 'paladin', level: CHARACTER_LEVEL, x: 54, y: 46 }
+    { id: 'player', name: 'GUERRERO', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
+    { id: 'sacredMage', name: 'MAGO', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
+    { id: 'sacredCleric', name: 'CLÉRIGO', team: 'sacred', className: 'cleric', level: CHARACTER_LEVEL, x: 43, y: 49 },
+    { id: 'sacredPaladin', name: 'PALADÍN', team: 'sacred', className: 'paladin', level: CHARACTER_LEVEL, x: 46, y: 46 },
+    { id: 'chaoticWarrior', name: 'GUERRERO', team: 'chaotic', className: 'warrior', level: CHARACTER_LEVEL, x: 57, y: 46 },
+    { id: 'chaoticMage', name: 'MAGO', team: 'chaotic', className: 'mage', level: CHARACTER_LEVEL, x: 57, y: 43 },
+    { id: 'chaoticCleric', name: 'CLÉRIGO', team: 'chaotic', className: 'cleric', level: CHARACTER_LEVEL, x: 57, y: 49 },
+    { id: 'chaoticPaladin', name: 'PALADÍN', team: 'chaotic', className: 'paladin', level: CHARACTER_LEVEL, x: 54, y: 46 }
   ];
   const HEADINGS = { N: 1, E: 2, S: 3, W: 4 };
   const DELTAS = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
@@ -79,7 +79,7 @@
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
   }
-  const STEP_DURATION = .24; // Velocidad real de AO: ~4 casilleros/seg (entre la caminata clásica y el agite frenético).
+  const STEP_DURATION = .22; // Velocidad de Imperium AO Classic: apenas más rápida que la caminata clásica (~4,5 casilleros/s).
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const NPC_COMBAT_RANGES = {
@@ -564,6 +564,13 @@
       : 'elegí un rival en el campo.';
     toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${usage}`);
   }
+  // Atajos E/Q: arman el hechizo propio de la clase (Inmovilizar / Remover Parálisis) como los slots 1-4.
+  function armSkillOfType(type) {
+    if (paused || !player.alive) return;
+    const index = (CLASS_PROFILES[currentClass]?.skills ?? []).findIndex(skill => skill?.type === type);
+    if (index < 0) { toast(type === 'immobilize' ? 'Tu clase no tiene Inmovilizar.' : 'Tu clase no tiene Remover Parálisis.'); return; }
+    selectSkill(index);
+  }
   function refreshSkillSelection() {
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, slot) => {
       button.classList.toggle('active-spell', slot === selectedSkill);
@@ -653,14 +660,19 @@
     currentClass = className in CLASS_PROFILES ? className : 'warrior';
     const profile = CLASS_PROFILES[currentClass];
     const [lookBody, lookHead] = FACTION_LOOKS[player.team]?.[currentClass] ?? [1, 1];
+    player.className = currentClass; player.name = profile.label;
     player.body = lookBody; player.head = lookHead;
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0, 0]; selectedSkill = null;
     player.potionCd = 0; player.castCd = 0;
     $('heroClass').textContent = profile.label;
+    const heroName = document.querySelector('.hero-name');
+    if (heroName) heroName.textContent = profile.label;
+    const selfName = document.querySelector('.self-row .roster-copy b');
+    if (selfName) selfName.textContent = profile.label;
     const selfTag = document.querySelector('.self-row .roster-copy small');
-    if (selfTag) selfTag.textContent = `TÚ · ${profile.label}`;
+    if (selfTag) selfTag.textContent = 'TÚ';
     renderSkills(); refreshSkillSelection(); refreshHud();
     toast(`Clase ${profile.label.toLowerCase()} seleccionada.`);
   }
@@ -751,7 +763,7 @@
     if (joystickKey) keys.add(joystickKey);
   }
   function updatePlayer() {
-    if (player.step || player.aim) return; // Apuntar es plantarse: el caster no camina con el hechizo en la mano.
+    if (player.step) return; // Lanzar NO frena: caminás mientras apuntás y el hechizo sale igual.
     // Use only the most recently pressed direction: holding two keys never creates a diagonal.
     const key = [...keys].reverse().find(pressed => PLAYER_DIRECTIONS[pressed]);
     if (key) startStep(player, ...PLAYER_DIRECTIONS[key]);
@@ -991,7 +1003,7 @@
       ctx.strokeStyle = '#ded6c2'; ctx.lineWidth = Math.max(1.5, tilePx * .055); ctx.beginPath();
       ctx.moveTo(centerX + tilePx * .24, baseY - tilePx * .36); ctx.lineTo(centerX + tilePx * .39, baseY - tilePx * .66); ctx.stroke();
     }
-    const labelY = sy + tilePx + 12, label = actor === player ? 'Viajero del Sur' : actor.name;
+    const labelY = sy + tilePx + 12, label = actor.name;
     ctx.textAlign = 'center'; ctx.font = `600 ${Math.max(8, tilePx * .25)}px DM Sans, sans-serif`;
     ctx.fillStyle = actor.team === 'sacred' ? '#7ec8ff' : '#ff8274'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, centerX, labelY, tilePx * 2.8);
@@ -1021,7 +1033,7 @@
     }
     drawGrh(bodyId, sx, sy, now, true);
     drawGrh(headId, sx + (body.HeadOffsetX || 0) * tilePx / 32, sy + (body.HeadOffsetY || 0) * tilePx / 32, now, false);
-    const labelY = sy + tilePx + 12, label = actor === player ? 'Viajero del Sur' : actor.name;
+    const labelY = sy + tilePx + 12, label = actor.name;
     ctx.save(); ctx.textAlign = 'center'; ctx.font = `600 ${Math.max(8, tilePx * .25)}px DM Sans, sans-serif`;
     ctx.fillStyle = actor.team === 'sacred' ? '#7ec8ff' : '#ff8274'; ctx.shadowColor = '#10130e'; ctx.shadowBlur = 4;
     ctx.fillText(label, sx + tilePx / 2, labelY, tilePx * 2.8);
@@ -1062,7 +1074,9 @@
     for (const actor of fighters) {
       const aim = actor.aim;
       if (!aim) continue;
-      const [fromX, fromY] = screenTile(aim.fromX, aim.fromY, cameraX, cameraY);
+      // El origen de la mira del jugador es su posición actual: puede caminar mientras apunta.
+      const [ox, oy] = actor === player ? position(actor) : [aim.fromX, aim.fromY];
+      const [fromX, fromY] = screenTile(ox, oy, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
       // Mira sin texto: el color comunica qué hechizo/golpe viene (aimColor por habilidad, rojo para golpes).
@@ -1251,7 +1265,9 @@
       else togglePause();
       return;
     }
-    if (key === 'enter' || key === 'f') { event.preventDefault(); attack(); return; }
+    if (key === 'enter' || key === 'f' || key === ' ') { event.preventDefault(); attack(); return; }
+    if (key === 'e') { armSkillOfType('immobilize'); return; }
+    if (key === 'q') { armSkillOfType('cleanse'); return; }
     if (['1', '2', '3', '4'].includes(key)) { selectSkill(Number(key) - 1); return; }
     if (key === '5') { event.preventDefault(); drinkPotion('red'); return; }
     if (key === '6') { event.preventDefault(); drinkPotion('blue'); return; }
