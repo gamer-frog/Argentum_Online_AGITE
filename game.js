@@ -84,7 +84,7 @@
   const CAST_RECOVERY = .9;
   // Apoyo aliado (backlog 10): solo magos y clérigos asisten a otros aliados, con demora ocasional; nunca es instantáneo.
   const SUPPORT_CLASSES = new Set(['mage', 'cleric']);
-  const SUPPORT_DELAY = { cleanse: [.9, 1.9], salvage: [.45, 1.05], heal: [.9, 1.8] };
+  const SUPPORT_DELAY = { cleanse: [.5, 1.2], salvage: [.3, .7], heal: [.9, 1.8] };
   const SUPPORT_CLASS_HP = .68, SUPPORT_SALVAGE_HP = .34;
   // Movimiento humano: flanqueo en tramos sostenidos con una pausa breve entre tramos.
   const STRAFE_WINDOW = [.7, 1.4], STRAFE_HOLD = .45;
@@ -387,8 +387,10 @@
     const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
     actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
+    // Tiempos random: cada apuntado tarda distinto (hechizos 0,42–0,78 s; golpes 0,40–0,60 s).
+    const base = spell ? rand(.42, .78) : rand(.4, .6);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
-    const duration = NPC_AIM_DURATION * Math.pow(.68, retries);
+    const duration = base * Math.pow(.68, retries);
     actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
     // El primer intento usa el ritmo normal; un reintento encadenado mantiene la mira viva sin pausa larga.
     actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
@@ -399,6 +401,9 @@
     if (!aim) return;
     const target = byId[aim.targetId];
     if (!actor.alive || !target?.alive) return;
+    const skill = aim.spell?.skill ?? null;
+    // Las curas no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
+    if (skill?.type === 'heal') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
@@ -412,7 +417,8 @@
     if (aim.spell) {
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
-        addFloatingTextAt(aim.x, aim.y, 'falló', 'status');
+        // Errar un hechizo es fallo del lanzador, no esquiva del blanco.
+        addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
         return;
       }
       npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
@@ -454,7 +460,9 @@
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
     actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : 4.2 + index * .8;
-    actor.attackCd = Math.max(actor.attackCd, .55);
+    // Intervalo global de lanzamiento: nadie encadena hechizos ni golpes al instante.
+    actor.attackCd = Math.max(actor.attackCd, CAST_RECOVERY);
+    actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
       const restored = Math.min(skill.heal, target.maxHp - target.hp);
@@ -514,6 +522,8 @@
     const skill = skillAt(index), target = targetOverride || byId[selected];
     if (!Number.isInteger(index) || index < 0 || !Array.isArray(player.skillCooldowns) || index >= player.skillCooldowns.length) return;
     if ((player.potionCd ?? 0) > 0) { toast('Estás bebiendo una poción; esperá para lanzar.'); return; }
+    if ((player.castCd ?? 0) > 0) { toast(`Intervalo de lanzamiento: esperá ${(player.castCd).toFixed(1)}s.`); return; }
+    if (player.attackCd > 0) { toast('Terminá el golpe antes de lanzar.'); return; }
     if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
       toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
     }
@@ -680,6 +690,7 @@
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
       if (!actor.alive || actor.step || actor.immobilized > 0) continue;
+      if ((actor.castCd ?? 0) > 0) continue; // Intervalo de lanzamiento: recupera antes de volver a actuar.
       actor.aiTimer -= dt;
       if (actor.aiTimer > 0) continue;
       const tick = .18 + Math.random() * .1;
@@ -700,8 +711,9 @@
           const wounded = candidates[0] ?? null;
           if (wounded) {
             if (wounded === actor) {
-              // Autocuidado (vendaje/plegaria propia): respuesta inmediata como acción propia.
-              if (npcCastSkill(actor, heal, healingIndex, actor)) continue;
+              // Autocuidado (vendaje/plegaria propia): también se apunta, con su telégrafo.
+              beginNpcAim(actor, actor, { skill: heal, index: healingIndex });
+              continue;
             } else if (SUPPORT_CLASSES.has(actor.className) && !actor.supportTask) {
               // Apoyo a un aliado: intención demorada, visible como anillo verde sobre el aliado.
               const kind = wounded.immobilized > 0 ? 'cleanse' : (wounded.hp / wounded.maxHp < SUPPORT_SALVAGE_HP ? 'salvage' : 'heal');
@@ -722,7 +734,7 @@
         .filter(({ skill, index }) => skill?.type === 'damage'
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
-      if (!actor.aim && attackSkills.length) {
+      if (!actor.aim && actor.attackCd <= 0 && attackSkills.length) {
         beginNpcAim(actor, target, { skill: attackSkills[0].skill, index: attackSkills[0].index });
         continue;
       }
@@ -756,6 +768,7 @@
       if (!task) continue;
       task.timer -= dt;
       if (task.timer > 0) continue;
+      if ((actor.castCd ?? 0) > 0) { task.timer = .3; continue; } // Espera el intervalo de lanzamiento antes de apuntar la ayuda.
       actor.supportTask = null;
       if (!actor.alive || actor.immobilized > 0) continue;
       const ally = byId[task.allyId];
@@ -767,9 +780,11 @@
         ? skill.cleanse && ally.immobilized > 0
         : ally.hp < ally.maxHp && ally.hp / ally.maxHp < SUPPORT_CLASS_HP;
       if (!stillNeeded) continue;
-      if (npcCastSkill(actor, skill, healingIndex, ally)) {
-        actor.aim = null; // Girarse a apoyar cancela la mira de combate en curso.
+      if (actor.mana < skill.cost || (Array.isArray(actor.skillCooldowns) && actor.skillCooldowns[healingIndex] > 0)) {
+        actor.supportTask = task; task.timer = .5; continue; // Sin maná o en cooldown: reintenta en un rato.
       }
+      // Toda ayuda se apunta: telégrafo verde sobre el aliado y recién entonces el hechizo.
+      beginNpcAim(actor, ally, { skill, index: healingIndex });
     }
   }
   function update(dt) {
@@ -1139,6 +1154,7 @@
   // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
   window.AO_DEBUG = () => ({
     elapsed: Number(elapsed.toFixed(2)), paused,
+    texts: floatingTexts.map(text => text.text),
     fighters: fighters.map(actor => ({
       id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
       x: actor.x, y: actor.y, stepping: Boolean(actor.step),
