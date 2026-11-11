@@ -406,10 +406,23 @@
   function addFloatingTextAt(x, y, text, kind) {
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
+  function addMissText(actor, target = null) {
+    addFloatingText(target?.alive ? target : actor, 'ERRADO', 'status');
+  }
+  function nearbyAimTile(actor, target, skill) {
+    const [tx, ty] = actorTile(target), [ax, ay] = actorTile(actor);
+    const candidates = [[tx, ty - 1], [tx + 1, ty], [tx, ty + 1], [tx - 1, ty]]
+      .filter(([x, y]) => (x !== tx || y !== ty)
+        && (x !== ax || y !== ay)
+        && Math.abs(ax - x) + Math.abs(ay - y) <= skillRange(skill)
+        && Math.abs(ax - x) + Math.abs(ay - y) <= SPELL_VISION_RANGE
+        && (!mapData || isOpen(x, y)));
+    return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+  }
   function beginNpcAim(actor, target, spell = null, retries = 0, tile = null) {
+    if (!actor?.alive || actor.aim) return false;
     const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
-    actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
     // El jugador lanza casi al instante sobre un objetivo elegido; los NPC conservan su ventana de esquiva.
     const directPlayerTarget = actor === player && !!target && !!spell;
     const base = directPlayerTarget ? .1 : spell ? rand(.38, .62) : rand(.36, .52);
@@ -421,8 +434,17 @@
   }
   function resolveNpcAim(actor) {
     const aim = actor.aim;
+    if (!aim || !actor.alive) { actor.aim = null; return; }
+    // Los NPC pueden re-apuntar durante la recuperación, pero el lanzamiento espera hasta que termine.
+    if (actor !== player && aim.spell && (actor.castCd ?? 0) > 0) {
+      aim.remaining = 0;
+      return;
+    }
     actor.aim = null;
-    if (!aim || !actor.alive) return;
+    if (actor !== player && aim.spell) {
+      actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
+      actor.attackCd = Math.max(actor.attackCd, CAST_RECOVERY);
+    }
     // Tiro a casilla (click en el suelo): pega a quien esté parado ahí, o erra.
     if (aim.tile) { resolveTileAim(actor, aim); return; }
     const target = byId[aim.targetId];
@@ -437,26 +459,25 @@
     if (aim.directPlayerTarget && aim.spell) { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
-      addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
-      // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
-      if ((aim.retries ?? 0) < 2 && (actor.castCd ?? 0) <= 0 && isEnemy(actor, target) && distance(actor, target) <= SPELL_VISION_RANGE) {
-        beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
-      }
+      // El blanco no esquiva el lanzamiento: el NPC apuntó a una casilla equivocada.
+      addMissText(actor, target);
+      actor.attackCd = Math.max(actor.attackCd, .9);
       return;
     }
-    // Hechizos con telégrafo apuntado: aciertan casi siempre, pero un blanco libre en movimiento puede hacerlos fallar de forma humana.
+    // Hechizos con telégrafo apuntado: el intervalo se consume también si el lanzador falla.
     if (aim.spell) {
+      actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
-        // Errar un hechizo es fallo del lanzador, no esquiva del blanco.
-        addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
+        addMissText(actor, target);
         return;
       }
       npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
       return;
     }
+    actor.attackCd = Math.max(actor.attackCd, .9);
     if (Math.random() > NPC_MELEE_ACCURACY) {
-      addFloatingTextAt(aim.x, aim.y, 'falló', 'status');
+      addMissText(actor, target);
       return;
     }
     actor.flash = .1;
@@ -473,12 +494,12 @@
   // Resolución de un tiro a casilla libre: mismo telegrama humano (puede errar) y golpea a quien esté ahí.
   function resolveTileAim(actor, aim) {
     const skill = aim.spell?.skill ?? null;
-    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addMissText(actor); return; }
     const [ax, ay] = actorTile(actor), tileDistance = Math.abs(ax - aim.x) + Math.abs(ay - aim.y);
     if (tileDistance > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
     if (tileDistance > skillRange(skill)) { addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status'); return; }
-    if (Math.random() > .82) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
     const victim = fighters.find(other => other.alive && actorTile(other)[0] === aim.x && actorTile(other)[1] === aim.y) ?? null;
+    if (Math.random() > .82) { addMissText(actor, victim); return; }
     if (!victim) { addFloatingTextAt(aim.x, aim.y, 'al vacío', 'status'); return; }
     npcCastSkill(actor, skill, aim.spell.index, victim);
   }
@@ -780,15 +801,31 @@
     const key = [...keys].reverse().find(pressed => PLAYER_DIRECTIONS[pressed]);
     if (key) startStep(player, ...PLAYER_DIRECTIONS[key]);
   }
+  function drinkNpcPotion(actor) {
+    if ((actor.potionCd ?? 0) > 0 || (actor.castCd ?? 0) > 0 || actor.aim) return false;
+    const red = actor.hp / actor.maxHp < .55;
+    const blue = !red && actor.maxMana > 0 && actor.mana / actor.maxMana < .2;
+    if (!red && !blue) return false;
+    const restored = red
+      ? Math.min(Math.ceil(actor.maxHp * POTION_HP_SHARE), actor.maxHp - actor.hp)
+      : Math.min(Math.ceil(actor.maxMana * POTION_MANA_SHARE), actor.maxMana - actor.mana);
+    if (restored <= 0) return false;
+    actor.potionCd = POTION_DURATION;
+    actor.attackCd = Math.max(actor.attackCd, POTION_DURATION);
+    actor.castCd = Math.max(actor.castCd ?? 0, POTION_DURATION);
+    if (red) { actor.hp += restored; actor.flash = .2; addFloatingText(actor, `+${restored}`, 'heal'); }
+    else { actor.mana += restored; addFloatingText(actor, `+${restored}`, 'mana'); }
+    addFloatingText(actor, red ? 'Poción roja' : 'Poción azul', 'spell');
+    return true;
+  }
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
       if (!actor.alive || actor.step) continue;
-      // Apuntar es plantarse: nadie camina mientras tiene la mira activa.
-      if (actor.aim) continue;
+      if (drinkNpcPotion(actor)) continue;
       if (actor.immobilized > 0) {
         // Congelado: solo puede intentar remover su propia parálisis, como en AO.
         const selfCleanse = (CLASS_PROFILES[actor.className]?.skills ?? []).findIndex(skill => skill?.type === 'cleanse');
-        if (selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
+        if (selfCleanse >= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0 && !actor.aim) {
           beginNpcAim(actor, actor, { skill: CLASS_PROFILES[actor.className].skills[selfCleanse], index: selfCleanse });
         }
         continue;
@@ -807,7 +844,7 @@
       if (!Array.isArray(actor.skillCooldowns)) continue;
       // Remover parálisis primero: un aliado congelado pierde varios turnos, es lo más urgente.
       const cleanseIndex = skills.findIndex((skill, index) => skill?.type === 'cleanse' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (cleanseIndex >= 0 && !recovering && !actor.supportTask) {
+      if (cleanseIndex >= 0 && !actor.supportTask) {
         const frozen = allies.find(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE);
         if (frozen) {
           const delay = rand(SUPPORT_DELAY.cleanse[0], SUPPORT_DELAY.cleanse[1]);
@@ -815,7 +852,7 @@
         }
       }
       const healingIndex = skills.findIndex((skill, index) => skill?.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (!recovering && healingIndex >= 0) {
+      if (!actor.aim && healingIndex >= 0) {
         const heal = skillAt(healingIndex, actor.className);
         if (heal) {
           const candidates = allies
@@ -826,7 +863,6 @@
             // Autocuidado: solo si de verdad está herido; curarse por curar plantado en un rincón no.
             if (actor.hp / actor.maxHp < SELF_CARE_HP) {
               beginNpcAim(actor, actor, { skill: heal, index: healingIndex });
-              continue;
             }
           } else if (wounded && SUPPORT_CLASSES.has(actor.className) && !actor.supportTask) {
             // Apoyo a un aliado: intención demorada, visible como anillo verde sobre el aliado.
@@ -851,7 +887,7 @@
       if (!combatRange) continue;
       // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
       const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (freezeIndex >= 0 && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
+      if (freezeIndex >= 0 && !actor.aim && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
         beginNpcAim(actor, target, { skill: skillAt(freezeIndex, actor.className), index: freezeIndex });
         continue;
       }
@@ -861,7 +897,7 @@
           && range <= skillRange(skill)
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
-      if (!recovering && !actor.aim && actor.attackCd <= 0 && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
+      if (!actor.aim && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, { skill: attackSkills[0].skill, index: attackSkills[0].index });
         continue;
       }
