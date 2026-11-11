@@ -48,6 +48,7 @@ Abrí <http://localhost:3000>. No abras `index.html` directamente como archivo: 
 - **Clic en un rival, en la lista o Tab:** seleccionar objetivo.
 - **F o Enter:** atacar al rival cuando esté en un casillero adyacente.
 - **Clic en una habilidad o teclas 1–3:** seleccionarla; luego elegí un rival para una habilidad ofensiva o tu personaje para curarte.
+- **Teclas 4 y 5:** beber una poción roja (vida) o azul (maná). Son ilimitadas para la práctica, pero beber ocupa al personaje: no podés atacar ni lanzar hechizos mientras dura la acción, y un golpe o hechizo reciente tampoco te deja beber hasta recuperarte.
 - **Esquiva:** los NPC anuncian algunos ataques con una línea y una mira; moverte durante el apuntado puede evitar el impacto.
 - **Combatientes:** mostrar u ocultar la lista de combatientes. **Esc** cierra la lista o la guía.
 - **☰:** pausar o reanudar.
@@ -73,7 +74,7 @@ Estos puntos quedan registrados como backlog; todavía no están implementados. 
 
 1. **Nombres y apuntado:** quitar “la facción” de los nombres; indicar la orientación sagrada/caótica en la clase (celeste/rojo). Al apuntar, mostrar solo la mira, sin texto “clase apuntando”. El color de la mira debe corresponder al hechizo preparado.
 2. **Lanzamiento legible:** mostrar sobre el personaje el nombre del hechizo que lanza e incorporar animaciones auténticas de hechizos cuando se encuentren y verifiquen recursos compatibles.
-3. **Ritmo y pociones:** ajustar los intervalos de ataques y hechizos a tiempos realistas de AO. Dar pociones rojas y azules ilimitadas para la práctica; beber una poción debe impedir atacar/lanzar durante esa acción, y viceversa.
+3. **Ritmo y pociones (pociones implementadas):** las pociones rojas y azules son ilimitadas (teclas 4 y 5) y beber ocupa al personaje: bloquea atacar y lanzar durante la acción, y viceversa. Lanzar un hechizo también impide atacar brevemente (recuperación de lanzamiento). Falta contrastar los intervalos exactos con AO Libre.
 4. **Movimiento (parcialmente implementado):** los NPC persiguen por rutas transitables, hacen desplazamientos laterales variables y siguen moviéndose durante el apuntado; la navegación penaliza casillas cercanas a aliados. Falta validar y ajustar el ritmo en playtest.
 5. **Roles de clase (parcialmente implementado):** las tácticas aproximadas priorizan distancias distintas para guerreros/paladines y magos/clérigos; el mago evita el cuerpo a cuerpo y clérigos/magos prefieren hechizos a distancia. La colaboración actual se limita principalmente a curar y elegir objetivos; falta validar y profundizar.
 6. **Reglas y balance:** permitir lanzar hechizos a cualquier distancia. Balancear los hechizos para que el combo buscado sea letal aproximadamente con un golpe y dos hechizos: mago (Apocalipsis/Juicio Final), paladín (hechizos de paladín), clérigo (Ráfaga y Curar heridas graves/Sanar). Confirmar nombres, daño y tiempos contra la versión de AO Libre elegida.

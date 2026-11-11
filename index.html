@@ -86,9 +86,9 @@
     <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
       <div class="spellbar-heading">
         <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
-        <span class="spellbar-shortcut">ATAJOS · 1 / 2 / 3</span>
+        <span class="spellbar-shortcut">ATAJOS · 1–3 HECHIZOS · 4–5 POCIONES</span>
       </div>
-      <div class="spell-loadout" aria-label="Habilidades del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button></div>
+      <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (4)"><kbd>4</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (5)"><kbd>5</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
       <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
     </section>
 
@@ -106,7 +106,7 @@
     </section>
   </main>
   <div class="toast" id="toast"></div>
-  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3</kbd><span>Seleccionar una habilidad</span></p><p><kbd>F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
+  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3</kbd><span>Seleccionar una habilidad</span></p><p><kbd>4 / 5</kbd><span>Beber poción roja (vida) o azul (maná)</span></p><p><kbd>F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
   <script src="game.js"></script>
 </body>
 </html>

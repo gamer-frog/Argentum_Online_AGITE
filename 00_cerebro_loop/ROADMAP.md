@@ -16,7 +16,7 @@
 
 Orden derivado de "Pendientes solicitados para el combate de agite" del README; cada ítem se verifica en navegador y se publica en `main` antes de pasar al siguiente.
 
-- [ ] Pociones rojas y azules ilimitadas para práctica: beber bloquea atacar/lanzar durante la acción y viceversa (backlog 3).
+- [x] Pociones rojas y azules ilimitadas para práctica: beber bloquea atacar/lanzar durante la acción y viceversa (backlog 3). Verificado en Chromium: teclas 4/5 y botones, cura con tope en vida máxima, candado de acción mutuo y cooldown visible en el slot.
 - [ ] Hechizos a cualquier distancia y ritmo realista: el lanzamiento comparte candado de acción con el ataque (backlog 3/6).
 - [ ] Balance de combo: un golpe + dos hechizos del mismo luchador aproximadamente letal (backlog 6).
 - [ ] Nombres sin facción, mira sin texto con color según el hechizo preparado y textos de estado propios de AO, más pequeños (backlog 1/9).

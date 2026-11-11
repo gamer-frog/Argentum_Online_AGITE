@@ -76,6 +76,9 @@
     cleric: { min: 3, max: 5 },
     paladin: { min: 1, max: 1 }
   };
+  // Pociones de práctica ilimitadas: beber ocupa al personaje e impide atacar/lanzar; las acciones también impiden beber.
+  const POTION_DURATION = 1.1, POTION_HP_SHARE = .4, POTION_MANA_SHARE = .45;
+  const CAST_RECOVERY = .9;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
@@ -95,7 +98,7 @@
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
       aiFlankSide: Math.random() < .5 ? -1 : 1,
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
-      skillCooldowns: [0, 0, 0], immobilized: 0
+      skillCooldowns: [0, 0, 0], immobilized: 0, potionCd: 0, castCd: 0
     };
   });
   const player = fighters[0];
@@ -333,6 +336,10 @@
   }
   function attack(actor = player, targetOverride = null) {
     if (paused || !actor.alive || actor.attackCd > 0) return false;
+    if ((actor.potionCd ?? 0) > 0) {
+      if (actor === player) toast('Estás bebiendo una poción; esperá para atacar.');
+      return false;
+    }
     const target = targetOverride || byId[selected];
     if (!target || !target.alive || target === actor || !isEnemy(actor, target)) { toast('Elegí un rival de la legión contraria.'); return false; }
     const d = distance(actor, target);
@@ -439,17 +446,27 @@
     toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${skill.type === 'heal' ? 'hacé clic en tu personaje para curarte.' : 'elegí un rival en el campo.'}`);
   }
   function refreshSkillSelection() {
-    document.querySelectorAll('.spell-slot').forEach((button, slot) => {
+    document.querySelectorAll('.spell-slot[data-skill]').forEach((button, slot) => {
       button.classList.toggle('active-spell', slot === selectedSkill);
       button.setAttribute('aria-pressed', String(slot === selectedSkill));
     });
     const skill = selectedSkill === null ? null : skillAt(selectedSkill);
     $('spellHint').textContent = skill ? `${skill.name} listo · ${skill.type === 'heal' ? 'hacé clic en tu personaje' : 'hacé clic en un rival'}` : 'Elegí un hechizo y hacé clic en un rival';
   }
+  function refreshPotions() {
+    document.querySelectorAll('.spell-slot[data-potion]').forEach(button => {
+      const kind = button.dataset.potion, drinking = (player.potionCd ?? 0) > 0;
+      const blocked = !player.alive || paused || player.attackCd > 0 || (player.castCd ?? 0) > 0;
+      button.disabled = !player.alive || paused || drinking || blocked;
+      button.classList.toggle('cooling', drinking);
+      button.querySelector('.spell-cost').textContent = drinking ? `${player.potionCd.toFixed(1)}s` : kind === 'red' ? 'VIDA ∞' : 'MANÁ ∞';
+    });
+  }
   function castSkill(index, targetOverride = null) {
     if (paused || !player.alive) return;
     const skill = skillAt(index), target = targetOverride || byId[selected];
     if (!Number.isInteger(index) || index < 0 || !Array.isArray(player.skillCooldowns) || index >= player.skillCooldowns.length) return;
+    if ((player.potionCd ?? 0) > 0) { toast('Estás bebiendo una poción; esperá para lanzar.'); return; }
     if (!skill || !target || !target.alive || (skill.type === 'heal' ? target !== player : target === player || !isEnemy(player, target))) {
       toast(skill?.type === 'heal' ? 'Hacé clic en tu personaje para curarte.' : 'Elegí un rival como objetivo.'); return;
     }
@@ -489,6 +506,27 @@
       if (target.hp <= 0) kill(target, player);
     }
     selectedSkill = null; refreshSkillSelection();
+    // El lanzamiento ocupa al personaje: recupera antes de atacar o beber otra poción.
+    player.castCd = Math.max(player.castCd ?? 0, CAST_RECOVERY);
+    player.attackCd = Math.max(player.attackCd, CAST_RECOVERY);
+    refreshHud();
+  }
+  function drinkPotion(kind) {
+    if (paused || !player.alive) return;
+    const red = kind === 'red';
+    if ((player.potionCd ?? 0) > 0) { toast('Todavía estás bebiendo la poción.'); return; }
+    if (player.attackCd > 0 || (player.castCd ?? 0) > 0) { toast('Terminá el golpe o hechizo antes de beber.'); return; }
+    const restored = red
+      ? Math.min(Math.ceil(player.maxHp * POTION_HP_SHARE), player.maxHp - player.hp)
+      : Math.min(Math.ceil(player.maxMana * POTION_MANA_SHARE), player.maxMana - player.mana);
+    if (!restored) { toast(red ? 'Ya tenés toda la vida.' : 'Ya tenés todo el maná.'); return; }
+    player.potionCd = POTION_DURATION;
+    player.attackCd = Math.max(player.attackCd, POTION_DURATION);
+    player.castCd = Math.max(player.castCd ?? 0, POTION_DURATION);
+    if (red) { player.hp += restored; player.flash = .2; addFloatingText(player, `+${restored}`, 'heal'); }
+    else { player.mana += restored; addFloatingText(player, `+${restored}`, 'mana'); }
+    addFloatingText(player, red ? 'Poción roja' : 'Poción azul', 'spell');
+    toast(red ? `Poción roja bebida: +${restored} de vida.` : `Poción azul bebida: +${restored} de maná.`);
     refreshHud();
   }
   function applyClass(className) {
@@ -498,12 +536,13 @@
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0]; selectedSkill = null;
+    player.potionCd = 0; player.castCd = 0;
     $('heroClass').textContent = profile.label;
     renderSkills(); refreshSkillSelection(); refreshHud();
     toast(`Clase ${profile.label.toLowerCase()} seleccionada.`);
   }
   function renderSkills() {
-    document.querySelectorAll('.spell-slot').forEach((button, index) => {
+    document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index);
       button.disabled = !skill;
       button.querySelector('.spell-icon').textContent = skill?.icon ?? '—';
@@ -528,7 +567,7 @@
   }
   function respawn(actor) {
     const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
-    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
+    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
     if (actor === player) updateRespawnNotice();
   }
   function updateRespawnNotice() {
@@ -646,6 +685,8 @@
       if (actor.flash > 0) actor.flash -= dt;
       if (actor.immobilized > 0) actor.immobilized = Math.max(0, actor.immobilized - dt);
       if (actor.alive) actor.mana = Math.min(actor.maxMana, actor.mana + dt * .8);
+      if (actor.potionCd > 0) actor.potionCd = Math.max(0, actor.potionCd - dt);
+      if (actor.castCd > 0) actor.castCd = Math.max(0, actor.castCd - dt);
       if (Array.isArray(actor.skillCooldowns)) actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
       if (actor.step) {
         actor.stepTime += dt;
@@ -832,7 +873,7 @@
       const [sx, sy] = screenTile(item.x, item.y, cameraX, cameraY), progress = item.age / 1.05;
       ctx.save(); ctx.globalAlpha = Math.min(1, (1 - progress) * 2.5);
       ctx.textAlign = 'center'; ctx.font = `800 ${Math.max(14, tilePx * .48)}px DM Sans, sans-serif`;
-      ctx.fillStyle = item.kind === 'spell' ? '#c3c6c8' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
+      ctx.fillStyle = item.kind === 'spell' ? '#c3c6c8' : item.kind === 'heal' ? '#9fe58e' : item.kind === 'mana' ? '#9fd8ee' : item.kind === 'miss' ? '#ffd27a' : '#ff8274'; ctx.shadowColor = '#11150f'; ctx.shadowBlur = 5;
       if (item.kind === 'spell') ctx.font = `800 ${Math.max(12, tilePx * .4)}px DM Sans, sans-serif`;
       ctx.fillText(item.text, sx + tilePx / 2, sy - tilePx * .18 - progress * tilePx * .8);
       ctx.restore();
@@ -862,13 +903,14 @@
     $('healthValue').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
     $('manaBar').style.width = `${player.mana / player.maxMana * 100}%`;
     $('manaValue').textContent = `${Math.floor(player.mana)} / ${player.maxMana}`;
-    document.querySelectorAll('.spell-slot').forEach((button, index) => {
+    document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
       button.disabled = !player.alive || !skill;
       button.classList.toggle('unavailable', !skill || player.mana < skill.cost);
       button.classList.toggle('cooling', cooldown > 0);
       button.querySelector('.spell-cost').textContent = !skill ? '—' : cooldown > 0 ? `${cooldown.toFixed(1)}s` : `${skill.cost} maná`;
     });
+    refreshPotions();
 
     const target = byId[selected], targetAlive = target?.alive && isEnemy(player, target);
     $('targetName').textContent = targetAlive ? target.name : 'Sin objetivo';
@@ -888,7 +930,7 @@
   function resetGame() {
     for (const actor of fighters) {
       const profile = CLASS_PROFILES[actor.className];
-      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0] });
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
     }
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
@@ -921,6 +963,8 @@
     }
     if (key === 'enter' || key === 'f') { event.preventDefault(); attack(); return; }
     if (['1', '2', '3'].includes(key)) { selectSkill(Number(key) - 1); return; }
+    if (key === '4') { event.preventDefault(); drinkPotion('red'); return; }
+    if (key === '5') { event.preventDefault(); drinkPotion('blue'); return; }
     if (key === 'tab') { event.preventDefault(); if (!event.repeat) cycleEnemyTarget(); return; }
     keys.add(key);
   });
@@ -933,7 +977,8 @@
   canvas.addEventListener('contextmenu', event => event.preventDefault());
   $('attackBtn').addEventListener('click', () => attack());
   $('classSelect').addEventListener('change', event => applyClass(event.target.value));
-  document.querySelectorAll('.spell-slot').forEach(button => button.addEventListener('click', () => selectSkill(Number(button.dataset.skill))));
+  document.querySelectorAll('.spell-slot[data-skill]').forEach(button => button.addEventListener('click', () => selectSkill(Number(button.dataset.skill))));
+  document.querySelectorAll('.spell-slot[data-potion]').forEach(button => button.addEventListener('click', () => drinkPotion(button.dataset.potion)));
   $('scoreboardToggle').addEventListener('click', () => toggleScoreboard());
   document.querySelectorAll('.roster-row[data-fighter]').forEach(row => {
     if (row.dataset.fighter !== 'player') row.addEventListener('click', () => selectTarget(byId[row.dataset.fighter]));
