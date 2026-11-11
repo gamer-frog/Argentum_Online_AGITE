@@ -40,26 +40,29 @@
     arrowleft: [-1, 0], a: [-1, 0]
   };
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
+  // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
+  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b', LIGHT_AIM_COLOR = '#f4df9b';
+  const FIRE_AIM_COLOR = '#ff9a54', SHOCK_AIM_COLOR = '#64d8d0', DEFAULT_AIM_COLOR = '#e8b75f';
   const CLASS_PROFILES = {
     warrior: { label: 'GUERRERO', body: 1, head: 1, hp: 130, mana: 70, skills: [
-      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [38, 50], range: 1 },
-      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32, cleanse: true },
-      { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [50, 64], range: 2 }
+      { name: 'Golpe poderoso', icon: '⚔', type: 'damage', cost: 14, damage: [38, 50], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Vendaje', icon: '✚', type: 'heal', cost: 18, heal: 32, cleanse: true, aimColor: HEAL_AIM_COLOR },
+      { name: 'Carga', icon: '➤', type: 'damage', cost: 24, damage: [50, 64], range: 2, aimColor: MELEE_AIM_COLOR }
     ] },
     mage: { label: 'MAGO', body: 2, head: 2, hp: 90, mana: 130, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [40, 54], range: 7, fxSpellId: 2 },
-      { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true },
-      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [55, 70], range: 8, immobilize: 1.8, fxSpellId: 9 }
+      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 22, damage: [40, 54], range: 7, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Curar', icon: '✚', type: 'heal', cost: 24, heal: 36, cleanse: true, aimColor: HEAL_AIM_COLOR },
+      { name: 'Rayo', icon: 'ϟ', type: 'damage', cost: 32, damage: [55, 70], range: 8, immobilize: 1.8, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR }
     ] },
     cleric: { label: 'CLÉRIGO', body: 2, head: 4, hp: 105, mana: 145, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [36, 48], range: 6, fxSpellId: 25 },
-      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true },
-      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [50, 64], range: 7 }
+      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 22, damage: [36, 48], range: 6, fxSpellId: 25, aimColor: LIGHT_AIM_COLOR },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 18, heal: 40, cleanse: true, aimColor: HEAL_AIM_COLOR },
+      { name: 'Destello', icon: '✧', type: 'damage', cost: 30, damage: [50, 64], range: 7, aimColor: LIGHT_AIM_COLOR }
     ] },
     paladin: { label: 'PALADÍN', body: 1, head: 3, hp: 145, mana: 90, skills: [
-      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [39, 51], range: 1 },
-      { name: 'Plegaria', icon: '✚', type: 'heal', cost: 20, heal: 34 },
-      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [49, 63], range: 2 }
+      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 16, damage: [39, 51], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Plegaria', icon: '✚', type: 'heal', cost: 20, heal: 34, aimColor: HEAL_AIM_COLOR },
+      { name: 'Carga de luz', icon: '➤', type: 'damage', cost: 25, damage: [49, 63], range: 2, aimColor: LIGHT_AIM_COLOR }
     ] }
   };
   // Acceso defensivo a habilidades: nunca devolver undefined (evita TypeError en .type/.cost).
@@ -67,7 +70,7 @@
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
   }
-  const STEP_DURATION = .095;
+  const STEP_DURATION = .21; // Ritmo de caminata humano: ~4,8 casilleros/seg en vez del sprint telegráfico anterior.
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
   const NPC_COMBAT_RANGES = {
@@ -79,9 +82,12 @@
   // Pociones de práctica ilimitadas: beber ocupa al personaje e impide atacar/lanzar; las acciones también impiden beber.
   const POTION_DURATION = 1.1, POTION_HP_SHARE = .4, POTION_MANA_SHARE = .45;
   const CAST_RECOVERY = .9;
-  // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
-  const SPELL_AIM_COLORS = { 2: '#ff9a54', 9: '#64d8d0', 25: '#f4df9b' };
-  const MELEE_AIM_COLOR = '#ff685b', DEFAULT_AIM_COLOR = '#e8b75f', HEAL_AIM_COLOR = '#9ee68b';
+  // Apoyo aliado (backlog 10): solo magos y clérigos asisten a otros aliados, con demora ocasional; nunca es instantáneo.
+  const SUPPORT_CLASSES = new Set(['mage', 'cleric']);
+  const SUPPORT_DELAY = { cleanse: [.9, 1.9], salvage: [.45, 1.05], heal: [.9, 1.8] };
+  const SUPPORT_CLASS_HP = .68, SUPPORT_SALVAGE_HP = .34;
+  // Movimiento humano: flanqueo en tramos sostenidos con una pausa breve entre tramos.
+  const STRAFE_WINDOW = [.7, 1.4], STRAFE_HOLD = .45;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let fallbackWorld = false;
@@ -101,7 +107,8 @@
       heading: index === 1 ? 'W' : 'S', step: null, stepTime: 0, aiTimer: rand(.2, 1),
       aiFlankSide: Math.random() < .5 ? -1 : 1,
       attackCd: rand(.2, .8), flash: 0, respawn: 0, bodyFrameTime: Math.random() * 2, aim: null,
-      skillCooldowns: [0, 0, 0], immobilized: 0, potionCd: 0, castCd: 0
+      skillCooldowns: [0, 0, 0], immobilized: 0, potionCd: 0, castCd: 0, supportTask: null,
+      movePlan: null, strafeTimer: 0
     };
   });
   const player = fighters[0];
@@ -253,6 +260,19 @@
     actor.step = { from: [x, y], to: [nx, ny] }; actor.stepTime = 0;
     return true;
   }
+  // Plan de movimiento de NPC encadenado: al terminar cada casillero, el siguiente paso sale sin pausa.
+  function npcPlanStep(actor) {
+    const plan = actor.movePlan;
+    if (!plan) return;
+    const target = byId[plan.targetId], combatRange = NPC_COMBAT_RANGES[actor.className];
+    if (!target?.alive || !combatRange) { actor.movePlan = null; return; }
+    const range = distance(actor, target);
+    let step = null;
+    if (plan.kind === 'retreat') step = range < combatRange.min ? nextRetreatStep(actor, target, combatRange.min, combatRange.max) : null;
+    else if (plan.kind === 'path') step = range > combatRange.max ? nextPathStep(actor, target, combatRange.min, combatRange.max) : null;
+    else if (plan.kind === 'strafe') step = range >= combatRange.min && range <= combatRange.max ? nextStrafeStep(actor, target, combatRange.min, combatRange.max) : null;
+    if (!step || !startStep(actor, step[0], step[1])) actor.movePlan = null;
+  }
   function position(actor) {
     if (!actor.step) return [actor.x, actor.y];
     const t = clamp(actor.stepTime / STEP_DURATION, 0, 1), [x0, y0] = actor.step.from, [x1, y1] = actor.step.to;
@@ -366,6 +386,7 @@
   function beginNpcAim(actor, target, spell = null, retries = 0) {
     const [x, y] = actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
+    actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
     const duration = NPC_AIM_DURATION * Math.pow(.68, retries);
     actor.aim = { targetId: target.id, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
@@ -580,7 +601,7 @@
     });
   }
   function kill(victim, attacker) {
-    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0;
+    victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0; victim.supportTask = null; victim.movePlan = null;
     if (victim === player) updateRespawnNotice();
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
@@ -595,7 +616,7 @@
   }
   function respawn(actor) {
     const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
-    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
+    Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     if (actor === player) updateRespawnNotice();
   }
   function updateRespawnNotice() {
@@ -661,20 +682,34 @@
       if (!actor.alive || actor.step || actor.immobilized > 0) continue;
       actor.aiTimer -= dt;
       if (actor.aiTimer > 0) continue;
-      actor.aiTimer = .18 + Math.random() * .1;
+      const tick = .18 + Math.random() * .1;
+      actor.aiTimer = tick;
 
       const allies = fighters.filter(other => other.alive && other.team === actor.team);
-      const wounded = allies.filter(other => other.hp / other.maxHp < .68 || other.immobilized > 0)
-        .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
       const profile = CLASS_PROFILES[actor.className];
       const skills = profile?.skills;
       if (!Array.isArray(skills)) continue;
       if (!Array.isArray(actor.skillCooldowns)) continue;
       const healingIndex = skills.findIndex((skill, index) => skill?.type === 'heal' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (wounded && healingIndex >= 0) {
+      if (healingIndex >= 0) {
         const heal = skillAt(healingIndex, actor.className);
-        if (heal && ((wounded.hp < wounded.maxHp && wounded.hp / wounded.maxHp < .68) || (heal.cleanse && wounded.immobilized > 0))) {
-          if (npcCastSkill(actor, heal, healingIndex, wounded)) continue;
+        if (heal) {
+          const candidates = allies
+            .filter(other => (heal.cleanse && other.immobilized > 0) || (other.hp < other.maxHp && other.hp / other.maxHp < SUPPORT_CLASS_HP))
+            .sort((a, b) => ((b.immobilized > 0 ? 1 : 0) - (a.immobilized > 0 ? 1 : 0)) || ((a.hp / a.maxHp) - (b.hp / b.maxHp)));
+          const wounded = candidates[0] ?? null;
+          if (wounded) {
+            if (wounded === actor) {
+              // Autocuidado (vendaje/plegaria propia): respuesta inmediata como acción propia.
+              if (npcCastSkill(actor, heal, healingIndex, actor)) continue;
+            } else if (SUPPORT_CLASSES.has(actor.className) && !actor.supportTask) {
+              // Apoyo a un aliado: intención demorada, visible como anillo verde sobre el aliado.
+              const kind = wounded.immobilized > 0 ? 'cleanse' : (wounded.hp / wounded.maxHp < SUPPORT_SALVAGE_HP ? 'salvage' : 'heal');
+              const [lo, hi] = SUPPORT_DELAY[kind] ?? SUPPORT_DELAY.heal;
+              const delay = rand(lo, hi);
+              actor.supportTask = { allyId: wounded.id, kind, timer: delay, delay };
+            }
+          }
         }
       }
 
@@ -692,19 +727,48 @@
         continue;
       }
 
-      let step;
+      // Movimiento humano: sostener un modo (acercarse/flanquear/retroceder) en vez de decidir a tics.
+      let step, plan = null;
       if (range < combatRange.min) {
-        // If every outward tile is blocked, hold position rather than pathing closer.
-        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max);
+        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max); plan = 'retreat';
       } else if (range > combatRange.max) {
-        step = nextPathStep(actor, target, combatRange.min, combatRange.max);
-      } else if (Math.random() < .72) {
-        step = nextStrafeStep(actor, target, combatRange.min, combatRange.max);
+        step = nextPathStep(actor, target, combatRange.min, combatRange.max); plan = 'path';
+      } else {
+        actor.strafeTimer -= tick;
+        if (actor.strafeTimer > 0) {
+          step = nextStrafeStep(actor, target, combatRange.min, combatRange.max); plan = 'strafe';
+        } else if (actor.strafeTimer < -STRAFE_HOLD) {
+          actor.strafeTimer = rand(STRAFE_WINDOW[0], STRAFE_WINDOW[1]);
+        }
       }
+      actor.movePlan = plan && step ? { kind: plan, targetId: target.id } : null;
       if (step) {
         startStep(actor, step[0], step[1]);
       } else if (!actor.aim && actor.className !== 'mage' && range <= 1 && actor.attackCd <= 0) {
         beginNpcAim(actor, target);
+      }
+    }
+  }
+  function updateNpcSupport(dt) {
+    // El apoyo demorado resuelve solo: vence el plazo, se revalida la necesidad y recién ahí se lanza.
+    for (const actor of fighters.slice(1)) {
+      const task = actor.supportTask;
+      if (!task) continue;
+      task.timer -= dt;
+      if (task.timer > 0) continue;
+      actor.supportTask = null;
+      if (!actor.alive || actor.immobilized > 0) continue;
+      const ally = byId[task.allyId];
+      if (!ally?.alive) continue;
+      const healingIndex = CLASS_PROFILES[actor.className]?.skills.findIndex(skill => skill?.type === 'heal') ?? -1;
+      const skill = healingIndex >= 0 ? skillAt(healingIndex, actor.className) : null;
+      if (!skill) continue;
+      const stillNeeded = task.kind === 'cleanse'
+        ? skill.cleanse && ally.immobilized > 0
+        : ally.hp < ally.maxHp && ally.hp / ally.maxHp < SUPPORT_CLASS_HP;
+      if (!stillNeeded) continue;
+      if (npcCastSkill(actor, skill, healingIndex, ally)) {
+        actor.aim = null; // Girarse a apoyar cancela la mira de combate en curso.
       }
     }
   }
@@ -721,7 +785,11 @@
       if (Array.isArray(actor.skillCooldowns)) actor.skillCooldowns = actor.skillCooldowns.map(value => Math.max(0, value - dt));
       if (actor.step) {
         actor.stepTime += dt;
-        if (actor.stepTime >= STEP_DURATION) { [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0; }
+        if (actor.stepTime >= STEP_DURATION) {
+          [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0;
+          // Encadenado del siguiente paso sin pausa: así caminan los NPCs como una persona, no a tirones.
+          if (actor !== player && !actor.aim) npcPlanStep(actor);
+        }
       }
       if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
     }
@@ -730,7 +798,7 @@
     for (const effect of spellEffects) effect.age += dt;
     while (floatingTexts.length && floatingTexts[0].age > 1.05) floatingTexts.shift();
     while (spellEffects.length && spellEffects[0].age > spellEffects[0].duration) spellEffects.shift();
-    updatePlayer(); updateNpcAims(dt); updateBots(dt);
+    updatePlayer(); updateNpcSupport(dt); updateNpcAims(dt); updateBots(dt);
     refreshHud();
   }
 
@@ -861,8 +929,8 @@
       const [fromX, fromY] = screenTile(aim.fromX, aim.fromY, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
-      // Mira sin texto: el color comunica qué se prepara (hechizo por FX, rojo para golpe).
-      const color = aim.spell ? (SPELL_AIM_COLORS[aim.spell.skill?.fxSpellId] ?? DEFAULT_AIM_COLOR) : MELEE_AIM_COLOR;
+      // Mira sin texto: el color comunica qué hechizo/golpe viene (aimColor por habilidad, rojo para golpes).
+      const color = aim.spell?.skill?.aimColor ?? MELEE_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 90 + aim.phase) * .16;
       ctx.save(); ctx.globalAlpha = .72 + pulse * .28;
       ctx.strokeStyle = color; ctx.fillStyle = color;
@@ -887,12 +955,32 @@
     if (readySkill && readyTarget?.alive && readyTarget !== player) {
       const [px, py] = position(readyTarget), [tsx, tsy] = screenTile(px, py, cameraX, cameraY);
       const x = tsx + tilePx / 2, y = tsy + tilePx / 2;
-      const color = readySkill.type === 'heal' ? HEAL_AIM_COLOR : SPELL_AIM_COLORS[readySkill.fxSpellId] ?? DEFAULT_AIM_COLOR;
+      const color = readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
       ctx.save(); ctx.globalAlpha = .5 + pulse * .35; ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, tilePx * .05);
       ctx.setLineDash([tilePx * .16, tilePx * .12]);
       ctx.beginPath(); ctx.arc(x, y, tilePx * (.3 + pulse * .04), 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]); ctx.restore();
+    }
+    // Apoyo aliado pendiente: anillo verde punteado que se cierra sobre el aliado mientras llega la ayuda.
+    for (const actor of fighters.slice(1)) {
+      const task = actor.supportTask;
+      if (!task) continue;
+      const ally = byId[task.allyId];
+      if (!ally?.alive) continue;
+      const [ax, ay] = position(ally), [tsx, tsy] = screenTile(ax, ay, cameraX, cameraY);
+      const x = tsx + tilePx / 2, y = tsy + tilePx / 2;
+      const progress = clamp(1 - task.timer / (task.delay || 1), 0, 1);
+      ctx.save(); ctx.globalAlpha = .38 + progress * .5;
+      ctx.strokeStyle = HEAL_AIM_COLOR; ctx.fillStyle = HEAL_AIM_COLOR; ctx.lineWidth = Math.max(2, tilePx * .05);
+      ctx.setLineDash([tilePx * .14, tilePx * .1]);
+      ctx.beginPath(); ctx.arc(x, y, tilePx * (.34 - progress * .1), 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      const arm = tilePx * .16, gap = tilePx * .055;
+      ctx.beginPath();
+      ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
+      ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      ctx.restore();
     }
     for (const effect of spellEffects) {
       const progress = effect.age / effect.duration;
@@ -981,7 +1069,7 @@
   function resetGame() {
     for (const actor of fighters) {
       const profile = CLASS_PROFILES[actor.className];
-      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0 });
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     }
     floatingTexts.length = 0; spellEffects.length = 0;
     selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
@@ -1048,6 +1136,17 @@
   $('closeHelp').addEventListener('click', () => $('helpModal').classList.add('hidden'));
   $('helpModal').addEventListener('click', event => { if (event.target === $('helpModal')) $('helpModal').classList.add('hidden'); });
   $('menuBtn').addEventListener('click', togglePause);
+  // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
+  window.AO_DEBUG = () => ({
+    elapsed: Number(elapsed.toFixed(2)), paused,
+    fighters: fighters.map(actor => ({
+      id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
+      x: actor.x, y: actor.y, stepping: Boolean(actor.step),
+      immobilized: Number(actor.immobilized.toFixed(2)), alive: actor.alive,
+      aiming: Boolean(actor.aim), aimSpell: actor.aim?.spell?.skill?.name ?? null, aimColor: actor.aim?.spell?.skill?.aimColor ?? null,
+      support: actor.supportTask ? { kind: actor.supportTask.kind, ally: actor.supportTask.allyId, timer: Number(actor.supportTask.timer.toFixed(2)) } : null
+    }))
+  });
   let previous = performance.now();
   function loop(now) { const dt = Math.min(.05, (now - previous) / 1000); previous = now; update(dt); draw(); requestAnimationFrame(loop); }
   renderSkills(); refreshHud(); loadAssets(); requestAnimationFrame(loop);
