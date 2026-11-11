@@ -407,13 +407,14 @@
     const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
     actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
-    // Tiempos random: cada apuntado tarda distinto (hechizos 0,38–0,62 s; golpes 0,36–0,52 s).
-    const base = spell ? rand(.38, .62) : rand(.36, .52);
+    // El jugador lanza casi al instante sobre un objetivo elegido; los NPC conservan su ventana de esquiva.
+    const directPlayerTarget = actor === player && !!target && !!spell;
+    const base = directPlayerTarget ? .1 : spell ? rand(.38, .62) : rand(.36, .52);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
     const duration = base * Math.pow(.68, retries);
-    actor.aim = { targetId: target?.id ?? null, tile: tile ?? null, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
-    // El primer intento usa el ritmo normal; un reintento encadenado mantiene la mira viva sin pausa larga.
-    actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
+    actor.aim = { targetId: target?.id ?? null, tile: tile ?? null, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries, directPlayerTarget };
+    // El apuntado del jugador no agrega una pausa de ataque ni interrumpe su movimiento.
+    if (actor !== player) actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
   }
   function resolveNpcAim(actor) {
     const aim = actor.aim;
@@ -428,6 +429,8 @@
     const skill = aim.spell?.skill ?? null;
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
+    // Un clic directo del jugador fija el blanco seleccionado durante el breve lanzamiento.
+    if (aim.directPlayerTarget && aim.spell) { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
