@@ -79,6 +79,9 @@
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
   }
+  function skillRange(skill) {
+    return Number.isFinite(skill?.range) ? skill.range : SPELL_VISION_RANGE;
+  }
   const STEP_DURATION = .22; // Velocidad de Imperium AO Classic: apenas más rápida que la caminata clásica (~4,5 casilleros/s).
   const NPC_AIM_DURATION = .58;
   const NPC_MELEE_ACCURACY = .78;
@@ -424,9 +427,10 @@
     if (aim.tile) { resolveTileAim(actor, aim); return; }
     const target = byId[aim.targetId];
     if (!target?.alive) return;
-    // Revalido la visión al resolver: si el blanco salió del área en pantalla durante la mira, no hay lanzamiento.
-    if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
     const skill = aim.spell?.skill ?? null;
+    // Revalido visión y alcance al resolver: un blanco que se aleja no recibe un golpe/hechizo fuera de rango.
+    if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
+    if (aim.spell && distance(actor, target) > skillRange(skill)) { addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status'); return; }
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     // Un clic directo del jugador fija el blanco seleccionado durante el breve lanzamiento.
@@ -470,8 +474,9 @@
   function resolveTileAim(actor, aim) {
     const skill = aim.spell?.skill ?? null;
     if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
-    const [ax, ay] = actorTile(actor);
-    if (Math.abs(ax - aim.x) + Math.abs(ay - aim.y) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
+    const [ax, ay] = actorTile(actor), tileDistance = Math.abs(ax - aim.x) + Math.abs(ay - aim.y);
+    if (tileDistance > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
+    if (tileDistance > skillRange(skill)) { addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status'); return; }
     if (Math.random() > .82) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
     const victim = fighters.find(other => other.alive && actorTile(other)[0] === aim.x && actorTile(other)[1] === aim.y) ?? null;
     if (!victim) { addFloatingTextAt(aim.x, aim.y, 'al vacío', 'status'); return; }
@@ -610,8 +615,10 @@
         : 'Elegí un rival como objetivo.');
       return;
     }
-    // Nadie lanza fuera de su visión: el área del personaje en pantalla es el límite.
-    if (distance(player, target) > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    // El alcance de la habilidad también limita el objetivo (Carga del guerrero: 2 casilleros).
+    const targetDistance = distance(player, target);
+    if (targetDistance > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    if (targetDistance > skillRange(skill)) { toast('Está fuera del alcance de esa habilidad; acercate.'); return; }
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
     // El jugador también apunta: la mira se ve igual que la de los bots y el hechizo recién sale al resolver.
@@ -635,7 +642,9 @@
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
     const [px, py] = actorTile(player), [tx, ty] = tile;
-    if (Math.abs(px - tx) + Math.abs(py - ty) > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    const tileDistance = Math.abs(px - tx) + Math.abs(py - ty);
+    if (tileDistance > SPELL_VISION_RANGE) { toast('Está fuera de tu visión; acercate para lanzar.'); return; }
+    if (tileDistance > skillRange(skill)) { toast('Esa casilla está fuera del alcance de la habilidad.'); return; }
     beginNpcAim(player, null, { skill, index }, 0, tile);
     player.castCd = Math.max(player.castCd ?? 0, CAST_RECOVERY);
     selectedSkill = null; refreshSkillSelection();
@@ -849,6 +858,7 @@
 
       const attackSkills = skills.map((skill, index) => ({ skill, index }))
         .filter(({ skill, index }) => skill?.type === 'damage'
+          && range <= skillRange(skill)
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
       if (!recovering && !actor.aim && actor.attackCd <= 0 && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
