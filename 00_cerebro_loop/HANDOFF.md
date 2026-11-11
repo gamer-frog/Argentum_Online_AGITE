@@ -1,10 +1,10 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-Se completó la infraestructura base del cerebro del agente y se verificó la app local existente. El proyecto ya contiene un prototipo web jugable de Argentum Online con arena local 4v4, movimiento, combate, habilidades, bots y reaparición. No se reemplazó el juego existente.
+Se revisó la evidencia documental de licencia y atribución disponible para el subset actual de AO Libre. Se actualizaron `assets/ao/ATTRIBUTION.txt`, `roadmap/inventario-recursos-ao.md`, `roadmap/producto-recuperado.md`, `todo.md` y los seguimientos del cerebro para distinguir la licencia raíz del upstream de los términos todavía no confirmados por medio. No se amplió el subset ni se presumieron permisos individuales.
 
 ## Estado del build/navegador
-🟢 Verde. Verificación realizada con Chromium en `http://localhost:3002`; canvas y escena visibles, interacción de combate comprobada y consola de la página sin errores. El prototipo no es un cliente completo ni multijugador en red; revisar el README para sus límites conocidos.
+🟢 Verde. Chromium abrió `http://localhost:3002`; canvas y escena visibles, solicitudes de `map.json`, `grhs.json`, `characters.json` y `spellfx.json` respondieron HTTP 200, y la consola registró 0 errores y 0 advertencias. Se guardó una captura local en `screenshots/brain-foundation.png` (ruta ignorada por Git). El prototipo no es un cliente completo ni multijugador en red; revisar el README para sus límites conocidos.
 
 ## Decisiones de diseño tomadas
 - Se conserva el juego existente y su documentación; sus reglas y valores se describen como aproximados, no como una recreación fiel de AO.
@@ -13,15 +13,15 @@ Se completó la infraestructura base del cerebro del agente y se verificó la ap
 - No se integran ramas anteriores a ciegas; los detalles históricos de checkpoints rescatados o descartados están en `CEMETERY.md`.
 
 ## PRÓXIMO PASO INMEDIATO
-🚀 Terminar la revisión de Git de esta subtarea y publicar solo si `origin/main` sigue siendo el padre directo del cambio. Después, abordar la prioridad de producto abierta: fijar una referencia visual AO y completar la auditoría de licencias/atribución por recurso antes de ampliar assets.
+🚀 Mantener abierta la prioridad de producto: fijar una referencia visual AO estable y obtener documentación o confirmación upstream de los términos/créditos específicos de los medios antes de ampliar o redistribuir el subset. La revisión de evidencia disponible quedó completada, pero no equivale a autorización por archivo. El cierre/publicación técnica sigue pendiente: el checkout es shallow, los cambios están sin commit y la rama actual es `opencode/42944998414`; no publicar hasta que el estado y la sincronización puedan reevaluarse con seguridad.
 
 ## Contexto importante
 - Ejecutar desde la raíz con `PORT=3002 bash start.sh`; abrir `http://localhost:3002`.
 - Controles: flechas/WASD para moverse; clic, lista o Tab para objetivo; F/Enter para atacar; teclas 1–3 y clic para habilidades; Esc para cerrar panel/guía; botón de pausa para pausar.
 - El combate es local e infinito, sin puntuación ni fin de partida. Inventario, equipo, persistencia y multijugador en red no están implementados.
 - Historial del BOOT: el checkpoint 40 se absorbió por fast-forward, y las refs remotas `opencode-checkpoints/*` y `opencode-resume/*` se verificaron vacías en la continuación anterior. Los tips preservados están documentados en `CEMETERY.md`.
-- La sesión actual parte del commit `9174a24` en la rama `opencode/42552277598`; la consulta de `origin/main` devolvió el mismo hash. Verificar de nuevo inmediatamente antes de publicar y no forzar si el remoto avanzó.
-- Captura de la verificación: `screenshots/brain-foundation.png`. La ruta completa `screenshots/` está ignorada por `.gitignore`; se conserva como evidencia local y no se fuerza su inclusión.
+- Estado Git comprobado: HEAD `868700d5f5d0d511582382e0ea405e9095ac65b6` en la rama `opencode/42944998414`; `origin/main` apunta al mismo hash. El checkout es shallow, hay cambios documentales sin commit y existe un diff previo en `Agents.md`, que se preservó sin modificar durante esta tarea. No se creó commit ni se publicó.
+- Captura actual: `screenshots/brain-foundation.png`. La ruta está ignorada por `.gitignore`; se conserva como evidencia local y no se fuerza su inclusión.
 
 ## Historial de verificación conservado
 - En la continuación anterior se publicó en `main` el commit `9880942` tras validar `game.js`/`dist/game.js`, sincronía de archivos y controles de habilidades en Chromium en `http://127.0.0.1:3000`; consola con cero errores y advertencias.

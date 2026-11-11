@@ -9,5 +9,6 @@
 - [x] Continuación BOOT 2026-11-08: preservar `306cac6` con `graveyard-opencode-checkpoints-40-tip-306cac6`, integrarlo por fast-forward y eliminar `opencode-checkpoints/40`; `git fetch --prune`/`git ls-remote` confirman cero refs remotas checkpoints/resumes.
 - [x] Fundación del cerebro: conservar y completar `PROTOCOL.md`, actualizar el handoff y anteponer la regla suprema a `Agents.md` sin eliminar las instrucciones existentes.
 - [x] Verificación de la fundación: iniciar el prototipo en `localhost:3002`, inspeccionar canvas/escena, probar controles básicos y confirmar cero errores/advertencias de consola en Chromium.
-- [ ] Cierre de esta subtarea: completar los registros de seguimiento, revisar captura/diff y comprobar si commit y publicación a `main` son seguros desde la rama actual.
-- [ ] Producto: elegir una referencia visual AO estable y completar la auditoría de licencias/atribución por recurso antes de ampliar o redistribuir assets; ver `roadmap/producto-recuperado.md` e `inventario-recursos-ao.md`.
+- [ ] Cierre técnico pendiente: diff documental y captura local revisados; no se creó commit ni se publicó. Revaluar el cierre desde un checkout no shallow y preservar el diff preexistente de `Agents.md`.
+- [x] Producto P0: revisar la evidencia documental disponible para el subset actual y corregir el aviso de licencia/atribución para no afirmar términos uniformes por archivo; hallazgos y límites en `roadmap/inventario-recursos-ao.md` y `assets/ao/ATTRIBUTION.txt`.
+- [ ] Producto P0: fijar una referencia visual AO estable y conseguir confirmación de términos/créditos específicos de los medios antes de ampliar o redistribuirlos; ver `roadmap/producto-recuperado.md` e `inventario-recursos-ao.md`.
