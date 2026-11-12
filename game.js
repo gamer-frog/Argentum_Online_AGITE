@@ -248,12 +248,13 @@
     const duration = animationData?.speed ? animationData.speed * cycles / 1000 : .5;
     spellEffects.push({ x, y, tx, ty, age: 0, duration, kind, spellId, definition });
   }
-  function findOpen(x, y) {
+  function findOpen(x, y, except = null) {
     if (!mapData) return [x, y];
     for (let radius = 0; radius < 10; radius++) {
       for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
         const tx = x + dx, ty = y + dy;
-        if (isOpen(tx, ty) && !fighters.some(f => f.x === tx && f.y === ty)) return [tx, ty];
+        // except permite conservar la casilla propia al spawnear/reaparecer; los muertos no bloquean.
+        if (isOpen(tx, ty) && !fighters.some(f => f !== except && f.alive && f.x === tx && f.y === ty)) return [tx, ty];
       }
     }
     return [x, y];
@@ -692,22 +693,31 @@
       button.title = skill ? `${skill.name} · ${costLabel} · ${typeHint}` : 'Habilidad no disponible';
     });
   }
+  function actorDisplayName(actor, fallback = 'Alguien') {
+    if (!actor) return fallback;
+    return names[actor.id] ?? actor.name ?? fallback;
+  }
   function kill(victim, attacker) {
+    if (!victim) return;
     victim.alive = false; victim.respawn = 2.4; victim.step = null; victim.aim = null; victim.immobilized = 0; victim.supportTask = null; victim.movePlan = null;
     if (victim === player) updateRespawnNotice();
     for (const actor of fighters) if (actor.aim?.targetId === victim.id) actor.aim = null;
+    const attackerLabel = attacker ? (attacker === player ? 'Vos' : actorDisplayName(attacker)) : 'Alguien';
+    const victimLabel = victim === player ? 'vos' : actorDisplayName(victim);
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
-    line.innerHTML = `<span class="feed-gold">✦</span> <b>${attacker === player ? 'Vos' : names[attacker.id]}</b><span> derrotó a </span><b>${victim === player ? 'vos' : names[victim.id]}</b>`;
+    line.innerHTML = `<span class="feed-gold">✦</span> <b>${attackerLabel}</b><span> derrotó a </span><b>${victimLabel}</b>`;
     feed.prepend(line); while (feed.children.length > 3) feed.lastElementChild.remove();
     const log = $('battleLog'), entry = document.createElement('div'); entry.className = 'log-entry';
-    entry.innerHTML = `${attacker === player ? '<b>Derrotaste</b>' : `<b>${names[attacker.id]}</b> derrotó a`} ${victim === player ? 'tu personaje' : names[victim.id]}.`;
+    entry.innerHTML = `${attacker === player ? '<b>Derrotaste</b>' : `<b>${attackerLabel}</b> derrotó a`} ${victim === player ? 'tu personaje' : actorDisplayName(victim)}.`;
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
-    toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${names[victim.id]}.` : `${names[victim.id]} cayó en combate.`);
+    toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${actorDisplayName(victim)}.` : `${actorDisplayName(victim)} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
     refreshHud();
   }
   function respawn(actor) {
-    const [x, y] = findOpen(actor.homeX, actor.homeY), profile = CLASS_PROFILES[actor.className];
+    if (!actor) return;
+    const [x, y] = findOpen(actor.homeX, actor.homeY, actor);
+    const profile = CLASS_PROFILES[actor.className] ?? CLASS_PROFILES.warrior;
     Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     if (actor === player) updateRespawnNotice();
   }

@@ -1,6 +1,7 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
+2026-11-12 · [C] Saneamiento de spawn/respawn: `findOpen(x,y,except)` ahora excluye al propio actor y a los muertos, así la formación inicial se conserva (el jugador vuelve a aparecer en 43,46, antes se auto-desplazaba a 42,45); `respawn` pasa el actor para no bloquearse con su propio cadáver y usa `CLASS_PROFILES` con fallback; `kill` usa nombres seguros (`actorDisplayName`) para no romper si falta el atacante. Verificado en Chromium: spawn exacto, 7 vivos a los 11 s, consola 0/0.
 2026-11-12 · [C] HUD de maná fiel al pedido: el guerrero ya no muestra la fila/barra de maná vacía (`resource-block.no-mana`, `display:none`); mago/clérigo/paladín la muestran con su valor real. Se corrigieron los valores iniciales del HTML (380/380, maná "—") y se sincronizó `dist/index.html` + `dist/styles.css` + `dist/game.js` con la fuente. Verificado en Chromium: guerrero oculto → mago visible (1400/1400) → guerrero oculto, consola 0/0.
 2026-11-12 · [A] Regresión de balance corregida: el ataque melee básico del jugador usaba `rand(11,18)` en vez del daño por clase del pedido Imperium. Ahora usa `MELEE_DAMAGE` (guerrero 85-105, paladín 75-95, mago 45-60, clérigo 50-65) igual que los NPC; además `applyClass` cancela un apuntado en curso y libera `attackCd` para que no quede un hechizo viejo de la clase anterior. Verificación en Chromium: ataque real adyacente al GUERRERO enemigo con delta de vida **102** (`-102` flotante), consola 0 errores/0 advertencias.
 
@@ -8,7 +9,7 @@
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; jugable: mover, objetivo (Tab/clic), atacar (F), hechizos 1-4 con apuntado y tiro a casilla, pociones 5-6, esquiva, pausa y reinicio. NPCs combaten constantemente (quieto = morir); curas/remociones/apoyo operativos.
 
 ## PRÓXIMO PASO INMEDIATO
-🎮 Playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría; la cola completa vive en `ROADMAP.md`. Mantenimiento sugerido para la próxima iteración: agregar una condición de victoria/ronda visible (hoy la arena es muerte súbita con reaparición) y revisar accesos a propiedades de actores/aim con optional chaining.
+🎮 Playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría; la cola completa vive en `ROADMAP.md`. Mejora de producto sugerida: agregar una condición de victoria/ronda visible y marcador de bajas (hoy la arena es muerte súbita con reaparición) para que la partida tenga un final claro.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
