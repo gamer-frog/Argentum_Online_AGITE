@@ -1386,6 +1386,7 @@
     texts: floatingTexts.map(text => text.text),
     fighters: fighters.map(actor => ({
       id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
+      mana: Math.round(actor.mana), maxMana: actor.maxMana,
       x: actor.x, y: actor.y, stepping: Boolean(actor.step),
       immobilized: Number(actor.immobilized.toFixed(2)), alive: actor.alive,
       aiming: Boolean(actor.aim), aimSpell: actor.aim?.spell?.skill?.name ?? null, aimColor: actor.aim?.spell?.skill?.aimColor ?? null, aimTargetId: actor.aim?.targetId ?? null,

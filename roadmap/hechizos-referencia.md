@@ -46,6 +46,12 @@ práctica) o **decisión propia**. Ningún número se presenta como fidelidad co
 - **FX:** solo existen tres animaciones locales. Apocalipsis usa su FX auténtico (25); Juicio Final
   reutiliza ese FX; Ráfaga Ígnea usa el FX 2 (Dardo Mágico) como fallback visual documentado. El
   resto usa el destello de respaldo del canvas.
-- **Pendiente de playtest:** confirmar el ritmo de las combinaciones (golpe + dos hechizos) con
-  las vidas de 260-380, el agotamiento de maná del paladín al remover parálisis varias veces y el
-  momento en que el clérigo debe atacar en vez de curar.
+- **Playtest 2026-11-12:** 90 s desde reinicio → 11 bajas (una cada 7,8 s); 4 guerrero / 3 mago /
+  2 paladín / 1 clérigo. Los siete bots se movieron 60–88 % del tiempo; el maná tocó mínimos de
+  5–92 y nunca quedó en cero; se usaron todos los recursos, incluidos Apocalipsis, Juicio Final,
+  Ráfaga, Sanar, Castigo y Fuente. El combo del mago (golpe 45-60 + Apocalipsis 117-119 +
+  Juicio Final 142-144 = 304-323) es letal contra ~300 de vida, como se pidió. El paladín concentra
+  5 de las 11 muertes; queda como observación para un playtest humano, no como ajuste automático.
+- **Pendiente:** decidir si `Fuente de vida` sube al rango 30-45 de la wiki 2012 para sostener al
+  paladín, y si `Sanar` debe remover estados como en esa wiki. Cualquier cambio debe medirse con el
+  mismo probe de 90 s y documentarse acá.
