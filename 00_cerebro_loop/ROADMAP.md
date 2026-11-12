@@ -30,5 +30,4 @@ Orden derivado de "Pendientes solicitados para el combate de agite" del README; 
 - [x] [A/C] Regresión de balance 2026-11-12: daño melee básico del jugador por clase (85-105/75-95/45-60/50-65), no el 11-18 fijo; cancelación defensiva del apuntado al cambiar de clase. Verificado en Chromium con ataque real (delta 102, consola 0/0) y publicado en `main`.
 - [x] [C] HUD y despliegue 2026-11-12: maná oculto por completo para el guerrero, visible para clases con maná; `dist/` sincronizado con `index.html`/`styles.css`/`game.js`. Verificado en Chromium (cambio guerrero→mago→guerrero, consola 0/0) y publicado en `main`.
 - [x] [C] Spawn/respawn 2026-11-12: `findOpen` respeta al propio actor y a los muertos, `respawn` usa el perfil con fallback y el kill-feed tolera nombres ausentes. Verificado en Chromium (formación exacta, consola 0/0) y publicado en `main`.
-- [ ] Agregar condición de victoria/ronda visible y marcador de bajas para que la arena tenga un final claro.
 - [ ] Validación en playtest del ritmo de bots y ajustes de balance resultantes (backlog 4/5/7).

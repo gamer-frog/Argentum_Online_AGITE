@@ -9,7 +9,7 @@
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; jugable: mover, objetivo (Tab/clic), atacar (F), hechizos 1-4 con apuntado y tiro a casilla, pociones 5-6, esquiva, pausa y reinicio. NPCs combaten constantemente (quieto = morir); curas/remociones/apoyo operativos.
 
 ## PRÓXIMO PASO INMEDIATO
-🎮 Playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría; la cola completa vive en `ROADMAP.md`. Mejora de producto sugerida: agregar una condición de victoria/ronda visible y marcador de bajas (hoy la arena es muerte súbita con reaparición) para que la partida tenga un final claro.
+🎮 Playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría; la cola completa vive en `ROADMAP.md`. Regla vigente: no agregar mejoras ni features no pedidas; si no hay un pedido específico nuevo, hacer solo mantenimiento verificado o esperar feedback del usuario.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
