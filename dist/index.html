@@ -42,9 +42,9 @@
           <h2 class="panel-title">PERSONAJE <span class="panel-mark">▰</span></h2>
           <div class="character-summary">
             <div class="character-paperdoll" aria-hidden="true"><span>♞</span><small>NIV 40</small></div>
-            <div class="character-info"><label class="sr-only" for="classSelect">Clase del personaje</label><select id="classSelect" aria-label="Elegir clase"><option value="warrior">GUERRERO</option><option value="mage">MAGO</option><option value="cleric">CLÉRIGO</option><option value="paladin">PALADÍN</option></select><strong class="hero-class" id="heroClass">GUERRERO</strong><span class="hero-name">Viajero del Sur</span><span class="character-faction">LEGIÓN SAGRADA</span></div>
+            <div class="character-info"><label class="sr-only" for="classSelect">Clase del personaje</label><select id="classSelect" aria-label="Elegir clase"><option value="warrior">GUERRERO</option><option value="mage">MAGO</option><option value="cleric">CLÉRIGO</option><option value="paladin">PALADÍN</option></select><strong class="hero-class" id="heroClass">GUERRERO</strong><span class="hero-name">GUERRERO</span><span class="character-faction">LEGIÓN SAGRADA</span></div>
           </div>
-          <div class="resource-block"><div class="resource-row"><span>VIDA</span><b id="healthValue">130 / 130</b></div><div class="health-track"><i id="healthBar"></i></div><div class="resource-row"><span>MANA</span><b id="manaValue">70 / 70</b></div><div class="mana-track"><i id="manaBar"></i></div></div>
+          <div class="resource-block no-mana" id="resourceBlock"><div class="resource-row"><span>VIDA</span><b id="healthValue">380 / 380</b></div><div class="health-track"><i id="healthBar"></i></div><div class="resource-row mana-row"><span>MANA</span><b id="manaValue">—</b></div><div class="mana-track"><i id="manaBar"></i></div></div>
           <div class="character-stats"><span>ESTADO <b>EN COMBATE</b></span><span>MODALIDAD <b>LIBRE</b></span></div>
         </section>
 
@@ -69,14 +69,14 @@
 
         <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
           <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
-            <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-sacred">Viajero del Sur</b><small>TÚ · GUERRERO</small></span></div>
-            <button type="button" class="roster-row" data-fighter="sacredMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b class="name-sacred">Thalira</b><small>MAGO · ALIADO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="sacredCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b class="name-sacred">Bendrick</b><small>CLÉRIGO · ALIADO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="sacredPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b class="name-sacred">Aldric</b><small>PALADÍN · ALIADO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticWarrior"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-chaotic">Drakar</b><small>GUERRERO · ENEMIGO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b class="name-chaotic">Morvath</b><small>MAGO · ENEMIGO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b class="name-chaotic">Valthor</b><small>CLÉRIGO · ENEMIGO</small></span></button>
-            <button type="button" class="roster-row" data-fighter="chaoticPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b class="name-chaotic">Grimwald</b><small>PALADÍN · ENEMIGO</small></span></button>
+            <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-sacred">GUERRERO</b><small>TÚ</small></span></div>
+            <button type="button" class="roster-row" data-fighter="sacredMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b class="name-sacred">MAGO</b><small>ALIADO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="sacredCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b class="name-sacred">CLÉRIGO</b><small>ALIADO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="sacredPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b class="name-sacred">PALADÍN</b><small>ALIADO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticWarrior"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-chaotic">GUERRERO</b><small>ENEMIGO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b class="name-chaotic">MAGO</b><small>ENEMIGO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b class="name-chaotic">CLÉRIGO</b><small>ENEMIGO</small></span></button>
+            <button type="button" class="roster-row" data-fighter="chaoticPaladin"><span class="roster-avatar">♜</span><span class="roster-copy"><b class="name-chaotic">PALADÍN</b><small>ENEMIGO</small></span></button>
           </div></section>
           <section class="battle-log"><h2 class="panel-title">REGISTRO DE BATALLA</h2><div id="battleLog" class="log-items"><div class="empty-log">Las acciones aparecerán aquí.</div></div></section>
         </aside>
@@ -86,9 +86,9 @@
     <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
       <div class="spellbar-heading">
         <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
-        <span class="spellbar-shortcut">ATAJOS · 1–3 HECHIZOS · 4–5 POCIONES</span>
+        <span class="spellbar-shortcut">ATAJOS · 1–4 HECHIZOS · 5–6 POCIONES · E INMO · Q REMO · ESPACIO PEGAR</span>
       </div>
-      <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (4)"><kbd>4</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (5)"><kbd>5</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
+      <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="3" type="button" aria-pressed="false"><kbd>4</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (5)"><kbd>5</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (6)"><kbd>6</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
       <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
     </section>
 
@@ -106,7 +106,7 @@
     </section>
   </main>
   <div class="toast" id="toast"></div>
-  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3</kbd><span>Seleccionar una habilidad</span></p><p><kbd>4 / 5</kbd><span>Beber poción roja (vida) o azul (maná)</span></p><p><kbd>F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
+  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3 / 4</kbd><span>Seleccionar una habilidad</span></p><p><kbd>E</kbd><span>Inmovilizar (arma el hechizo; clic para lanzar)</span></p><p><kbd>Q</kbd><span>Remover Parálisis (sobre vos o un aliado)</span></p><p><kbd>5 / 6</kbd><span>Beber poción roja (vida) o azul (maná)</span></p><p><kbd>ESPACIO / F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
   <script src="game.js"></script>
 </body>
 </html>

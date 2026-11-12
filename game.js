@@ -1203,6 +1203,8 @@
     $('healthValue').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
     $('manaBar').style.width = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
     $('manaValue').textContent = player.maxMana ? `${Math.floor(player.mana)} / ${player.maxMana}` : '—';
+    // El guerrero no tiene maná: se oculta la fila y la barra completas, no solo el valor.
+    $('resourceBlock')?.classList.toggle('no-mana', !(player.maxMana > 0));
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
       button.disabled = !player.alive || !skill;

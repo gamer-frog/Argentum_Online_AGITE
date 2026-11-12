@@ -85,3 +85,6 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
 @media(max-width:1000px){.spellbar-panel{grid-template-columns:minmax(155px,.8fr) minmax(0,1.2fr)}.spellbar-panel .spell-hint{grid-column:1/-1;padding:6px 0 0;border-top:1px solid #777;border-left:0;text-align:center}}
 @media(max-width:760px){.spellbar-panel{grid-template-columns:minmax(0,1fr);gap:7px;margin-top:0;padding:8px}.spellbar-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.spellbar-heading .panel-title{font-size:9px}.spellbar-shortcut{margin:0;white-space:nowrap}.spellbar-panel .spell-loadout{width:100%;max-width:460px;justify-self:center}.spellbar-panel .spell-slot{height:58px}.spellbar-panel .spell-hint{grid-column:auto;padding:6px 0 0;border-top:1px solid #777;border-left:0;text-align:center}}
 @media(max-width:420px){.spellbar-heading .panel-title{font-size:8px}.spellbar-shortcut{font-size:7px}.spellbar-panel .spell-name{font-size:8px}}
+
+/* Clases sin maná (guerrero): el recurso completo desaparece del HUD. */
+.resource-block.no-mana .mana-row,.resource-block.no-mana .mana-track{display:none}

@@ -1,13 +1,14 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
+2026-11-12 · [C] HUD de maná fiel al pedido: el guerrero ya no muestra la fila/barra de maná vacía (`resource-block.no-mana`, `display:none`); mago/clérigo/paladín la muestran con su valor real. Se corrigieron los valores iniciales del HTML (380/380, maná "—") y se sincronizó `dist/index.html` + `dist/styles.css` + `dist/game.js` con la fuente. Verificado en Chromium: guerrero oculto → mago visible (1400/1400) → guerrero oculto, consola 0/0.
 2026-11-12 · [A] Regresión de balance corregida: el ataque melee básico del jugador usaba `rand(11,18)` en vez del daño por clase del pedido Imperium. Ahora usa `MELEE_DAMAGE` (guerrero 85-105, paladín 75-95, mago 45-60, clérigo 50-65) igual que los NPC; además `applyClass` cancela un apuntado en curso y libera `attackCd` para que no quede un hechizo viejo de la clase anterior. Verificación en Chromium: ataque real adyacente al GUERRERO enemigo con delta de vida **102** (`-102` flotante), consola 0 errores/0 advertencias.
 
 ## Estado del build/navegador
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; jugable: mover, objetivo (Tab/clic), atacar (F), hechizos 1-4 con apuntado y tiro a casilla, pociones 5-6, esquiva, pausa y reinicio. NPCs combaten constantemente (quieto = morir); curas/remociones/apoyo operativos.
 
 ## PRÓXIMO PASO INMEDIATO
-🛠️ [C] Cerrar la brecha visual/maná del guerrero: ocultar de verdad la fila y barra de maná cuando la clase no tiene maná (hoy muestra "—" y una barra vacía), y sincronizar `dist/index.html` con el HTML actual (el arranque lo copia, pero el archivo versionado quedó viejo). Después: playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números; la cola completa vive en `ROADMAP.md`.
+🎮 Playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría; la cola completa vive en `ROADMAP.md`. Mantenimiento sugerido para la próxima iteración: agregar una condición de victoria/ronda visible (hoy la arena es muerte súbita con reaparición) y revisar accesos a propiedades de actores/aim con optional chaining.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
