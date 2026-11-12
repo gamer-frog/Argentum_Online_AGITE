@@ -315,9 +315,14 @@
     const frozenBonus = (target.immobilized > 0 ? 3.5 : 0) + (actor.className === 'cleric' && target.immobilized > 0 ? 2.5 : 0);
     return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5 - frozenBonus;
   }
-  function tacticalAlly(actor) {
-    return fighters.filter(other => other.alive && other.team === actor.team)
-      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || actor;
+  // Prioridad de apoyo: vida baja primero, pero el clérigo sostiene al paladín del equipo
+  // (pedido de roles): lo cura antes que a otros y lo desparaliza por encima de todo.
+  function supportPriority(actor, ally, kind = 'heal') {
+    if (!actor || !ally) return Infinity;
+    const paladinBias = ally.className === 'paladin'
+      ? (actor.className === 'cleric' ? (kind === 'cleanse' ? 1.1 : .45) : .2)
+      : 0;
+    return (ally.hp / (ally.maxHp || 1)) - paladinBias + distance(actor, ally) * .01;
   }
   function allyPressure(actor, x, y, allies, radius = 1) {
     return allies.reduce((pressure, ally) => {
@@ -820,7 +825,9 @@
       // Remover parálisis primero: un aliado congelado pierde varios turnos, es lo más urgente.
       const cleanseIndex = skills.findIndex((skill, index) => skill?.type === 'cleanse' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (cleanseIndex >= 0 && !recovering && !actor.supportTask) {
-        const frozen = allies.find(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE);
+        const frozen = allies
+          .filter(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE)
+          .sort((a, b) => supportPriority(actor, a, 'cleanse') - supportPriority(actor, b, 'cleanse'))[0] ?? null;
         if (frozen) {
           const delay = rand(SUPPORT_DELAY.cleanse[0], SUPPORT_DELAY.cleanse[1]);
           actor.supportTask = { allyId: frozen.id, kind: 'cleanse', timer: delay, delay, tries: 0 };
@@ -832,7 +839,7 @@
         if (heal) {
           const candidates = allies
             .filter(other => other.hp < other.maxHp && other.hp / other.maxHp < SUPPORT_CLASS_HP && distance(actor, other) <= SPELL_VISION_RANGE)
-            .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+            .sort((a, b) => supportPriority(actor, a) - supportPriority(actor, b));
           const wounded = candidates[0] ?? null;
           if (wounded === actor) {
             // Autocuidado: solo si de verdad está herido; curarse por curar plantado en un rincón no.
@@ -1355,6 +1362,18 @@
   // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
   window.AO_DEBUG = () => ({
     elapsed: Number(elapsed.toFixed(2)), paused,
+    // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
+    supportPriority: (() => {
+      const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);
+      if (!cleric) return [];
+      return fighters
+        .filter(ally => ally.alive && ally.team === cleric.team)
+        .map(ally => ({
+          id: ally.id, cls: ally.className, hpPct: Math.round(ally.hp / (ally.maxHp || 1) * 100),
+          heal: Number(supportPriority(cleric, ally).toFixed(2)), cleanse: Number(supportPriority(cleric, ally, 'cleanse').toFixed(2))
+        }))
+        .sort((a, b) => a.heal - b.heal);
+    })(),
     texts: floatingTexts.map(text => text.text),
     fighters: fighters.map(actor => ({
       id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
