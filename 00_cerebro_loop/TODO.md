@@ -1,9 +1,0 @@
-# TODO
-
-- [x] Paso 4: completado; 51 refs remotas de checkpoints/resumes eliminadas y sus tips resguardados como tags locales `graveyard-boot-*`; checkpoint 39 preservado como sesión activa.
-- [x] Paso 5: merge limpio de `origin/main`; navegador verificado con capturas desktop/mobile, canvas visible, ocho personajes, recursos HTTP 200 y consola limpia. Cierre publicado en `main` mediante fast-forward; tags `save-000` y `save-001` creados tras confirmar cada push.
-- [x] Continuación BOOT: checkpoint 40 (`306cac6`) preservado con tag local, integrado por fast-forward y retirado del remoto. No quedan refs remotas checkpoints/resumes.
-- [x] Fundación del cerebro: mantener el protocolo de trabajo, documentar el estado/límites reales del prototipo y añadir la regla suprema al inicio de `Agents.md` preservando el resto.
-- [x] Validación de navegador de la fundación: Chromium cargó la app en `http://localhost:3002`; canvas/escena visibles, controles básicos probados y consola con cero errores/advertencias. Captura guardada en `screenshots/brain-foundation.png`.
-- [x] Cierre técnico (2026-11-11): verificado en Chromium en `http://localhost:3002` (canvas pintado, combate activo entre 8 luchadores, consola 0 errores/0 advertencias, recursos HTTP 200). Publicación segura a `main` por fast-forward; la rama de trabajo parte de `origin/main` y solo agrega cambios verificados.
-- [x] Producto, prioridad 0: referencia visual AO fijada en README (`ao-libre/ao-cliente` @ `7d32d61`), atribución versionada en `assets/ao/ATTRIBUTION.txt` e inventario por categoría en `roadmap/inventario-recursos-ao.md`. Queda registrada como cautela la licencia individual por archivo antes de redistribuir recursos; el alcance pendiente sigue explícito en `roadmap/producto-recuperado.md`.
