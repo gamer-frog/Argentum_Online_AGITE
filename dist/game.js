@@ -41,7 +41,7 @@
   };
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
   // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
-  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b', LIGHT_AIM_COLOR = '#f4df9b';
+  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b';
   const FIRE_AIM_COLOR = '#ff9a54', SHOCK_AIM_COLOR = '#64d8d0', DEFAULT_AIM_COLOR = '#e8b75f';
   // Escala Imperium AO (nivel 40): el guerrero es el de más vida y NO tiene maná; el combo golpe+hechizo+hechizo mata.
   const MELEE_DAMAGE = { warrior: [85, 105], paladin: [75, 95], mage: [45, 60], cleric: [50, 65] };
@@ -57,19 +57,23 @@
       { name: 'Vendaje', icon: '✚', type: 'heal', cost: 0, heal: 115, aimColor: HEAL_AIM_COLOR },
       { name: 'Carga', icon: '➤', type: 'damage', cost: 0, damage: [125, 145], range: 2, aimColor: MELEE_AIM_COLOR }
     ] },
+    // Nombres y daños del manual de Imperium Classic; los costos de maná son de práctica
+    // (el manual no publica maná y los del foro no entran en las reservas de nivel 40).
     mage: { label: 'MAGO', hp: 260, mana: 1400, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 230, damage: [100, 120], range: 7, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Apocalipsis', icon: '✹', type: 'damage', cost: 230, damage: [117, 119], range: 7, fxSpellId: 25, aimColor: FIRE_AIM_COLOR },
+      { name: 'Juicio Final', icon: '☄', type: 'damage', cost: 350, damage: [142, 144], range: 7, fxSpellId: 25, aimColor: FIRE_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
     cleric: { label: 'CLÉRIGO', hp: 300, mana: 1200, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 230, damage: [95, 115], range: 6, fxSpellId: 25, aimColor: LIGHT_AIM_COLOR },
-      { name: 'Sanar', icon: '✚', type: 'heal', cost: 220, heal: 120, aimColor: HEAL_AIM_COLOR },
+      { name: 'Ráfaga Ígnea', icon: '✹', type: 'damage', cost: 230, damage: [98, 100], range: 6, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 220, heal: [40, 45], aimColor: HEAL_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
     paladin: { label: 'PALADÍN', hp: 330, mana: 1000, skills: [
-      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 40, damage: [110, 130], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Castigo Divino', icon: '⚔', type: 'damage', cost: 40, damage: [90, 92], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Fuente de vida', icon: '✚', type: 'heal', cost: 220, heal: [25, 32], aimColor: HEAL_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] }
@@ -78,6 +82,11 @@
   function skillAt(index, className = currentClass) {
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
+  }
+  // Las curas de Imperium se publican como rango (p. ej. Sanar 40-45); aceptar número o par.
+  function skillHealAmount(skill) {
+    const heal = skill?.heal;
+    return Array.isArray(heal) ? rand(heal[0] ?? 0, heal[1] ?? heal[0] ?? 0) : Number(heal) || 0;
   }
   const STEP_DURATION = .22; // Velocidad de Imperium AO Classic: apenas más rápida que la caminata clásica (~4,5 casilleros/s).
   const NPC_AIM_DURATION = .58;
@@ -531,7 +540,7 @@
     actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
-      const restored = Math.min(skill.heal, target.maxHp - target.hp);
+      const restored = Math.min(Math.ceil(skillHealAmount(skill)), target.maxHp - target.hp);
       if (restored > 0) addFloatingText(actor, skill.name, 'spell');
       if (restored > 0) {
         target.hp += restored; target.flash = .2;
