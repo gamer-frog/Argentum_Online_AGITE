@@ -390,7 +390,9 @@
     actor.heading = actorTile(target)[0] < actorTile(actor)[0] ? 'W' : actorTile(target)[0] > actorTile(actor)[0] ? 'E' : actorTile(target)[1] < actorTile(actor)[1] ? 'N' : 'S';
     actor.attackCd = actor === player ? .62 : rand(.7, 1.05);
     actor.flash = .1;
-    const damage = Math.ceil(rand(11, 18)); target.hp = Math.max(0, target.hp - damage); target.flash = .22;
+    // Daño melee por clase (Imperium nivel 40): mismo rango para jugador y NPCs.
+    const [meleeLo, meleeHi] = MELEE_DAMAGE[actor.className] ?? [11, 18];
+    const damage = Math.ceil(rand(meleeLo, meleeHi)); target.hp = Math.max(0, target.hp - damage); target.flash = .22;
     addFloatingText(target, `-${damage}`, 'damage');
     tone(155 + Math.random() * 50, .07);
     if (target.hp <= 0) kill(target, actor);
@@ -665,6 +667,8 @@
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0, 0]; selectedSkill = null;
+    // Cambiar de clase a mitad de un apuntado cancela el hechizo viejo y libera el intervalo.
+    player.aim = null; player.attackCd = 0;
     player.potionCd = 0; player.castCd = 0;
     $('heroClass').textContent = profile.label;
     const heroName = document.querySelector('.hero-name');

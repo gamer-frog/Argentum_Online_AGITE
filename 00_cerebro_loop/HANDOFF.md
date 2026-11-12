@@ -1,13 +1,13 @@
 # HANDOFF (Estado Actual)
 
 ## Última acción completada
-2026-11-11 · [A] Lote grande del usuario: balance Imperium AO nivel 40 (guerrero 380 vida SIN maná, mago 260/1400, clérigo 300/1200, paladín 330/1000; Paralizar 350 / Remover 330; daño melee 85-105/75-95/45-60/50-65 y hechizos ~95-120), Inmovilizar y Remover Parálisis como hechizos propios de mago/clérigo/paladín, skins por clase y facción (FACTION_LOOKS), barra de maná bajo la de vida (oculta para guerrero), límite de visión ~11 casilleros con revalidación al resolver ("fuera de vista"), jugador que apunta como los bots (telégrafo + mira EN VIVO del personaje al cursor + tiro a casilla con "al vacío"), atajos 1-4 hechizos / 5-6 pociones con 4º slot, y movimiento agite v3: nadie se queda quieto (persigue siempre, vuelve a su puesto sin blancos, baile en el anillo) a velocidad real de AO (STEP_DURATION .24 s/casillero ≈ 4 tiles/s tras correcciones del usuario: .13 "imposible", .4 "lento"). Verificaciones en Chromium: consola 0/0 tras cada cambio; probe 40 s con 7 parálisis liberadas end-to-end ("Removida"), ERRADO/esquivó activos, cap de visión respetado (máx 11); camino del jugador probado con eventos sintéticos (tecla 1 → click en suelo → aiming → resolución 'al vacío').
+2026-11-12 · [A] Regresión de balance corregida: el ataque melee básico del jugador usaba `rand(11,18)` en vez del daño por clase del pedido Imperium. Ahora usa `MELEE_DAMAGE` (guerrero 85-105, paladín 75-95, mago 45-60, clérigo 50-65) igual que los NPC; además `applyClass` cancela un apuntado en curso y libera `attackCd` para que no quede un hechizo viejo de la clase anterior. Verificación en Chromium: ataque real adyacente al GUERRERO enemigo con delta de vida **102** (`-102` flotante), consola 0 errores/0 advertencias.
 
 ## Estado del build/navegador
 🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; jugable: mover, objetivo (Tab/clic), atacar (F), hechizos 1-4 con apuntado y tiro a casilla, pociones 5-6, esquiva, pausa y reinicio. NPCs combaten constantemente (quieto = morir); curas/remociones/apoyo operativos.
 
 ## PRÓXIMO PASO INMEDIATO
-🎮 Playtest con el usuario del nuevo ritmo (velocidad .24 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números si algo chirría. Después: pulir densidad de parálisis (168 "Paralizado" en 30 s de probe puede sentirse encadenado) y probar Inmovilizar del jugador (mago/clérigo/paladín). La cola completa vive en `ROADMAP.md`.
+🛠️ [C] Cerrar la brecha visual/maná del guerrero: ocultar de verdad la fila y barra de maná cuando la clase no tiene maná (hoy muestra "—" y una barra vacía), y sincronizar `dist/index.html` con el HTML actual (el arranque lo copia, pero el archivo versionado quedó viejo). Después: playtest del ritmo de bots (velocidad .22 s, baile, telégrafos 0,38-0,62 s) y ajuste fino de números; la cola completa vive en `ROADMAP.md`.
 
 ## Decisiones de diseño tomadas
 - La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
