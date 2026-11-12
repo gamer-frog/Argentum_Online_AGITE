@@ -289,7 +289,11 @@
     if (!target?.alive || !combatRange) { actor.movePlan = null; return; }
     const range = distance(actor, target);
     let step = null;
-    if (plan.kind === 'retreat') step = range < combatRange.min ? nextRetreatStep(actor, target, combatRange.min, combatRange.max) : null;
+    // Retirada: si el paso codicioso no existe (pared, aliado o esquina), buscar una casilla
+    // del anillo por ruta para que el mago/clérigo no se quede acorralado en melee.
+    if (plan.kind === 'retreat') step = range < combatRange.min
+      ? (nextRetreatStep(actor, target, combatRange.min, combatRange.max) ?? nextPathStep(actor, target, combatRange.min, combatRange.max))
+      : null;
     else if (plan.kind === 'path') step = range > combatRange.max ? nextPathStep(actor, target, combatRange.min, combatRange.max) : null;
     else if (plan.kind === 'strafe') step = range >= combatRange.min && range <= combatRange.max ? nextStrafeStep(actor, target, combatRange.min, combatRange.max) : null;
     if (!step || !startStep(actor, step[0], step[1])) { actor.movePlan = null; actor.aiTimer = rand(.04, .12); }
@@ -306,7 +310,10 @@
   }
   function enemyScore(actor, target) {
     const alliesCommitted = fighters.filter(ally => ally !== actor && ally.alive && ally.team === actor.team && (ally.aim?.targetId === target.id || ally.aiTargetId === target.id)).length;
-    return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5;
+    // Coordinación de agite: un rival inmovilizado es una ventana de daño gratis.
+    // El clérigo, además, lo prioriza como blanco (pedido de roles de equipo).
+    const frozenBonus = (target.immobilized > 0 ? 3.5 : 0) + (actor.className === 'cleric' && target.immobilized > 0 ? 2.5 : 0);
+    return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5 - frozenBonus;
   }
   function tacticalAlly(actor) {
     return fighters.filter(other => other.alive && other.team === actor.team)
@@ -409,7 +416,7 @@
   function beginNpcAim(actor, target, spell = null, retries = 0, tile = null) {
     const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
-    actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
+    // Apuntar NO detiene al NPC: sigue buscando ángulo y flanqueando mientras la mira corre (pedido de agite).
     // Tiempos random: cada apuntado tarda distinto (hechizos 0,38–0,62 s; golpes 0,36–0,52 s).
     const base = spell ? rand(.38, .62) : rand(.36, .52);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
@@ -429,6 +436,11 @@
     // Revalido la visión al resolver: si el blanco salió del área en pantalla durante la mira, no hay lanzamiento.
     if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
     const skill = aim.spell?.skill ?? null;
+    // Como ahora el NPC puede moverse mientras apunta, el golpe melee revalida su alcance real al resolver.
+    if (!skill && distance(actor, target) > Math.max(1, NPC_COMBAT_RANGES[actor.className]?.max ?? 1)) {
+      addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status');
+      return;
+    }
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
     const [x, y] = actorTile(target);
@@ -785,12 +797,10 @@
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
       if (!actor.alive || actor.step) continue;
-      // Apuntar es plantarse: nadie camina mientras tiene la mira activa.
-      if (actor.aim) continue;
       if (actor.immobilized > 0) {
         // Congelado: solo puede intentar remover su propia parálisis, como en AO.
         const selfCleanse = (CLASS_PROFILES[actor.className]?.skills ?? []).findIndex(skill => skill?.type === 'cleanse');
-        if (selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
+        if (!actor.aim && selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
           beginNpcAim(actor, actor, { skill: CLASS_PROFILES[actor.className].skills[selfCleanse], index: selfCleanse });
         }
         continue;
@@ -826,7 +836,7 @@
           const wounded = candidates[0] ?? null;
           if (wounded === actor) {
             // Autocuidado: solo si de verdad está herido; curarse por curar plantado en un rincón no.
-            if (actor.hp / actor.maxHp < SELF_CARE_HP) {
+            if (!actor.aim && actor.hp / actor.maxHp < SELF_CARE_HP) {
               beginNpcAim(actor, actor, { skill: heal, index: healingIndex });
               continue;
             }
@@ -851,9 +861,20 @@
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
+      // El mago jamás entra a melee: si lo presionan, primero se despega y busca ángulo.
+      if (actor.className === 'mage' && range < combatRange.min) {
+        const step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
+          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
+        if (step) {
+          actor.movePlan = { kind: 'retreat', targetId: target.id };
+          startStep(actor, step[0], step[1]);
+          continue;
+        }
+        // Sin salida: se defiende a hechazos, nunca a golpes.
+      }
       // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
       const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (freezeIndex >= 0 && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
+      if (freezeIndex >= 0 && !actor.aim && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
         beginNpcAim(actor, target, { skill: skillAt(freezeIndex, actor.className), index: freezeIndex });
         continue;
       }
@@ -897,6 +918,7 @@
       if (!task) continue;
       task.timer -= dt;
       if (task.timer > 0) continue;
+      if (actor.aim) { task.timer = .2; continue; } // Termina la mira actual sin cancelar el apoyo pendiente.
       if ((actor.castCd ?? 0) > 0) { task.timer = .3; continue; } // Espera el intervalo de lanzamiento antes de apuntar la ayuda.
       actor.supportTask = null;
       if (!actor.alive || actor.immobilized > 0) continue;
@@ -939,7 +961,7 @@
         if (actor.stepTime >= STEP_DURATION) {
           [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0;
           // Encadenado del siguiente paso sin pausa: así caminan los NPCs como una persona, no a tirones.
-          if (actor !== player && !actor.aim) npcPlanStep(actor);
+          if (actor !== player) npcPlanStep(actor);
         }
       }
       if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
@@ -1088,8 +1110,8 @@
     for (const actor of fighters) {
       const aim = actor.aim;
       if (!aim) continue;
-      // El origen de la mira del jugador es su posición actual: puede caminar mientras apunta.
-      const [ox, oy] = actor === player ? position(actor) : [aim.fromX, aim.fromY];
+      // El origen de la mira sigue la posición actual: jugador y NPC pueden caminar mientras apuntan.
+      const [ox, oy] = position(actor);
       const [fromX, fromY] = screenTile(ox, oy, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
