@@ -36,3 +36,5 @@
 ## Historial de verificación conservado
 - 2026-11-11: consola 0 errores/0 advertencias tras cargar y jugar (Tab, F, W); canvas 917×675 con >600k píxeles pintados; HUD vivo (`healthValue` cayó a 20/130 por daño de bots durante la prueba).
 - Sesiones previas: verificación del cerebro en 3002 con capturas desktop/mobile, recursos HTTP 200 y consola limpia; commits `9880942` y `868700d` publicados en `main` tras validar `game.js`/`dist/game.js` en Chromium.
+- 2026-11-13: runtime reabierto correctamente en `http://localhost:3002` con Chromium; título de la app visible y consola con 0 errores/0 advertencias. El fallo anterior se debía a que el servidor se lanzó con timeout y terminó; `PORT=3002 bash start.sh` en segundo plano persistente lo resolvió. La rotación sigue pendiente de acordar ubicaciones.
+- 2026-11-13: revisión de `assets/ao/` confirma que solo hay un mapa: `Mapa2.map` (100×100, según `ATTRIBUTION.txt`), así que no están disponibles ahí los datos de las ubicaciones propuestas. Lista tentativa si el usuario no indica otra: Ullathorpe, Nix, Banderbill, Lindos y Arena; antes de implementarlas hay que verificar datos/zonas de spawn para mapas auténticos.
