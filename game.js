@@ -456,7 +456,7 @@
       return;
     }
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
-    if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
+    if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
@@ -474,7 +474,7 @@
         addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
         return;
       }
-      npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
+      npcCastSkill(actor, aim.spell?.skill, aim.spell?.index, target);
       return;
     }
     if (Math.random() > NPC_MELEE_ACCURACY) {
@@ -532,6 +532,9 @@
   function npcCastSkill(actor, skill, index, target) {
     if (!actor || !skill || !target || !target.alive || !Number.isInteger(index)
       || !Array.isArray(actor.skillCooldowns) || index < 0 || index >= actor.skillCooldowns.length) return false;
+    // Perfil defensivo: una habilidad incompleta no debe consumir maná ni romper el combate.
+    if (skill.type === 'damage' && !Array.isArray(skill.damage)) return false;
+    if (skill.type === 'immobilize' && !(skill.immobilize > 0)) return false;
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
     actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : skill.type === 'cleanse' ? 2.5 : skill.type === 'immobilize' ? 3.5 : 4.2 + index * .8;
@@ -813,9 +816,12 @@
       if (!actor.alive || actor.step) continue;
       if (actor.immobilized > 0) {
         // Congelado: solo puede intentar remover su propia parálisis, como en AO.
-        const selfCleanse = (CLASS_PROFILES[actor.className]?.skills ?? []).findIndex(skill => skill?.type === 'cleanse');
-        if (!actor.aim && selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
-          beginNpcAim(actor, actor, { skill: CLASS_PROFILES[actor.className].skills[selfCleanse], index: selfCleanse });
+        if (!Array.isArray(actor.skillCooldowns)) continue;
+        const profileSkills = CLASS_PROFILES[actor.className]?.skills ?? [];
+        const selfCleanse = profileSkills.findIndex(skill => skill?.type === 'cleanse');
+        const cleanseSkill = selfCleanse >= 0 ? profileSkills[selfCleanse] ?? null : null;
+        if (cleanseSkill && !actor.aim && (actor.castCd ?? 0) <= 0 && actor.mana >= cleanseSkill.cost && actor.skillCooldowns[selfCleanse] <= 0) {
+          beginNpcAim(actor, actor, { skill: cleanseSkill, index: selfCleanse });
         }
         continue;
       }
@@ -896,7 +902,7 @@
       }
 
       const attackSkills = skills.map((skill, index) => ({ skill, index }))
-        .filter(({ skill, index }) => skill?.type === 'damage'
+        .filter(({ skill, index }) => skill?.type === 'damage' && Array.isArray(skill.damage)
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
       if (!recovering && !actor.aim && actor.attackCd <= 0 && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
