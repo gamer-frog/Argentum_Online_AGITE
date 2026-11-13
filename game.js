@@ -497,7 +497,6 @@
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
-      addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
       // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
       if ((aim.retries ?? 0) < 2 && (actor.castCd ?? 0) <= 0 && isEnemy(actor, target) && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
