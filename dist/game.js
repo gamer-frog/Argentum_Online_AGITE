@@ -108,7 +108,8 @@
   const SPELL_VISION_RANGE = 11;
   // Autocuidado: solo se planta a curarse si de verdad está herido (nada de curarse por curar).
   const SELF_CARE_HP = .5;
-  const images = new Map(), spellSounds = new Map();
+  const images = new Map(), spellSounds = new Map(), stepSounds = [];
+  let stepSoundIndex = 0;
   let mapData, grhs, characters, spellFx = {};
   let mapManifest = [], currentMap = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
   let fallbackWorld = false;
@@ -119,7 +120,6 @@
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
-  let joystickKey = null;
   const fighters = ACTORS.map((actor, index) => {
     const profile = CLASS_PROFILES[actor.className];
     const [body, head] = FACTION_LOOKS[actor.team]?.[actor.className] ?? [1, 1];
@@ -198,6 +198,7 @@
           }
         }
       } catch (_) { /* Authentic effects and sounds are optional. */ }
+       for (const id of [16, 27, 114]) { const sound = new Audio(`${MAP_URL}audio/${id}.wav`); sound.preload = 'auto'; stepSounds.push(sound); }
       const ids = [...new Set(Object.values(grhs).flatMap(def => def.image ? [def.image] : []))];
       const loaded = await Promise.all(ids.map(loadImage));
       for (const [id, image] of loaded) if (image) images.set(id, image);
@@ -245,10 +246,9 @@
   }
   function refreshMapHud() {
     const name = currentMap?.name || 'Campo de batalla';
-    const location = $('mapName'), pillLabel = $('mapPillLabel'), progress = $('killProgress');
+    const location = $('mapName'), pillLabel = $('mapPillLabel');
     if (location) location.textContent = name.toLocaleUpperCase('es');
     if (pillLabel) pillLabel.textContent = `${name.toLocaleUpperCase('es')} · ARENA LIBRE`;
-    if (progress) progress.textContent = `${Math.min(killsTowardRotation, 5)}/5 BAJAS`;
   }
   function resize() {
     const rect = frame.getBoundingClientRect();
@@ -311,6 +311,11 @@
   function actorTile(actor) { return actor.step ? actor.step.to : [actor.x, actor.y]; }
   function distance(a, b) { const [ax, ay] = actorTile(a), [bx, by] = actorTile(b); return Math.abs(ax - bx) + Math.abs(ay - by); }
   function occupied(x, y, except) { return fighters.some(actor => actor !== except && actor.alive && actorTile(actor)[0] === x && actorTile(actor)[1] === y); }
+  function playStepSound() {
+    if (!audioOn || !audioReady || !stepSounds.length) return;
+    const sound = stepSounds[stepSoundIndex++ % stepSounds.length];
+    try { sound.currentTime = 0; const playback = sound.play(); if (playback?.catch) playback.catch(() => {}); } catch (_) { /* Audio is optional. */ }
+  }
   function startStep(actor, dx, dy) {
     if (!actor.alive || actor.immobilized > 0 || actor.step || (!dx && !dy)) return false;
     if (dx && dy) { if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0; }
@@ -321,6 +326,7 @@
     // Cada casillero dura un poco distinto (solo NPCs): sin ese jitter el bot camina en metrónomo.
     const duration = actor === player ? STEP_DURATION : STEP_DURATION * rand(.82, 1.22);
     actor.step = { from: [x, y], to: [nx, ny], duration }; actor.stepTime = 0;
+    if (actor === player) playStepSound();
     return true;
   }
   // Plan de movimiento de NPC: rachas de 2–4 casilleros encadenados y un freno natural entre rachas.
@@ -352,7 +358,12 @@
   }
   function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
   function tacticalEnemy(actor) {
-    const candidates = fighters.filter(other => isEnemy(actor, other) && other.alive);
+    const range = NPC_COMBAT_RANGES[actor.className] || NPC_COMBAT_RANGES.warrior;
+    const candidates = fighters.filter(other => {
+      if (!isEnemy(actor, other) || !other.alive) return false;
+      return distance(actor, other) >= range.min && distance(actor, other) <= range.max
+        || nextPathStep(actor, other, range.min, range.max) !== null;
+    });
     return candidates.sort((a, b) => enemyScore(actor, a) - enemyScore(actor, b))[0] || null;
   }
   function enemyScore(actor, target) {
@@ -495,6 +506,8 @@
     }
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
+    // Un click directo del jugador fija el rival como objetivo: moverse durante la mira no esquiva el hechizo.
+    if (actor === player && aim.spell) { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
@@ -771,7 +784,7 @@
     const attackerLabel = attacker ? (attacker === player ? 'Vos' : actorDisplayName(attacker)) : 'Alguien';
     const victimLabel = victim === player ? 'vos' : actorDisplayName(victim);
     const feed = $('killFeed'), line = document.createElement('div'); line.className = 'feed-line';
-    line.innerHTML = `<span class="feed-gold">✦</span> <b>${attackerLabel}</b><span> derrotó a </span><b>${victimLabel}</b>`;
+    line.innerHTML = `<span class="feed-gold">✦</span> <b class="feed-killer">${attackerLabel}</b><span> derrotó a </span><b class="feed-victim">${victimLabel}</b>`;
     feed.prepend(line); while (feed.children.length > 3) feed.lastElementChild.remove();
     const log = $('battleLog'), entry = document.createElement('div'); entry.className = 'log-entry';
     entry.innerHTML = `${attacker === player ? '<b>Derrotaste</b>' : `<b>${attackerLabel}</b> derrotó a`} ${victim === player ? 'tu personaje' : actorDisplayName(victim)}.`;
@@ -862,27 +875,26 @@
     selected = target.id;
     castSkill(selectedSkill, target);
   }
-  function clearJoystick() {
-    if (joystickKey) keys.delete(joystickKey);
-    joystickKey = null;
-    const knob = $('joyKnob');
-    if (knob) knob.style.transform = '';
-  }
-  function updateJoystick(event) {
-    const joy = $('joystick'), knob = $('joyKnob');
-    if (!joy || !knob) return;
-    const rect = joy.getBoundingClientRect(), dx = event.clientX - (rect.left + rect.width / 2), dy = event.clientY - (rect.top + rect.height / 2);
-    const length = Math.hypot(dx, dy), radius = rect.width * .32, scale = length > radius ? radius / length : 1;
-    knob.style.transform = `translate(${dx * scale}px, ${dy * scale}px)`;
-    if (joystickKey) keys.delete(joystickKey);
-    joystickKey = length < 12 ? null : Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'arrowleft' : 'arrowright') : (dy < 0 ? 'arrowup' : 'arrowdown');
-    if (joystickKey) keys.add(joystickKey);
+  function clearDirections() {
+    document.querySelectorAll('.mobile-directions [data-direction].active').forEach(button => {
+      keys.delete(button.dataset.direction); button.classList.remove('active');
+    });
   }
   function updatePlayer() {
     if (player.step) return; // Lanzar NO frena: caminás mientras apuntás y el hechizo sale igual.
     // Use only the most recently pressed direction: holding two keys never creates a diagonal.
     const key = [...keys].reverse().find(pressed => PLAYER_DIRECTIONS[pressed]);
     if (key) startStep(player, ...PLAYER_DIRECTIONS[key]);
+  }
+  function drinkNpcPotion(actor, kind) {
+    if (!actor.alive || actor.potionCd > 0 || actor.attackCd > 0 || actor.castCd > 0) return false;
+    if (kind === 'red') actor.hp = Math.min(actor.maxHp, actor.hp + actor.maxHp * POTION_HP_SHARE);
+    else actor.mana = Math.min(actor.maxMana, actor.mana + actor.maxMana * POTION_MANA_SHARE);
+    actor.potionCd = POTION_DURATION;
+    actor.attackCd = Math.max(actor.attackCd, POTION_DURATION);
+    actor.castCd = Math.max(actor.castCd, POTION_DURATION);
+    actor.flash = .12;
+    return true;
   }
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
@@ -945,6 +957,8 @@
         }
       }
 
+      const potionKind = actor.hp / actor.maxHp < .42 ? 'red' : actor.mana / Math.max(1, actor.maxMana) < .3 ? 'blue' : null;
+      if (potionKind && drinkNpcPotion(actor, potionKind)) continue;
       const target = tacticalEnemy(actor);
       // Nadie se queda quieto jamás: con blanco lo persigue (el agite nunca para); sin blancos vivos vuelve a su puesto.
       if (!target) {
@@ -1433,7 +1447,7 @@
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
-  window.addEventListener('blur', () => { keys.clear(); clearJoystick(); });
+  window.addEventListener('blur', () => { keys.clear(); clearDirections(); });
   canvas.addEventListener('pointermove', event => {
     const rect = canvas.getBoundingClientRect();
     mouseTile = tileAtPointer(event.clientX - rect.left, event.clientY - rect.top);
@@ -1458,14 +1472,14 @@
   document.querySelectorAll('.roster-row[data-fighter]').forEach(row => {
     if (row.dataset.fighter !== 'player') row.addEventListener('click', () => selectTarget(byId[row.dataset.fighter]));
   });
-  const joystick = $('joystick');
-  if (joystick) {
-    joystick.addEventListener('pointerdown', event => { event.preventDefault(); joystick.setPointerCapture(event.pointerId); updateJoystick(event); });
-    joystick.addEventListener('pointermove', event => { if (joystick.hasPointerCapture(event.pointerId)) updateJoystick(event); });
-    joystick.addEventListener('pointerup', clearJoystick);
-    joystick.addEventListener('pointercancel', clearJoystick);
-    joystick.addEventListener('lostpointercapture', clearJoystick);
-  }
+  document.querySelectorAll('.mobile-directions [data-direction]').forEach(button => {
+    const direction = button.dataset.direction;
+    const release = () => { keys.delete(direction); button.classList.remove('active'); };
+    button.addEventListener('pointerdown', event => { event.preventDefault(); audioReady = true; keys.add(direction); button.classList.add('active'); button.setPointerCapture?.(event.pointerId); });
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
+  });
   $('restartBtn').addEventListener('click', resetGame);
   $('soundToggle').addEventListener('click', () => { audioOn = !audioOn; $('soundLabel').textContent = `SONIDO ${audioOn ? 'ON' : 'OFF'}`; $('soundIcon').textContent = audioOn ? '♫' : '♪'; });
   $('helpBtn').addEventListener('click', () => $('helpModal').classList.remove('hidden'));

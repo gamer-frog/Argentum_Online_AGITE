@@ -15,22 +15,22 @@
   <main class="client-window">
     <header class="client-titlebar">
       <div class="client-brand"><span class="brand-gem">✦</span><strong>ARGENTUM ONLINE</strong><span class="client-version">CLIENTE DE PRUEBA</span></div>
-      <div class="window-actions"><button id="soundToggle" type="button" title="Alternar sonido"><span id="soundIcon">♫</span> <span id="soundLabel">SONIDO</span></button><button id="helpBtn" type="button" title="Controles">?</button><button id="menuBtn" type="button" title="Pausar o reanudar">Ⅱ</button></div>
+      <div class="window-actions"><button id="soundToggle" type="button" title="Alternar sonido"><span id="soundIcon">♫</span> <span id="soundLabel">SONIDO</span></button><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar en otro mapa">REINICIAR</button><button id="helpBtn" type="button" title="Controles">?</button><button id="menuBtn" type="button" title="Pausar o reanudar">Ⅱ</button></div>
     </header>
 
     <section class="client-layout" id="arenaLayout" aria-label="Cliente de juego">
       <section class="world-window">
         <div class="world-toolbar">
-          <span class="location-mark">⌖</span><strong id="mapName">CARGANDO MAPA</strong><span class="toolbar-divider"></span><span>MUNDO · AO LOCAL</span>
-          <div class="toolbar-actions"><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar en otro mapa">REINICIAR</button></div>
+          <span class="location-mark">⌖</span><strong id="mapName">CARGANDO MAPA</strong><span class="toolbar-divider"></span><span>LINDOS · MUNDO · AO LOCAL</span>
+
         </div>
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
-          <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div><div class="kill-progress" id="killProgress" aria-live="polite">0/5 BAJAS</div></div>
+          <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div></div>
           <div class="kill-feed" id="killFeed"><div class="feed-line"><b>La batalla te espera</b><span>—</span> partida local.</div></div>
           <div class="respawn-notice hidden" id="respawnNotice" role="status" aria-live="polite"><strong>HAS CAÍDO</strong><span>Reaparecés en <b id="respawnTimer" aria-hidden="true">2.4</b> s</span></div>
-          <div class="mobile-joystick" id="joystick"><div class="joy-ring"><div class="joy-knob" id="joyKnob"></div></div></div>
+          <div class="mobile-directions" aria-label="Direcciones"><button type="button" data-direction="arrowup" aria-label="Arriba">▲</button><button type="button" data-direction="arrowleft" aria-label="Izquierda">◀</button><button type="button" data-direction="arrowdown" aria-label="Abajo">▼</button><button type="button" data-direction="arrowright" aria-label="Derecha">▶</button></div>
           <div class="mobile-cast-hint">MOVER · ATACAR EN EL PANEL</div>
           <div class="canvas-tip"><span>FLECHAS / WASD</span> MOVER <i>·</i> <span>CLICK</span> ELEGIR / LANZAR <i>·</i> <span>F</span> ATACAR</div>
         </div>

@@ -88,3 +88,18 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
 
 /* Clases sin maná (guerrero): el recurso completo desaparece del HUD. */
 .resource-block.no-mana .mana-row,.resource-block.no-mana .mana-track{display:none}
+
+/* Updated arena controls and kill-feed colors. */
+.kill-progress{display:none!important}
+.feed-line .feed-killer{color:#ed7068}
+.feed-line .feed-victim{color:#67d3e2}
+.mobile-directions{display:none}
+@media(max-width:760px){
+  .mobile-directions{position:absolute;z-index:3;left:12px;bottom:12px;width:112px;height:112px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:3px;touch-action:none}
+  .mobile-directions button{border:1px solid #e4d59b99;background:#10180fc9;color:#eadb9d;box-shadow:inset 0 0 0 1px #d6d2b515;touch-action:none}
+  .mobile-directions button:nth-child(1){grid-column:2}
+  .mobile-directions button:nth-child(2){grid-column:1;grid-row:2}
+  .mobile-directions button:nth-child(3){grid-column:2;grid-row:3}
+  .mobile-directions button:nth-child(4){grid-column:3;grid-row:2}
+  .mobile-directions button.active,.mobile-directions button:active{background:#9e8d4c99;color:#fff4c2}
+}
