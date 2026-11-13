@@ -18,6 +18,13 @@ from pathlib import Path
 TILE_SIZE = 32
 MAP_SIDE = 100
 AO_SERVER_REVISION = "ca6ad7ff428a585475373474ec5640eabe05961b"
+MAPS = {
+    1: {"name": "Ullathorpe", "spawn": [58, 45], "kind": "city"},
+    34: {"name": "Nix", "spawn": [44, 88], "kind": "city"},
+    59: {"name": "Banderbill", "spawn": [50, 50], "kind": "city"},
+    62: {"name": "Lindos", "spawn": [72, 41], "kind": "city"},
+    272: {"name": "Arena", "spawns": [[30, 44], [58, 46]], "kind": "arena"},
+}
 SPELL_FX = {
     2: {"name": "Dardo Mágico", "fx": 15, "wav": 114, "loops": 2},
     9: {"name": "Paralizar", "fx": 8, "wav": 16, "loops": 0},
@@ -63,35 +70,50 @@ def main() -> None:
     graphics_dir.mkdir(parents=True, exist_ok=True)
     audio_dir.mkdir(parents=True, exist_ok=True)
 
-    raw_map = (source / "Mapas/Alkon/Mapa2.map").read_bytes()
-    if len(raw_map) < 273 + MAP_SIDE * MAP_SIDE * 5:
-        raise SystemExit("Unexpected Mapa2.map size")
-    cursor = 273
-    tiles = []
     roots: set[int] = set()
-    for y in range(MAP_SIDE):
-        row = []
-        for x in range(MAP_SIDE):
-            flags = raw_map[cursor]
-            cursor += 1
-            layers = []
-            for bit in (0, 2, 4, 8):
-                if bit == 0 or flags & bit:
-                    graphic = struct.unpack_from("<I", raw_map, cursor)[0]
-                    cursor += 4
-                    layers.append(graphic)
-                    if graphic:
-                        roots.add(graphic)
-                else:
-                    layers.append(0)
-            if flags & 16:
-                cursor += 2
-            if flags & 32:
-                cursor += 2
-            row.append({"b": bool(flags & 1), "g": layers})
-        tiles.append(row)
-    if cursor != len(raw_map):
-        raise SystemExit(f"Map parse ended at {cursor}; file is {len(raw_map)} bytes")
+
+    def parse_map(map_id: int) -> dict:
+        raw_map = (source / f"Mapas/Alkon/Mapa{map_id}.map").read_bytes()
+        cursor = 273
+        tiles = []
+        for y in range(MAP_SIDE):
+            row = []
+            for x in range(MAP_SIDE):
+                if cursor >= len(raw_map):
+                    raise SystemExit(f"Unexpected Mapa{map_id}.map size")
+                flags = raw_map[cursor]
+                cursor += 1
+                layers = []
+                for bit in (0, 2, 4, 8):
+                    if bit == 0 or flags & bit:
+                        if cursor + 4 > len(raw_map):
+                            raise SystemExit(f"Truncated graphic in Mapa{map_id}.map")
+                        graphic = struct.unpack_from("<I", raw_map, cursor)[0]
+                        cursor += 4
+                        layers.append(graphic)
+                        if graphic:
+                            roots.add(graphic)
+                    else:
+                        layers.append(0)
+                if flags & 16:
+                    cursor += 2
+                if flags & 32:
+                    cursor += 2
+                row.append({"b": bool(flags & 1), "g": layers})
+            tiles.append(row)
+        if cursor != len(raw_map):
+            raise SystemExit(f"Mapa{map_id}.map parse ended at {cursor}; file is {len(raw_map)} bytes")
+        return {"width": MAP_SIDE, "height": MAP_SIDE, "tileSize": TILE_SIZE, "tiles": tiles}
+
+    maps = {str(map_id): parse_map(map_id) for map_id in MAPS}
+    for map_id, metadata in MAPS.items():
+        # AO server coordinates are 1-based; the extracted tile arrays are 0-based.
+        spawns = metadata.get("spawns", [metadata.get("spawn")])
+        for x, y in spawns:
+            if not (1 <= x <= MAP_SIDE and 1 <= y <= MAP_SIDE):
+                raise SystemExit(f"Configured spawn ({x},{y}) is outside map {map_id}")
+            if maps[str(map_id)]["tiles"][y - 1][x - 1]["b"]:
+                raise SystemExit(f"Configured spawn ({x},{y}) is blocked on map {map_id}")
 
     fx_definitions = parse_character_ini(source / "INIT/fxs.ini", "FX", ["Animacion", "OffsetX", "OffsetY"])
     selected_fx = {}
@@ -156,7 +178,14 @@ def main() -> None:
         check=False, capture_output=True, text=True,
     )
     revision = source_revision.stdout.strip() if source_revision.returncode == 0 else "unknown"
-    (output / "map.json").write_text(json.dumps({"width": MAP_SIDE, "height": MAP_SIDE, "tileSize": TILE_SIZE, "tiles": tiles}, separators=(",", ":")))
+    maps_dir = output / "maps"
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    for map_id, map_data in maps.items():
+        (maps_dir / f"{map_id}.json").write_text(json.dumps(map_data, separators=(",", ":")))
+    (output / "maps.json").write_text(json.dumps({
+        "maps": [{"id": map_id, **metadata} for map_id, metadata in MAPS.items()]
+    }, separators=(",", ":")))
+    (output / "map.json").write_text(json.dumps(maps["272"], separators=(",", ":")))
     (output / "grhs.json").write_text(json.dumps(grhs, separators=(",", ":")))
     (output / "characters.json").write_text(json.dumps({"bodies": selected_bodies, "heads": selected_heads}, separators=(",", ":")))
     (output / "spellfx.json").write_text(json.dumps({"sourceRevision": revision, "serverRevision": AO_SERVER_REVISION, "spells": selected_fx}, separators=(",", ":")))

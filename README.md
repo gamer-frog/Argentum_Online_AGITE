@@ -8,13 +8,13 @@ Prototipo web local inspirado en **Argentum Online**. Presenta un mundo explorab
 
 ## Recursos gráficos locales
 
-Con un checkout completo de [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente) que incluya `LICENSE` y `INIT/Creditos.txt`, extraé el mapa 2, sus láminas referenciadas y los datos de personajes:
+Con un checkout completo de [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente) que incluya `LICENSE` y `INIT/Creditos.txt`, extraé los mapas oficiales configurados en `scripts/extract_ao_assets.py` (Ullathorpe 1, Nix 34, Banderbill 59, Lindos 62 y Arena 272), sus láminas referenciadas y los datos de personajes:
 
 ```bash
 python3 scripts/extract_ao_assets.py /ruta/a/ao-cliente
 ```
 
-El resultado se genera en `assets/ao/`; los archivos seleccionados y sus avisos se versionan para que la app publicada pueda cargarlos. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
+El resultado se genera en `assets/ao/`, con cada mapa de 100×100 en `assets/ao/maps/<ID>.json` y un `maps.json` que registra nombres y coordenadas oficiales de aparición (coordenadas del servidor, base 1). La aplicación elige un mapa al iniciar, cambia al siguiente de la lista cada cinco bajas y al reiniciar selecciona otro mapa; si la carga falla, conserva el mapa actual. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
 
 ### Efectos y sonidos de hechizos
 
