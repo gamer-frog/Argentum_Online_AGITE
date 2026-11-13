@@ -352,12 +352,7 @@
   }
   function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
   function tacticalEnemy(actor) {
-    const range = NPC_COMBAT_RANGES[actor.className] || NPC_COMBAT_RANGES.warrior;
-    const candidates = fighters.filter(other => {
-      if (!isEnemy(actor, other) || !other.alive) return false;
-      return distance(actor, other) >= range.min && distance(actor, other) <= range.max
-        || nextPathStep(actor, other, range.min, range.max) !== null;
-    });
+    const candidates = fighters.filter(other => isEnemy(actor, other) && other.alive);
     return candidates.sort((a, b) => enemyScore(actor, a) - enemyScore(actor, b))[0] || null;
   }
   function enemyScore(actor, target) {
@@ -493,9 +488,6 @@
     // Revalido la visión al resolver: si el blanco salió del área en pantalla durante la mira, no hay lanzamiento.
     if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
     const skill = aim.spell?.skill ?? null;
-    // Un click directo del jugador fija al rival como objetivo: su movimiento no esquiva el hechizo.
-    // Los NPC mantienen la resolución sobre la casilla apuntada y su posibilidad de errar.
-    if (actor === player) { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     // Como ahora el NPC puede moverse mientras apunta, el golpe melee revalida su alcance real al resolver.
     if (!skill && distance(actor, target) > Math.max(1, NPC_COMBAT_RANGES[actor.className]?.max ?? 1)) {
       addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status');
