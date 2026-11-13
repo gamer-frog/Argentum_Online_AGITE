@@ -55,8 +55,8 @@
 - [~] **Cada clase con comportamiento propio.** Hay rangos, prioridades y retirada del mago; falta profundizar.
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
 - [~] **Referencia visual estable de AO.** Hay URLs anotadas, pero no una captura versionada en el repo con versión/resolución/procedencia.
-- [~] **No esquivar hechizos clickeados.** Si el blanco cambia de casilla durante la mira todavía aparece «esquivó». El usuario pidió que un click directo no se esquive (ver pendiente).
-- [~] **Texto `ERRADO` sobre el lanzador.** Ya no se atribuye a esquiva del blanco, pero puede seguir apareciendo en la casilla apuntada en vez de sobre el personaje que erró.
+- [x] **No esquivar hechizos clickeados.** Un clic directo conserva al rival como objetivo aunque cambie de casilla mientras apunta; el hechizo se resuelve sobre él si sigue dentro del rango de visión. Verificado en Chromium.
+- [x] **Texto `ERRADO` sobre el lanzador.** El fallo se dibuja sobre el personaje que lanzó, no sobre la casilla clickeada. Verificado en Chromium.
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
@@ -76,8 +76,6 @@
 - [ ] **Agotamiento de maná del paladín** tras varios Remover Parálisis y necesidad de apoyo aliado (hoy los costos son de práctica).
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
-- [ ] **No esquivar hechizos clickeados por el jugador:** si el jugador clickea un rival, el hechizo debe resolver sobre ese rival aunque se mueva, o explicar claramente el fallo; hoy puede aparecer «esquivó».
-- [ ] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click.
 - [ ] **Proponer y acordar la lista de mapas famosos** para la rotación (el usuario pidió proponer los más famosos y elegir juntos).
 - [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.
 

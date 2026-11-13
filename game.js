@@ -110,7 +110,6 @@
   const SELF_CARE_HP = .5;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
-  let mapManifest = [], currentMap = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
@@ -162,29 +161,23 @@
       image.src = `${MAP_URL}graphics/${id}.png`;
     });
   }
-  async function fetchJson(url) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Could not load ${url}: ${response.status}`);
-    return response.json();
+  async function loadData(base) {
+    return Promise.all(['map.json', 'grhs.json', 'characters.json'].map(name => fetch(base + name).then(response => {
+      if (!response.ok) throw new Error(`Could not load ${name} from ${base}: ${response.status}`);
+      return response.json();
+    })));
   }
   async function loadAssets() {
     try {
       for (let index = 0; index < MAP_CANDIDATES.length; index++) {
         try {
+          [mapData, grhs, characters] = await loadData(MAP_CANDIDATES[index]);
           MAP_URL = MAP_CANDIDATES[index];
-          const [manifest, graphicData, characterData] = await Promise.all([
-            fetchJson(MAP_URL + 'maps.json'), fetchJson(MAP_URL + 'grhs.json'), fetchJson(MAP_URL + 'characters.json')
-          ]);
-          mapManifest = manifest.maps || [];
-          grhs = graphicData; characters = characterData;
           break;
         } catch (error) {
           if (index === MAP_CANDIDATES.length - 1) throw error;
         }
       }
-      currentMap = mapManifest[Math.floor(Math.random() * mapManifest.length)];
-      if (!currentMap) throw new Error('No authentic AO maps were listed in maps.json');
-      mapData = await fetchJson(`${MAP_URL}maps/${currentMap.id}.json`);
       try {
         const response = await fetch(MAP_URL + 'spellfx.json');
         if (response.ok) {
@@ -203,8 +196,7 @@
       for (const [id, image] of loaded) if (image) images.set(id, image);
       const missing = ids.length - images.size;
       if (missing) toast(`${missing} láminas de mapa no cargaron; el resto del mundo sigue disponible.`);
-      spawnActorsOnMap(currentMap);
-      refreshMapHud();
+      fighters.forEach(actor => { [actor.x, actor.y] = findOpen(actor.x, actor.y, actor); actor.homeX = actor.x; actor.homeY = actor.y; });
       refreshHud();
     } catch (error) {
       console.warn('No se pudieron cargar los recursos de AO; se inicia una arena de práctica local.', error);
@@ -219,36 +211,6 @@
       toast('Faltan assets/ao/: arena de práctica visual alternativa.');
       refreshHud();
     }
-  }
-  function spawnActorsOnMap(map) {
-    fighters.forEach(actor => { actor.alive = false; actor.step = null; actor.aim = null; });
-    const cityOffsets = [[0, 0], [0, -1], [0, 1], [-1, 0]];
-    const arenaOffsets = [[-1, 0], [0, -1], [0, 1], [1, 0]];
-    for (const team of ['sacred', 'chaotic']) {
-      const teamActors = fighters.filter(actor => actor.team === team);
-      const teamIndex = team === 'sacred' ? 0 : 1;
-      const serverSpawn = map.kind === 'arena' ? map.spawns?.[teamIndex] : map.spawn;
-      if (!serverSpawn) continue;
-      const centerX = serverSpawn[0] - 1, centerY = serverSpawn[1] - 1;
-      const teamShift = map.kind === 'arena' ? 0 : (teamIndex ? 2 : -2);
-      teamActors.forEach((actor, index) => {
-        const [offsetX, offsetY] = (map.kind === 'arena' ? arenaOffsets : cityOffsets)[index] || [0, index];
-        const [x, y] = findOpen(centerX + teamShift + offsetX, centerY + offsetY, actor);
-        Object.assign(actor, {
-          x, y, homeX: x, homeY: y, alive: true, step: null, stepTime: 0, respawn: 0,
-          hp: actor.maxHp, mana: actor.maxMana, flash: 0, aim: null, immobilized: 0,
-          aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0,
-          supportTask: null, movePlan: null, strafeTimer: 0
-        });
-      });
-    }
-  }
-  function refreshMapHud() {
-    const name = currentMap?.name || 'Campo de batalla';
-    const location = $('mapName'), pillLabel = $('mapPillLabel'), progress = $('killProgress');
-    if (location) location.textContent = name.toLocaleUpperCase('es');
-    if (pillLabel) pillLabel.textContent = `${name.toLocaleUpperCase('es')} · ARENA LIBRE`;
-    if (progress) progress.textContent = `${Math.min(killsTowardRotation, 5)}/5 BAJAS`;
   }
   function resize() {
     const rect = frame.getBoundingClientRect();
@@ -352,12 +314,7 @@
   }
   function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
   function tacticalEnemy(actor) {
-    const range = NPC_COMBAT_RANGES[actor.className] || NPC_COMBAT_RANGES.warrior;
-    const candidates = fighters.filter(other => {
-      if (!isEnemy(actor, other) || !other.alive) return false;
-      return distance(actor, other) >= range.min && distance(actor, other) <= range.max
-        || nextPathStep(actor, other, range.min, range.max) !== null;
-    });
+    const candidates = fighters.filter(other => isEnemy(actor, other) && other.alive);
     return candidates.sort((a, b) => enemyScore(actor, a) - enemyScore(actor, b))[0] || null;
   }
   function enemyScore(actor, target) {
@@ -501,7 +458,8 @@
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
-    if (x !== aim.x || y !== aim.y) {
+    if ((x !== aim.x || y !== aim.y) && actor !== player) {
+      addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
       // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
       if ((aim.retries ?? 0) < 2 && (actor.castCd ?? 0) <= 0 && isEnemy(actor, target) && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
@@ -513,7 +471,7 @@
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
         // Errar un hechizo es fallo del lanzador, no esquiva del blanco.
-        addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
+        addFloatingText(actor, 'ERRADO', 'status');
         return;
       }
       npcCastSkill(actor, aim.spell?.skill, aim.spell?.index, target);
@@ -537,10 +495,10 @@
   // Resolución de un tiro a casilla libre: mismo telegrama humano (puede errar) y golpea a quien esté ahí.
   function resolveTileAim(actor, aim) {
     const skill = aim.spell?.skill ?? null;
-    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingText(actor, 'ERRADO', 'status'); return; }
     const [ax, ay] = actorTile(actor);
     if (Math.abs(ax - aim.x) + Math.abs(ay - aim.y) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
-    if (Math.random() > .82) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    if (Math.random() > .82) { addFloatingText(actor, 'ERRADO', 'status'); return; }
     const victim = fighters.find(other => other.alive && actorTile(other)[0] === aim.x && actorTile(other)[1] === aim.y) ?? null;
     if (!victim) { addFloatingTextAt(aim.x, aim.y, 'al vacío', 'status'); return; }
     npcCastSkill(actor, skill, aim.spell.index, victim);
@@ -783,43 +741,7 @@
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${actorDisplayName(victim)}.` : `${actorDisplayName(victim)} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    killsTowardRotation++;
-    refreshMapHud();
-    if (killsTowardRotation >= 5) rotateMapAfterKills();
     refreshHud();
-  }
-  async function rotateMapAfterKills() {
-    if (mapChangeInProgress || resetInProgress || mapManifest.length < 2) return;
-    mapChangeInProgress = true;
-    const transitionId = ++mapTransitionId;
-    try {
-      while (killsTowardRotation >= 5 && transitionId === mapTransitionId) {
-        const currentIndex = mapManifest.findIndex(map => map.id === currentMap?.id);
-        const nextMap = mapManifest[(currentIndex + 1 + mapManifest.length) % mapManifest.length];
-        const nextData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
-        if (transitionId !== mapTransitionId) return;
-        mapData = nextData; currentMap = nextMap; killsTowardRotation -= 5;
-        spawnActorsOnMap(currentMap);
-        floatingTexts.length = 0; spellEffects.length = 0;
-        selected = 'chaoticWarrior'; selectedSkill = null; refreshSkillSelection();
-        $('respawnNotice').classList.add('hidden');
-        refreshMapHud(); refreshHud();
-        toast(`Cambio de mapa · ${currentMap.name}.`);
-        const feed = $('killFeed'), line = document.createElement('div');
-        line.className = 'feed-line'; line.innerHTML = `<b>Nuevo mapa: ${currentMap.name}</b><span>—</span> la batalla continúa.`;
-        feed.prepend(line); while (feed.children.length > 3) feed.lastElementChild.remove();
-      }
-    } catch (error) {
-      if (transitionId === mapTransitionId) {
-        console.warn('No se pudo completar la rotación de mapa AO.', error);
-        toast('No se pudo cargar el siguiente mapa; la partida continúa aquí.');
-      }
-    } finally {
-      if (transitionId === mapTransitionId) {
-        mapChangeInProgress = false;
-        refreshMapHud();
-      }
-    }
   }
   function respawn(actor) {
     if (!actor) return;
@@ -1361,42 +1283,17 @@
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('targeted', actor.id === selected); }
     }
   }
-  async function resetGame() {
-    if (resetInProgress) return;
-    resetInProgress = true;
-    const transitionId = ++mapTransitionId;
-    mapChangeInProgress = false;
-    try {
-      const alternatives = mapManifest.filter(map => map.id !== currentMap?.id);
-      const nextMap = alternatives.length ? alternatives[Math.floor(Math.random() * alternatives.length)] : null;
-      if (nextMap) {
-        try {
-          const nextMapData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
-          if (transitionId !== mapTransitionId) return;
-          currentMap = nextMap; mapData = nextMapData;
-          spawnActorsOnMap(currentMap);
-        } catch (error) {
-          console.warn('No se pudo elegir un mapa nuevo al reiniciar; se conserva el mapa actual.', error);
-        }
-      }
-      if (transitionId !== mapTransitionId) return;
-      killsTowardRotation = 0;
-      for (const actor of fighters) {
-        const profile = CLASS_PROFILES[actor.className];
-        Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
-      }
-      floatingTexts.length = 0; spellEffects.length = 0;
-      selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
-      refreshSkillSelection(); refreshMapHud();
-      $('respawnNotice').classList.add('hidden'); $('respawnTimer').textContent = '2.4'; $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
-      $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La batalla te espera</b><span>—</span> buena suerte, viajero.</div>';
-      refreshHud(); toast('Partida reiniciada · elegí un objetivo y luchá.');
-    } finally {
-      if (transitionId === mapTransitionId) {
-        resetInProgress = false;
-        mapChangeInProgress = false;
-      }
+  function resetGame() {
+    for (const actor of fighters) {
+      const profile = CLASS_PROFILES[actor.className];
+      Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
     }
+    floatingTexts.length = 0; spellEffects.length = 0;
+    selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
+    refreshSkillSelection();
+    $('respawnNotice').classList.add('hidden'); $('respawnTimer').textContent = '2.4'; $('battleLog').innerHTML = '<div class="empty-log">Las hazañas de la arena aparecerán aquí.</div>';
+    $('killFeed').innerHTML = '<div class="feed-line"><span class="feed-gold">✦</span> <b>La arena te espera</b><span>—</span> buena suerte, viajero.</div>';
+    refreshHud(); toast('Arena reiniciada · elegí un objetivo y luchá.');
   }
   function togglePause() { paused = !paused; toast(paused ? 'Partida pausada' : 'Partida reanudada'); }
   function tileAtPointer(px, py) {
