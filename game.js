@@ -41,7 +41,7 @@
   };
   const names = Object.fromEntries(ACTORS.map(actor => [actor.id, actor.name]));
   // Color de la mira según el hechizo preparado (FX de AO) y del golpe cuerpo a cuerpo.
-  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b', LIGHT_AIM_COLOR = '#f4df9b';
+  const MELEE_AIM_COLOR = '#ff685b', HEAL_AIM_COLOR = '#9ee68b';
   const FIRE_AIM_COLOR = '#ff9a54', SHOCK_AIM_COLOR = '#64d8d0', DEFAULT_AIM_COLOR = '#e8b75f';
   // Escala Imperium AO (nivel 40): el guerrero es el de más vida y NO tiene maná; el combo golpe+hechizo+hechizo mata.
   const MELEE_DAMAGE = { warrior: [85, 105], paladin: [75, 95], mage: [45, 60], cleric: [50, 65] };
@@ -57,19 +57,23 @@
       { name: 'Vendaje', icon: '✚', type: 'heal', cost: 0, heal: 115, aimColor: HEAL_AIM_COLOR },
       { name: 'Carga', icon: '➤', type: 'damage', cost: 0, damage: [125, 145], range: 2, aimColor: MELEE_AIM_COLOR }
     ] },
+    // Nombres y daños del manual de Imperium Classic; los costos de maná son de práctica
+    // (el manual no publica maná y los del foro no entran en las reservas de nivel 40).
     mage: { label: 'MAGO', hp: 260, mana: 1400, skills: [
-      { name: 'Bola de fuego', icon: '✹', type: 'damage', cost: 230, damage: [100, 120], range: 7, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Apocalipsis', icon: '✹', type: 'damage', cost: 230, damage: [117, 119], range: 7, fxSpellId: 25, aimColor: FIRE_AIM_COLOR },
+      { name: 'Juicio Final', icon: '☄', type: 'damage', cost: 350, damage: [142, 144], range: 7, fxSpellId: 25, aimColor: FIRE_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
     cleric: { label: 'CLÉRIGO', hp: 300, mana: 1200, skills: [
-      { name: 'Luz sagrada', icon: '✹', type: 'damage', cost: 230, damage: [95, 115], range: 6, fxSpellId: 25, aimColor: LIGHT_AIM_COLOR },
-      { name: 'Sanar', icon: '✚', type: 'heal', cost: 220, heal: 120, aimColor: HEAL_AIM_COLOR },
+      { name: 'Ráfaga Ígnea', icon: '✹', type: 'damage', cost: 230, damage: [98, 100], range: 6, fxSpellId: 2, aimColor: FIRE_AIM_COLOR },
+      { name: 'Sanar', icon: '✚', type: 'heal', cost: 220, heal: [40, 45], aimColor: HEAL_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] },
     paladin: { label: 'PALADÍN', hp: 330, mana: 1000, skills: [
-      { name: 'Golpe sagrado', icon: '⚔', type: 'damage', cost: 40, damage: [110, 130], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Castigo Divino', icon: '⚔', type: 'damage', cost: 40, damage: [90, 92], range: 1, aimColor: MELEE_AIM_COLOR },
+      { name: 'Fuente de vida', icon: '✚', type: 'heal', cost: 220, heal: [25, 32], aimColor: HEAL_AIM_COLOR },
       { name: 'Inmovilizar', icon: '❄', type: 'immobilize', cost: 350, immobilize: 3.5, fxSpellId: 9, aimColor: SHOCK_AIM_COLOR },
       { name: 'Remover parálisis', icon: '✧', type: 'cleanse', cost: 330, aimColor: HEAL_AIM_COLOR }
     ] }
@@ -78,6 +82,11 @@
   function skillAt(index, className = currentClass) {
     const skills = CLASS_PROFILES[className]?.skills;
     return Array.isArray(skills) ? skills[index] ?? null : null;
+  }
+  // Las curas de Imperium se publican como rango (p. ej. Sanar 40-45); aceptar número o par.
+  function skillHealAmount(skill) {
+    const heal = skill?.heal;
+    return Array.isArray(heal) ? rand(heal[0] ?? 0, heal[1] ?? heal[0] ?? 0) : Number(heal) || 0;
   }
   const STEP_DURATION = .22; // Velocidad de Imperium AO Classic: apenas más rápida que la caminata clásica (~4,5 casilleros/s).
   const NPC_AIM_DURATION = .58;
@@ -289,7 +298,11 @@
     if (!target?.alive || !combatRange) { actor.movePlan = null; return; }
     const range = distance(actor, target);
     let step = null;
-    if (plan.kind === 'retreat') step = range < combatRange.min ? nextRetreatStep(actor, target, combatRange.min, combatRange.max) : null;
+    // Retirada: si el paso codicioso no existe (pared, aliado o esquina), buscar una casilla
+    // del anillo por ruta para que el mago/clérigo no se quede acorralado en melee.
+    if (plan.kind === 'retreat') step = range < combatRange.min
+      ? (nextRetreatStep(actor, target, combatRange.min, combatRange.max) ?? nextPathStep(actor, target, combatRange.min, combatRange.max))
+      : null;
     else if (plan.kind === 'path') step = range > combatRange.max ? nextPathStep(actor, target, combatRange.min, combatRange.max) : null;
     else if (plan.kind === 'strafe') step = range >= combatRange.min && range <= combatRange.max ? nextStrafeStep(actor, target, combatRange.min, combatRange.max) : null;
     if (!step || !startStep(actor, step[0], step[1])) { actor.movePlan = null; actor.aiTimer = rand(.04, .12); }
@@ -306,11 +319,19 @@
   }
   function enemyScore(actor, target) {
     const alliesCommitted = fighters.filter(ally => ally !== actor && ally.alive && ally.team === actor.team && (ally.aim?.targetId === target.id || ally.aiTargetId === target.id)).length;
-    return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5;
+    // Coordinación de agite: un rival inmovilizado es una ventana de daño gratis.
+    // El clérigo, además, lo prioriza como blanco (pedido de roles de equipo).
+    const frozenBonus = (target.immobilized > 0 ? 3.5 : 0) + (actor.className === 'cleric' && target.immobilized > 0 ? 2.5 : 0);
+    return distance(actor, target) * 1.6 + target.hp / target.maxHp * 5 - alliesCommitted * 2.5 - frozenBonus;
   }
-  function tacticalAlly(actor) {
-    return fighters.filter(other => other.alive && other.team === actor.team)
-      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0] || actor;
+  // Prioridad de apoyo: vida baja primero, pero el clérigo sostiene al paladín del equipo
+  // (pedido de roles): lo cura antes que a otros y lo desparaliza por encima de todo.
+  function supportPriority(actor, ally, kind = 'heal') {
+    if (!actor || !ally) return Infinity;
+    const paladinBias = ally.className === 'paladin'
+      ? (actor.className === 'cleric' ? (kind === 'cleanse' ? 1.1 : .45) : .2)
+      : 0;
+    return (ally.hp / (ally.maxHp || 1)) - paladinBias + distance(actor, ally) * .01;
   }
   function allyPressure(actor, x, y, allies, radius = 1) {
     return allies.reduce((pressure, ally) => {
@@ -409,7 +430,7 @@
   function beginNpcAim(actor, target, spell = null, retries = 0, tile = null) {
     const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
-    actor.movePlan = null; // Apuntar es plantarse: el NPC termina el paso en curso y deja de caminar.
+    // Apuntar NO detiene al NPC: sigue buscando ángulo y flanqueando mientras la mira corre (pedido de agite).
     // Tiempos random: cada apuntado tarda distinto (hechizos 0,38–0,62 s; golpes 0,36–0,52 s).
     const base = spell ? rand(.38, .62) : rand(.36, .52);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
@@ -429,8 +450,13 @@
     // Revalido la visión al resolver: si el blanco salió del área en pantalla durante la mira, no hay lanzamiento.
     if (distance(actor, target) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
     const skill = aim.spell?.skill ?? null;
+    // Como ahora el NPC puede moverse mientras apunta, el golpe melee revalida su alcance real al resolver.
+    if (!skill && distance(actor, target) > Math.max(1, NPC_COMBAT_RANGES[actor.className]?.max ?? 1)) {
+      addFloatingTextAt(aim.x, aim.y, 'fuera de alcance', 'status');
+      return;
+    }
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
-    if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell.index, target); return; }
+    if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
     if (x !== aim.x || y !== aim.y) {
       addFloatingTextAt(aim.x, aim.y, 'esquivó', 'status');
@@ -448,7 +474,7 @@
         addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
         return;
       }
-      npcCastSkill(actor, aim.spell.skill, aim.spell.index, target);
+      npcCastSkill(actor, aim.spell?.skill, aim.spell?.index, target);
       return;
     }
     if (Math.random() > NPC_MELEE_ACCURACY) {
@@ -506,6 +532,9 @@
   function npcCastSkill(actor, skill, index, target) {
     if (!actor || !skill || !target || !target.alive || !Number.isInteger(index)
       || !Array.isArray(actor.skillCooldowns) || index < 0 || index >= actor.skillCooldowns.length) return false;
+    // Perfil defensivo: una habilidad incompleta no debe consumir maná ni romper el combate.
+    if (skill.type === 'damage' && !Array.isArray(skill.damage)) return false;
+    if (skill.type === 'immobilize' && !(skill.immobilize > 0)) return false;
     if (actor.mana < skill.cost || actor.skillCooldowns[index] > 0) return false;
     actor.mana -= skill.cost;
     actor.skillCooldowns[index] = skill.type === 'heal' ? 5 : skill.type === 'cleanse' ? 2.5 : skill.type === 'immobilize' ? 3.5 : 4.2 + index * .8;
@@ -514,7 +543,7 @@
     actor.castCd = Math.max(actor.castCd ?? 0, CAST_RECOVERY);
     const [sx, sy] = position(actor), [tx, ty] = position(target);
     if (skill.type === 'heal') {
-      const restored = Math.min(skill.heal, target.maxHp - target.hp);
+      const restored = Math.min(Math.ceil(skillHealAmount(skill)), target.maxHp - target.hp);
       if (restored > 0) addFloatingText(actor, skill.name, 'spell');
       if (restored > 0) {
         target.hp += restored; target.flash = .2;
@@ -785,13 +814,14 @@
   function updateBots(dt) {
     for (const actor of fighters.slice(1)) {
       if (!actor.alive || actor.step) continue;
-      // Apuntar es plantarse: nadie camina mientras tiene la mira activa.
-      if (actor.aim) continue;
       if (actor.immobilized > 0) {
         // Congelado: solo puede intentar remover su propia parálisis, como en AO.
-        const selfCleanse = (CLASS_PROFILES[actor.className]?.skills ?? []).findIndex(skill => skill?.type === 'cleanse');
-        if (selfCleanse >= 0 && (actor.castCd ?? 0) <= 0 && actor.mana >= CLASS_PROFILES[actor.className].skills[selfCleanse].cost && actor.skillCooldowns[selfCleanse] <= 0) {
-          beginNpcAim(actor, actor, { skill: CLASS_PROFILES[actor.className].skills[selfCleanse], index: selfCleanse });
+        if (!Array.isArray(actor.skillCooldowns)) continue;
+        const profileSkills = CLASS_PROFILES[actor.className]?.skills ?? [];
+        const selfCleanse = profileSkills.findIndex(skill => skill?.type === 'cleanse');
+        const cleanseSkill = selfCleanse >= 0 ? profileSkills[selfCleanse] ?? null : null;
+        if (cleanseSkill && !actor.aim && (actor.castCd ?? 0) <= 0 && actor.mana >= cleanseSkill.cost && actor.skillCooldowns[selfCleanse] <= 0) {
+          beginNpcAim(actor, actor, { skill: cleanseSkill, index: selfCleanse });
         }
         continue;
       }
@@ -810,7 +840,9 @@
       // Remover parálisis primero: un aliado congelado pierde varios turnos, es lo más urgente.
       const cleanseIndex = skills.findIndex((skill, index) => skill?.type === 'cleanse' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (cleanseIndex >= 0 && !recovering && !actor.supportTask) {
-        const frozen = allies.find(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE);
+        const frozen = allies
+          .filter(other => other.immobilized > 0 && distance(actor, other) <= SPELL_VISION_RANGE)
+          .sort((a, b) => supportPriority(actor, a, 'cleanse') - supportPriority(actor, b, 'cleanse'))[0] ?? null;
         if (frozen) {
           const delay = rand(SUPPORT_DELAY.cleanse[0], SUPPORT_DELAY.cleanse[1]);
           actor.supportTask = { allyId: frozen.id, kind: 'cleanse', timer: delay, delay, tries: 0 };
@@ -822,11 +854,11 @@
         if (heal) {
           const candidates = allies
             .filter(other => other.hp < other.maxHp && other.hp / other.maxHp < SUPPORT_CLASS_HP && distance(actor, other) <= SPELL_VISION_RANGE)
-            .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+            .sort((a, b) => supportPriority(actor, a) - supportPriority(actor, b));
           const wounded = candidates[0] ?? null;
           if (wounded === actor) {
             // Autocuidado: solo si de verdad está herido; curarse por curar plantado en un rincón no.
-            if (actor.hp / actor.maxHp < SELF_CARE_HP) {
+            if (!actor.aim && actor.hp / actor.maxHp < SELF_CARE_HP) {
               beginNpcAim(actor, actor, { skill: heal, index: healingIndex });
               continue;
             }
@@ -851,15 +883,26 @@
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
+      // El mago jamás entra a melee: si lo presionan, primero se despega y busca ángulo.
+      if (actor.className === 'mage' && range < combatRange.min) {
+        const step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
+          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
+        if (step) {
+          actor.movePlan = { kind: 'retreat', targetId: target.id };
+          startStep(actor, step[0], step[1]);
+          continue;
+        }
+        // Sin salida: se defiende a hechazos, nunca a golpes.
+      }
       // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
       const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
-      if (freezeIndex >= 0 && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
+      if (freezeIndex >= 0 && !actor.aim && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
         beginNpcAim(actor, target, { skill: skillAt(freezeIndex, actor.className), index: freezeIndex });
         continue;
       }
 
       const attackSkills = skills.map((skill, index) => ({ skill, index }))
-        .filter(({ skill, index }) => skill?.type === 'damage'
+        .filter(({ skill, index }) => skill?.type === 'damage' && Array.isArray(skill.damage)
           && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0)
         .sort((a, b) => (b.skill.damage[0] + b.skill.damage[1]) - (a.skill.damage[0] + a.skill.damage[1]));
       if (!recovering && !actor.aim && actor.attackCd <= 0 && attackSkills.length && distance(actor, target) <= SPELL_VISION_RANGE) {
@@ -897,6 +940,7 @@
       if (!task) continue;
       task.timer -= dt;
       if (task.timer > 0) continue;
+      if (actor.aim) { task.timer = .2; continue; } // Termina la mira actual sin cancelar el apoyo pendiente.
       if ((actor.castCd ?? 0) > 0) { task.timer = .3; continue; } // Espera el intervalo de lanzamiento antes de apuntar la ayuda.
       actor.supportTask = null;
       if (!actor.alive || actor.immobilized > 0) continue;
@@ -939,7 +983,7 @@
         if (actor.stepTime >= STEP_DURATION) {
           [actor.x, actor.y] = actor.step.to; actor.step = null; actor.stepTime = 0;
           // Encadenado del siguiente paso sin pausa: así caminan los NPCs como una persona, no a tirones.
-          if (actor !== player && !actor.aim) npcPlanStep(actor);
+          if (actor !== player) npcPlanStep(actor);
         }
       }
       if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
@@ -1088,8 +1132,8 @@
     for (const actor of fighters) {
       const aim = actor.aim;
       if (!aim) continue;
-      // El origen de la mira del jugador es su posición actual: puede caminar mientras apunta.
-      const [ox, oy] = actor === player ? position(actor) : [aim.fromX, aim.fromY];
+      // El origen de la mira sigue la posición actual: jugador y NPC pueden caminar mientras apuntan.
+      const [ox, oy] = position(actor);
       const [fromX, fromY] = screenTile(ox, oy, cameraX, cameraY);
       const [sx, sy] = screenTile(aim.cursorX, aim.cursorY, cameraX, cameraY);
       const x = sx + tilePx / 2, y = sy + tilePx / 2;
@@ -1333,9 +1377,22 @@
   // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
   window.AO_DEBUG = () => ({
     elapsed: Number(elapsed.toFixed(2)), paused,
+    // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
+    supportPriority: (() => {
+      const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);
+      if (!cleric) return [];
+      return fighters
+        .filter(ally => ally.alive && ally.team === cleric.team)
+        .map(ally => ({
+          id: ally.id, cls: ally.className, hpPct: Math.round(ally.hp / (ally.maxHp || 1) * 100),
+          heal: Number(supportPriority(cleric, ally).toFixed(2)), cleanse: Number(supportPriority(cleric, ally, 'cleanse').toFixed(2))
+        }))
+        .sort((a, b) => a.heal - b.heal);
+    })(),
     texts: floatingTexts.map(text => text.text),
     fighters: fighters.map(actor => ({
       id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
+      mana: Math.round(actor.mana), maxMana: actor.maxMana,
       x: actor.x, y: actor.y, stepping: Boolean(actor.step),
       immobilized: Number(actor.immobilized.toFixed(2)), alive: actor.alive,
       aiming: Boolean(actor.aim), aimSpell: actor.aim?.spell?.skill?.name ?? null, aimColor: actor.aim?.spell?.skill?.aimColor ?? null, aimTargetId: actor.aim?.targetId ?? null,

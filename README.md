@@ -22,9 +22,9 @@ Se extrajeron de la revisión fijada del cliente tres efectos completos (animaci
 
 | Hechizo AO | ID | FX / Grh / WAV | Uso visual aproximado |
 | --- | ---: | --- | --- |
-| Dardo Mágico | 2 | 15 / 275 / 114 | Bola de fuego del mago |
-| Paralizar | 9 | 8 / 183 / 16 | Rayo del mago |
-| Apocalipsis | 25 | 13 / 259 / 27 | Luz sagrada del clérigo |
+| Dardo Mágico | 2 | 15 / 275 / 114 | Ráfaga Ígnea del clérigo (fallback) |
+| Paralizar | 9 | 8 / 183 / 16 | Inmovilizar del mago, clérigo y paladín |
+| Apocalipsis | 25 | 13 / 259 / 27 | Apocalipsis y Juicio Final del mago |
 
 Las tres asociaciones con habilidades del prototipo son aproximaciones para reutilizar recursos, no equivalencias de nombre, daño, alcance o reglas. Cuando están disponibles, el canvas dibuja la animación original sobre la casilla objetivo con los offsets de `fxs.ini`, y el audio usa el WAV correspondiente; sin esos recursos se conserva el efecto genérico y el tono de reserva. No hay un WAV asociado a las habilidades de curación actuales.
 
