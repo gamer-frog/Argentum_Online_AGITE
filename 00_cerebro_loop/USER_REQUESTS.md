@@ -23,7 +23,6 @@
 - [x] **Miras por hechizo (12/12).** Fuego naranja `#ff9a54`, rayo teal `#64d8d0`, luz/clérigo dorado `#f4df9b`, golpes rojos `#ff685b`, curas verdes `#9ee68b`. Verificado con probe (25 miras, todas con color correcto).
 - [x] **Mira del jugador.** Se pinta en vivo entre el personaje y el mouse; click en rival lanza, click en el suelo hace tiro a casilla, click desactiva; Esc/click-derecho desarma; el jugador apunta con el mismo telégrafo que los bots.
 - [x] **Todos los hechizos se apuntan, incluida la cura.** «CURAR» no es instantáneo; tiempos de lanzamiento aleatorios; nadie lanza sin telégrafo.
-- [x] **`ERRADO` es fallo del lanzador** (separado de «esquivó» del blanco) y el texto sale sobre el personaje, no en el punto del click.
 - [x] **Intervalo global de lanzamiento.** El `castCd` compartido impide spam; el melee también deja intervalo. Los NPC no clickean varias veces por segundo.
 - [x] **Visión como límite.** Nadie lanza fuera del área en pantalla (~11 casillas Manhattan), jugador y NPC, incluido apoyo a aliados; se revalida al resolver («fuera de vista»).
 - [x] **Maná visible debajo de la vida.** Barra azul y valor real para mago/clérigo/paladín; el guerrero no tiene maná y la fila/barra queda oculta.
@@ -31,7 +30,7 @@
 - [x] **Skin por clase y por facción** (raza humana por ahora); nombres propios coloreados por bando.
 - [x] **Balance Imperium nivel 40.** Guerrero 380 vida sin maná; mago 260/1400; clérigo 300/1200; paladín 330/1000. Melee 85-105 / 75-95 / 45-60 / 50-65; golpe + dos hechizos ≈ letal contra ~300 de vida.
 - [x] **Hechizos de la wiki de Imperium AO.** Apocalipsis 117-119, Juicio Final 142-144, Ráfaga Ígnea 98-100, Sanar 40-45, Castigo Divino 90-92, Fuente de vida 25-32. Detalle y límites en `roadmap/hechizos-referencia.md`.
-- [x] **Pociones rojas y azules infinitas** (teclas 4/5 y botones); beber bloquea atacar/lanzar durante la acción y viceversa; cooldown visible en el slot.
+- [x] **Pociones rojas y azules infinitas** (teclas 5/6 y botones); beber bloquea atacar/lanzar durante la acción y viceversa; cooldown visible en el slot.
 - [x] **Lanzar un hechizo NO frena al jugador:** camina mientras apunta y el hechizo sale desde su posición actual.
 - [x] **Atajos:** E = Inmovilizar, Q = Remover Parálisis, ESPACIO = pegar (además de F/Enter).
 - [x] **Movimiento de agite.** Nadie se queda quieto; persecución permanente del blanco más cercano; regreso al puesto si no hay blancos; `STEP_DURATION = .22` s (Imperium AO Classic, ~4,5 casilleros/s) tras iterar .095 → .21 → .4 → .22; pasos encadenados sin pausa; flanqueo y jitter; el mago nunca entra a melee y se retira si lo presionan; blancos inmovilizados prioritarios.
@@ -57,6 +56,7 @@
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
 - [~] **Referencia visual estable de AO.** Hay URLs anotadas, pero no una captura versionada en el repo con versión/resolución/procedencia.
 - [~] **No esquivar hechizos clickeados.** Si el blanco cambia de casilla durante la mira todavía aparece «esquivó». El usuario pidió que un click directo no se esquive (ver pendiente).
+- [~] **Texto `ERRADO` sobre el lanzador.** Ya no se atribuye a esquiva del blanco, pero puede seguir apareciendo en la casilla apuntada en vez de sobre el personaje que erró.
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
@@ -77,6 +77,7 @@
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
 - [ ] **No esquivar hechizos clickeados por el jugador:** si el jugador clickea un rival, el hechizo debe resolver sobre ese rival aunque se mueva, o explicar claramente el fallo; hoy puede aparecer «esquivó».
+- [ ] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click.
 - [ ] **Proponer y acordar la lista de mapas famosos** para la rotación (el usuario pidió proponer los más famosos y elegir juntos).
 - [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.
 
