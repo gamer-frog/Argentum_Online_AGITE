@@ -352,7 +352,12 @@
   }
   function isEnemy(a, b) { return Boolean(a && b && a.team !== b.team); }
   function tacticalEnemy(actor) {
-    const candidates = fighters.filter(other => isEnemy(actor, other) && other.alive);
+    const range = NPC_COMBAT_RANGES[actor.className] || NPC_COMBAT_RANGES.warrior;
+    const candidates = fighters.filter(other => {
+      if (!isEnemy(actor, other) || !other.alive) return false;
+      return distance(actor, other) >= range.min && distance(actor, other) <= range.max
+        || nextPathStep(actor, other, range.min, range.max) !== null;
+    });
     return candidates.sort((a, b) => enemyScore(actor, a) - enemyScore(actor, b))[0] || null;
   }
   function enemyScore(actor, target) {
