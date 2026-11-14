@@ -22,6 +22,7 @@
 - [x] **Nombres y apuntado (README backlog 1).** Sin «la facción» en el nombre; orientación sagrada/caótica con color celeste/rojo; al apuntar se muestra solo la mira, sin el texto «clase apuntando»; el color de la mira corresponde al hechizo preparado.
 - [x] **Miras por hechizo (12/12).** Fuego naranja `#ff9a54`, rayo teal `#64d8d0`, luz/clérigo dorado `#f4df9b`, golpes rojos `#ff685b`, curas verdes `#9ee68b`. Verificado con probe (25 miras, todas con color correcto).
 - [x] **Mira del jugador.** Se pinta en vivo entre el personaje y el mouse; click en rival lanza, click en el suelo hace tiro a casilla, click desactiva; Esc/click-derecho desarma; el jugador apunta con el mismo telégrafo que los bots.
+- [x] **Hechizos directos al rival clickeado.** Los lanzamientos de daño e Inmovilizar con click directo siguen al rival elegido durante la mira y resuelven sobre él aunque se mueva. Verificado en Chromium con Inmovilizar contra `chaoticPaladin` (se movió durante la mira y recibió el hechizo; textos «Inmovilizar» y «Paralizado»). No cambia tiros a casilla, apuntado NPC ni apoyo/hechizos sobre aliados.
 - [x] **Todos los hechizos se apuntan, incluida la cura.** «CURAR» no es instantáneo; tiempos de lanzamiento aleatorios; nadie lanza sin telégrafo.
 - [x] **Intervalo global de lanzamiento.** El `castCd` compartido impide spam; el melee también deja intervalo. Los NPC no clickean varias veces por segundo.
 - [x] **Visión como límite.** Nadie lanza fuera del área en pantalla (~11 casillas Manhattan), jugador y NPC, incluido apoyo a aliados; se revalida al resolver («fuera de vista»).
@@ -55,7 +56,6 @@
 - [~] **Cada clase con comportamiento propio.** Hay rangos, prioridades y retirada del mago; falta profundizar.
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
 - [~] **Referencia visual estable de AO.** Hay URLs anotadas, pero no una captura versionada en el repo con versión/resolución/procedencia.
-- [~] **No esquivar hechizos clickeados.** Si el blanco cambia de casilla durante la mira todavía aparece «esquivó». El usuario pidió que un click directo no se esquive (ver pendiente).
 - [~] **Texto `ERRADO` sobre el lanzador.** Ya no se atribuye a esquiva del blanco, pero puede seguir apareciendo en la casilla apuntada en vez de sobre el personaje que erró.
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
@@ -76,7 +76,7 @@
 - [ ] **Agotamiento de maná del paladín** tras varios Remover Parálisis y necesidad de apoyo aliado (hoy los costos son de práctica).
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
-- [ ] **No esquivar hechizos clickeados por el jugador:** si el jugador clickea un rival, el hechizo debe resolver sobre ese rival aunque se mueva, o explicar claramente el fallo; hoy puede aparecer «esquivó».
+- [x] **No esquivar hechizos clickeados por el jugador:** los hechizos de daño e Inmovilizar apuntados con click directo resuelven sobre el rival elegido aunque se mueva durante la mira. Verificado en Chromium; los tiros a casilla y el apoyo a aliados conservan su comportamiento. El filtro de rango/camino de selección de enemigos NPC sigue presente en `dist/game.js`; su comportamiento runtime no se aisló de forma concluyente en esta prueba.
 - [ ] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click.
 - [ ] **Proponer y acordar la lista de mapas famosos** para la rotación (el usuario pidió proponer los más famosos y elegir juntos).
 - [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.

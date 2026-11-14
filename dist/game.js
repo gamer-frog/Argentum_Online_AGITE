@@ -470,7 +470,7 @@
   function addFloatingTextAt(x, y, text, kind) {
     floatingTexts.push({ x, y, text, kind, age: 0 });
   }
-  function beginNpcAim(actor, target, spell = null, retries = 0, tile = null) {
+  function beginNpcAim(actor, target, spell = null, retries = 0, tile = null, trackTarget = false) {
     const [x, y] = tile ?? actorTile(target), [fromX, fromY] = actorTile(actor);
     actor.heading = x < fromX ? 'W' : x > fromX ? 'E' : y < fromY ? 'N' : 'S';
     // Apuntar NO detiene al NPC: sigue buscando ángulo y flanqueando mientras la mira corre (pedido de agite).
@@ -478,7 +478,7 @@
     const base = spell ? rand(.38, .62) : rand(.36, .52);
     // Cada reintento encadenado acelera la mira: el apuntador ajusta más rápido y el blanco tiene menos ventana de escape.
     const duration = base * Math.pow(.68, retries);
-    actor.aim = { targetId: target?.id ?? null, tile: tile ?? null, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries };
+    actor.aim = { targetId: target?.id ?? null, tile: tile ?? null, x, y, fromX, fromY, cursorX: x, cursorY: y, phase: Math.random() * Math.PI * 2, duration, remaining: duration, spell, retries, trackTarget };
     // El primer intento usa el ritmo normal; un reintento encadenado mantiene la mira viva sin pausa larga.
     actor.attackCd = retries > 0 ? Math.max(.25, actor.attackCd * .5) : rand(.85, 1.15);
   }
@@ -501,7 +501,7 @@
     // Las curas y las remociones no se esquivan ni fallan: el telégrafo resuelve sobre el aliado vivo, aunque se mueva.
     if (skill?.type === 'heal' || skill?.type === 'cleanse') { npcCastSkill(actor, skill, aim.spell?.index, target); return; }
     const [x, y] = actorTile(target);
-    if (x !== aim.x || y !== aim.y) {
+    if (!aim.trackTarget && (x !== aim.x || y !== aim.y)) {
       // Mira persistente: si el blanco huyó de la casilla, el NPC encadena otro apuntado en vez de soltar la mira.
       if ((aim.retries ?? 0) < 2 && (actor.castCd ?? 0) <= 0 && isEnemy(actor, target) && distance(actor, target) <= SPELL_VISION_RANGE) {
         beginNpcAim(actor, target, aim.spell, (aim.retries ?? 0) + 1);
@@ -686,7 +686,7 @@
     if (player.skillCooldowns[index] > 0) { toast('Esa habilidad todavía se está recuperando.'); return; }
     if (player.mana < skill.cost) { toast('No tenés maná suficiente.'); return; }
     // El jugador también apunta: la mira se ve igual que la de los bots y el hechizo recién sale al resolver.
-    beginNpcAim(player, target, { skill, index });
+    beginNpcAim(player, target, { skill, index }, 0, null, !wantsAlly && Boolean(targetOverride));
     player.castCd = Math.max(player.castCd ?? 0, CAST_RECOVERY);
     selectedSkill = null; refreshSkillSelection();
   }

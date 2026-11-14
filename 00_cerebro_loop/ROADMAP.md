@@ -44,7 +44,7 @@ Se recuperó la lista completa de pedidos desde 141 mensajes de usuario en 83 co
 - [ ] **Rotación de mapas:** cada partida arranca en un mapa famoso distinto (lista a proponer y acordar) y se cambia de mapa cada 5 kills; el bosque actual entre Nix y Ulla no gusta.
 - [ ] **Interfaz clon visual de AO:** personaje/vida/stats/inventario/mapa a la derecha, barra inferior de «objetos» como slots de hechizos, comparación lado a lado con captura de referencia, desktop y móvil.
 - [ ] **Lanzamiento legible:** nombre del hechizo sobre el personaje y animaciones auténticas cuando se verifiquen recursos (distinguir fallback).
-- [ ] **No esquivar hechizos clickeados:** si el jugador clickea un rival, resolver sobre ese rival aunque se mueva (hoy puede mostrar «esquivó»).
+- [x] **No esquivar hechizos clickeados** (2026-11-14): los hechizos de daño e Inmovilizar con click directo siguen al rival elegido y resuelven aunque se mueva durante la mira. Verificado en Chromium con Inmovilizar sobre `chaoticPaladin` (textos «Inmovilizar» y «Paralizado»); tiro a casilla y apoyo a aliados no cambian. El filtro NPC de rango/camino permanece en `dist/game.js`; la prueba no aisló de forma concluyente su selección runtime.
 - [ ] **Contraste completo con AO Libre:** ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y nivel 40; registrar confirmado/aproximado/práctica.
 - [ ] **Combo y maná:** confirmar Curar heridas graves vs Sanar, evaluar `Fuente de vida` 30-45 y el agotamiento de maná del paladín con apoyo aliado.
 - [ ] **Variar estados y persecución:** momentos de inmovilización/remoción/curación/ataque, menos patrones y sin pares quietos.
