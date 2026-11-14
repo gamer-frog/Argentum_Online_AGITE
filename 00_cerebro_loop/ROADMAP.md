@@ -43,10 +43,12 @@ Se recuperó la lista completa de pedidos desde 141 mensajes de usuario en 83 co
 
 - [ ] **Rotación de mapas:** cada partida arranca en un mapa famoso distinto (lista a proponer y acordar) y se cambia de mapa cada 5 kills; el bosque actual entre Nix y Ulla no gusta.
 - [ ] **Interfaz clon visual de AO:** personaje/vida/stats/inventario/mapa a la derecha, barra inferior de «objetos» como slots de hechizos, comparación lado a lado con captura de referencia, desktop y móvil.
-- [ ] **Lanzamiento legible:** nombre del hechizo sobre el personaje y animaciones auténticas cuando se verifiquen recursos (distinguir fallback).
+- [x] **Nombre del hechizo sobre el lanzador:** verificado en Chromium durante lanzamientos reales; consola 0 errores/0 advertencias, sin cambios de código porque ya estaba implementado.
+- [ ] **Animaciones auténticas de hechizos:** buscar/verificar recursos compatibles y distinguirlos visualmente del fallback.
 - [x] **No esquivar hechizos clickeados** (2026-11-14): los hechizos de daño e Inmovilizar con click directo siguen al rival elegido y resuelven aunque se mueva durante la mira. Verificado en Chromium con Inmovilizar sobre `chaoticPaladin` (textos «Inmovilizar» y «Paralizado»); tiro a casilla y apoyo a aliados no cambian. El filtro NPC de rango/camino permanece en `dist/game.js`; la prueba no aisló de forma concluyente su selección runtime.
 - [ ] **Contraste completo con AO Libre:** ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y nivel 40; registrar confirmado/aproximado/práctica.
 - [ ] **Combo y maná:** confirmar Curar heridas graves vs Sanar, evaluar `Fuente de vida` 30-45 y el agotamiento de maná del paladín con apoyo aliado.
 - [ ] **Variar estados y persecución:** momentos de inmovilización/remoción/curación/ataque, menos patrones y sin pares quietos.
 - [ ] **Alcance futuro:** inventario/equipamiento funcional, chat lateral y sonidos licenciados, escenarios 1v1/2v2/3v3, multijugador/persistencia.
 - [ ] **Referencia y licencias:** captura AO estable versionada y auditoría de atribución por recurso antes de redistribuir.
+- [x] Evaluación de candidatas a referencia visual 2026-11-14: inspeccionadas las seis capturas de la galería oficial (1023×770 o 1024×770); la página sólo las etiqueta «Screenshot» y no aporta versión ni fecha de captura. Los PNG no guardan esos metadatos; `Last-Modified: 2026-10-22` sólo fecha publicación del archivo, y el «V:5» visible no identifica de forma comprobable la versión del cliente. Adecuadas como inspiración de estilo, no como patrón estable. Sin comparación de píxeles ni cambios de interfaz; pendiente obtener referencia con versión y procedencia verificables.
