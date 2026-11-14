@@ -14,7 +14,7 @@ Con un checkout completo de [ao-libre/ao-cliente](https://github.com/ao-libre/ao
 python3 scripts/extract_ao_assets.py /ruta/a/ao-cliente
 ```
 
-El resultado se genera en `assets/ao/`, con cada mapa de 100×100 en `assets/ao/maps/<ID>.json` y un `maps.json` que registra nombres y coordenadas oficiales de aparición (coordenadas del servidor, base 1). La aplicación elige un mapa al iniciar, cambia al siguiente de la lista cada cinco bajas y al reiniciar selecciona otro mapa; si la carga falla, conserva el mapa actual. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
+El resultado se genera en `assets/ao/`: incluye cinco mapas de 100×100 en `assets/ao/maps/<ID>.json` y un `maps.json` con nombres y coordenadas oficiales de aparición (coordenadas del servidor, base 1). El comportamiento actual elige al azar un mapa del manifiesto al iniciar, avanza al siguiente mapa en el orden del manifiesto cada cinco bajas y, al reiniciar, elige al azar uno distinto del mapa actual; si una carga falla, conserva el mapa actual. Esto no garantiza un mapa inicial distinto entre partidas. La propuesta de acordar una lista de rotación y asegurar inicios distintos sigue pendiente de aprobación. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
 
 ### Efectos y sonidos de hechizos
 
@@ -85,7 +85,7 @@ Estos puntos quedan registrados como backlog; todavía no están implementados. 
 
 ### Inventario de importación de AO Libre
 
-El [inventario verificable del subset](roadmap/inventario-recursos-ao.md) separa extracción, carga por la app y verificación visual. Se cuantificaron el mapa 2 (100×100), 560 registros Grh, 51 láminas PNG, tres WAV y datos limitados a 3 cuerpos/4 cabezas y tres efectos. La carga/render del canvas se observó en Chromium, pero no se probaron individualmente todos los recursos ni se compararon con el cliente original. No se importaron assets de interfaz ni datos integrales de clases, objetos o reglas. Las atribuciones disponibles son generales y la licencia específica por archivo requiere revisión antes de redistribuir; no se presenta la fidelidad visual o mecánica como comprobada.
+El [inventario verificable del subset](roadmap/inventario-recursos-ao.md) separa extracción, carga por la app y verificación visual. El subset contiene cinco mapas de 100×100, 1.511 registros Grh (1.472 estáticos y 39 animados), 203 PNG (201 referenciados por esos registros y dos no referenciados), tres WAV y datos limitados a 3 cuerpos, 4 cabezas y tres efectos. Los cinco mapas refieren 1.262 IDs Grh distintos. La carga/render del canvas se observó en Chromium, pero no se probaron individualmente todos los recursos ni se compararon con el cliente original. No se importaron assets de interfaz ni datos integrales de clases, objetos o reglas. Las atribuciones disponibles son generales y la licencia específica por archivo requiere revisión antes de redistribuir; no se presenta la fidelidad visual o mecánica como comprobada.
 
 ## Tecnologías
 
