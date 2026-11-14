@@ -245,10 +245,9 @@
   }
   function refreshMapHud() {
     const name = currentMap?.name || 'Campo de batalla';
-    const location = $('mapName'), pillLabel = $('mapPillLabel'), progress = $('killProgress');
+    const location = $('mapName'), pillLabel = $('mapPillLabel');
     if (location) location.textContent = name.toLocaleUpperCase('es');
     if (pillLabel) pillLabel.textContent = `${name.toLocaleUpperCase('es')} · ARENA LIBRE`;
-    if (progress) progress.textContent = `${Math.min(killsTowardRotation, 5)}/5 BAJAS`;
   }
   function resize() {
     const rect = frame.getBoundingClientRect();
