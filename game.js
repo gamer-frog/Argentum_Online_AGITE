@@ -116,6 +116,7 @@
   let elapsed = 0, paused = false;
   let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
   let mouseTile = null; // Casilla bajo el cursor: alimenta la mira en vivo del hechizo preparado.
+  let spellDrag = null, canvasPress = null, lastSpellGesture = null;
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
@@ -635,9 +636,9 @@
     if (!skill) return;
     selectedSkill = selectedSkill === index ? null : index;
     refreshSkillSelection();
-    const usage = skill.type === 'heal' ? 'hacé clic en tu personaje o un aliado para curar.'
-      : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado.'
-      : 'elegí un rival en el campo.';
+    const usage = skill.type === 'heal' ? 'arrastrá al personaje o aliado para curar; en PC, elegilo y hacé clic para apuntar.'
+      : skill.type === 'cleanse' ? 'arrastrá al personaje o aliado paralizado; en PC, elegilo y hacé clic para apuntar.'
+      : 'arrastrá a un rival; en PC, elegilo y hacé clic para apuntar.';
     toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${usage}`);
   }
   // Atajos E/Q: arman el hechizo propio de la clase (Inmovilizar / Remover Parálisis) como los slots 1-4.
@@ -654,8 +655,8 @@
     });
     const skill = selectedSkill === null ? null : skillAt(selectedSkill);
     const hint = skill
-      ? `${skill.name} listo · ${skill.type === 'damage' || skill.type === 'immobilize' ? 'hacé clic en un rival' : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado' : 'hacé clic en tu personaje o un aliado'}`
-      : 'Elegí un hechizo y hacé clic en un rival';
+      ? `${skill.name} listo · arrastrá al objetivo o en PC hacé clic y soltá · ${skill.type === 'damage' || skill.type === 'immobilize' ? 'rival' : skill.type === 'cleanse' ? 'aliado paralizado' : 'aliado'}`
+      : 'Mantené y arrastrá un hechizo al campo · en PC elegilo y hacé clic para apuntar';
     $('spellHint').textContent = hint;
   }
   function refreshPotions() {
@@ -741,6 +742,7 @@
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0, 0]; selectedSkill = null;
+    cancelSpellDrag();
     // Cambiar de clase a mitad de un apuntado cancela el hechizo viejo y libera el intervalo.
     player.aim = null; player.attackCd = 0;
     player.potionCd = 0; player.castCd = 0;
@@ -1238,7 +1240,8 @@
       ctx.restore();
     }
     // Mira en vivo del hechizo preparado: línea del personaje al cursor, misma estética que la mira de los bots.
-    const readySkill = selectedSkill === null ? null : skillAt(selectedSkill);
+    const readyIndex = spellDrag?.index ?? selectedSkill;
+    const readySkill = readyIndex === null ? null : skillAt(readyIndex);
     if (readySkill && player.alive && !paused && mouseTile) {
       const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
       const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
@@ -1419,6 +1422,59 @@
     }
     return best;
   }
+  function canvasPointAtPointer(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+    const x = clientX - rect.left, y = clientY - rect.top;
+    return { x, y, tile: tileAtPointer(x, y) };
+  }
+  function resolveCanvasPointer(point, skillIndex = null) {
+    if (!point) return;
+    const target = actorAtPointer(point.x, point.y);
+    if (skillIndex !== null) {
+      if (target) castSkill(skillIndex, target);
+      else if (point.tile) castSkillAtTile(skillIndex, point.tile);
+      return;
+    }
+    if (target) handleCanvasTarget(target);
+    else if (selectedSkill !== null && point.tile) castSkillAtTile(selectedSkill, point.tile);
+  }
+  function cancelSpellDrag(pointerId = null) {
+    if (spellDrag && (pointerId === null || spellDrag.pointerId === pointerId)) spellDrag = null;
+    if (canvasPress && (pointerId === null || canvasPress.pointerId === pointerId)) canvasPress = null;
+    mouseTile = null;
+  }
+  function pointFromEvent(event) {
+    return canvasPointAtPointer(event.clientX, event.clientY);
+  }
+  function finishSpellDrag(event, cancelled = false) {
+    if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
+    const drag = spellDrag;
+    const point = cancelled ? null : pointFromEvent(event);
+    spellDrag = null;
+    mouseTile = null;
+    lastSpellGesture = { button: drag.button, expiresAt: performance.now() + 1000 };
+    if (cancelled) return true;
+    if (drag.moved && point) resolveCanvasPointer(point, drag.index);
+    else if (!drag.moved) selectSkill(drag.index);
+    return true;
+  }
+  function finishCanvasPress(event, cancelled = false) {
+    if (!canvasPress || canvasPress.pointerId !== event.pointerId) return false;
+    const press = canvasPress;
+    canvasPress = null;
+    const point = cancelled ? null : pointFromEvent(event);
+    mouseTile = null;
+    if (!cancelled && point) resolveCanvasPointer(point, press.skillIndex);
+    return true;
+  }
+  function updatePointerAim(event) {
+    const point = pointFromEvent(event);
+    mouseTile = point?.tile ?? null;
+    if (spellDrag && spellDrag.pointerId === event.pointerId) {
+      if (Math.hypot(event.clientX - spellDrag.startX, event.clientY - spellDrag.startY) > 8) spellDrag.moved = true;
+    }
+  }
   window.addEventListener('pointerdown', () => { audioReady = true; }, { once: true });
   window.addEventListener('keydown', event => {
     audioReady = true; const key = event.key.toLowerCase();
@@ -1440,26 +1496,55 @@
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
-  window.addEventListener('blur', () => { keys.clear(); clearJoystick(); });
-  canvas.addEventListener('pointermove', event => {
-    const rect = canvas.getBoundingClientRect();
-    mouseTile = tileAtPointer(event.clientX - rect.left, event.clientY - rect.top);
+  window.addEventListener('blur', () => { keys.clear(); clearJoystick(); cancelSpellDrag(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelSpellDrag(); });
+  canvas.addEventListener('pointermove', event => updatePointerAim(event));
+  canvas.addEventListener('pointerleave', event => {
+    if (!spellDrag && !canvasPress) mouseTile = null;
   });
-  canvas.addEventListener('pointerleave', () => { mouseTile = null; });
   canvas.addEventListener('pointerdown', event => {
-    const rect = canvas.getBoundingClientRect(), px = event.clientX - rect.left, py = event.clientY - rect.top;
-    const target = actorAtPointer(px, py);
-    if (target) { handleCanvasTarget(target); return; }
-    // Click en el suelo con hechizo preparado: lanza a esa casilla (le pega a quien esté ahí, o erra).
-    if (selectedSkill !== null) { const tile = tileAtPointer(px, py); if (tile) castSkillAtTile(selectedSkill, tile); }
+    if (event.button !== 0 || spellDrag) return;
+    event.preventDefault();
+    audioReady = true;
+    const point = pointFromEvent(event);
+    if (!point) return;
+    canvasPress = { pointerId: event.pointerId, skillIndex: selectedSkill };
+    mouseTile = point.tile;
+    try { canvas.setPointerCapture(event.pointerId); } catch {}
   });
+  canvas.addEventListener('pointerup', event => finishCanvasPress(event));
+  canvas.addEventListener('pointercancel', event => { finishCanvasPress(event, true); cancelSpellDrag(event.pointerId); });
+  canvas.addEventListener('lostpointercapture', event => { finishCanvasPress(event, true); cancelSpellDrag(event.pointerId); });
   canvas.addEventListener('contextmenu', event => {
     event.preventDefault();
     if (selectedSkill !== null) { selectedSkill = null; refreshSkillSelection(); toast('Hechizo desarmado.'); }
   });
   $('attackBtn').addEventListener('click', () => attack());
   $('classSelect').addEventListener('change', event => applyClass(event.target.value));
-  document.querySelectorAll('.spell-slot[data-skill]').forEach(button => button.addEventListener('click', () => selectSkill(Number(button.dataset.skill))));
+  document.querySelectorAll('.spell-slot[data-skill]').forEach(button => {
+    button.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || button.disabled || spellDrag) return;
+      lastSpellGesture = null;
+      event.preventDefault();
+      audioReady = true;
+      spellDrag = { pointerId: event.pointerId, index: Number(button.dataset.skill), button, startX: event.clientX, startY: event.clientY, moved: false };
+      const point = pointFromEvent(event);
+      mouseTile = point?.tile ?? null;
+      try { button.setPointerCapture(event.pointerId); } catch {}
+    });
+    button.addEventListener('pointermove', updatePointerAim);
+    button.addEventListener('pointerup', event => finishSpellDrag(event));
+    button.addEventListener('pointercancel', event => finishSpellDrag(event, true));
+    button.addEventListener('lostpointercapture', event => finishSpellDrag(event, true));
+    button.addEventListener('click', event => {
+      if (event.detail > 0 && lastSpellGesture?.button === button && performance.now() <= lastSpellGesture.expiresAt) {
+        event.preventDefault();
+        lastSpellGesture = null;
+        return;
+      }
+      selectSkill(Number(button.dataset.skill));
+    });
+  });
   document.querySelectorAll('.spell-slot[data-potion]').forEach(button => button.addEventListener('click', () => drinkPotion(button.dataset.potion)));
   $('scoreboardToggle').addEventListener('click', () => toggleScoreboard());
   document.querySelectorAll('.roster-row[data-fighter]').forEach(row => {
