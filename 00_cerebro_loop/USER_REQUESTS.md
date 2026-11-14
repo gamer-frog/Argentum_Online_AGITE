@@ -57,13 +57,13 @@
 - [~] **Cada clase con comportamiento propio.** Hay rangos, prioridades y retirada del mago; falta profundizar.
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
 - [~] **Referencia visual estable de AO.** Se inspeccionaron las seis imágenes de la galería oficial (1023×770 o 1024×770); son referencias de estilo, pero no indican versión ni fecha de captura. El `Last-Modified` de los archivos no acredita la toma ni el cliente, y el «V:5» visible en una imagen no basta para fijar una versión verificable. Aún no hay una captura estable con versión/resolución/procedencia documentadas.
-- [~] **Texto `ERRADO` sobre el lanzador.** Ya no se atribuye a esquiva del blanco, pero puede seguir apareciendo en la casilla apuntada en vez de sobre el personaje que erró.
+- [x] **Texto `ERRADO` sobre el lanzador.** Las tres rutas de error de `resolveNpcAim`/`resolveTileAim` ahora anclan el texto al actor con `addFloatingText(actor, ...)`. Verificado en Chromium forzando fallos: la captura `/tmp/opencode/shots/errado-actor.png` muestra `ERRADO` sobre el personaje; consola limpia. `game.js` y `dist/game.js` sincronizados.
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
 
-- [ ] **Rotación de mapas (pedido textual, issues #47-#48).** Cada partida debe arrancar en un mapa distinto de una lista consensuada de lugares famosos de AO (ciudades, arenas, etc.); cambiar de mapa cada 5 kills. El bosque actual entre Nix y Ulla no le gusta al usuario. Falta proponer la lista y elegir juntos.
-- [ ] **Interfaz clon visual fiel de AO.** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas propias y de referencia al mismo tamaño; validar escritorio y móvil sin ocultar funciones.
+- [ ] **Rotación de mapas (pedido textual, issues #47-#48).** Propuesta pendiente de aprobación: Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272), los cinco mapas AO Libre con spawns registrados en `assets/ao/maps.json`. Cada partida debe arrancar en un mapa distinto de la lista acordada y cambiar cada 5 kills; el bosque actual entre Nix y Ulla no le gusta al usuario. No implementar hasta que el usuario apruebe o ajuste la lista.
+- [ ] **Interfaz clon visual fiel de AO.** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas propias y de referencia al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Avance 2026-11-14: corregido el overflow horizontal de `.spellbar-shortcut` en móvil; validado sin desbordamiento de página a 320, 390 y 1440 px. La tarea sigue pendiente: falta la referencia versionada/procedente y completar la comparación fiel del layout.
 - [ ] **Inventario funcional, equipamiento y objetos/pociones integrados** con la interfaz (hoy es una práctica de combate, no un clon completo).
 - [ ] **Animaciones auténticas de hechizos** cuando se encuentren/verifiquen recursos compatibles; distinguir visualmente el fallback.
 - [ ] **Chat lateral y sonidos de golpes/hechizos** si hay recursos licenciados.
@@ -77,8 +77,8 @@
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
 - [x] **No esquivar hechizos clickeados por el jugador:** los hechizos de daño e Inmovilizar apuntados con click directo resuelven sobre el rival elegido aunque se mueva durante la mira. Verificado en Chromium; los tiros a casilla y el apoyo a aliados conservan su comportamiento. El filtro de rango/camino de selección de enemigos NPC sigue presente en `dist/game.js`; su comportamiento runtime no se aisló de forma concluyente en esta prueba.
-- [ ] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click.
-- [ ] **Proponer y acordar la lista de mapas famosos** para la rotación (el usuario pidió proponer los más famosos y elegir juntos).
+- [x] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click. Completado y verificado en Chromium; evidencia y detalles en la sección 2.
+- [ ] **Acordar la lista de mapas famosos** para la rotación: propuesta presentada en el ítem de rotación (Ullathorpe, Nix, Banderbill, Lindos y Arena, respaldados por mapas/spawns del subset AO Libre); falta la elección del usuario.
 - [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.
 
 ## 4. Pedidos explícitamente descartados o superseded
