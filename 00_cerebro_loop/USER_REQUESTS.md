@@ -24,6 +24,7 @@
 - [x] **Mira del jugador.** Se pinta en vivo entre el personaje y el mouse; click en rival lanza, click en el suelo hace tiro a casilla, click desactiva; Esc/click-derecho desarma; el jugador apunta con el mismo telégrafo que los bots.
 - [x] **Hechizos directos al rival clickeado.** Los lanzamientos de daño e Inmovilizar con click directo siguen al rival elegido durante la mira y resuelven sobre él aunque se mueva. Verificado en Chromium con Inmovilizar contra `chaoticPaladin` (se movió durante la mira y recibió el hechizo; textos «Inmovilizar» y «Paralizado»). No cambia tiros a casilla, apuntado NPC ni apoyo/hechizos sobre aliados.
 - [x] **Todos los hechizos se apuntan, incluida la cura.** «CURAR» no es instantáneo; tiempos de lanzamiento aleatorios; nadie lanza sin telégrafo.
+- [x] **Nombre del hechizo lanzado sobre el personaje.** Los lanzamientos efectivos muestran el nombre sobre el lanzador; verificado en Chromium durante combate real (por ejemplo, «Remover parálisis») junto con estados/daño. Consola limpia. No se modificó código porque la función ya estaba implementada.
 - [x] **Intervalo global de lanzamiento.** El `castCd` compartido impide spam; el melee también deja intervalo. Los NPC no clickean varias veces por segundo.
 - [x] **Visión como límite.** Nadie lanza fuera del área en pantalla (~11 casillas Manhattan), jugador y NPC, incluido apoyo a aliados; se revalida al resolver («fuera de vista»).
 - [x] **Maná visible debajo de la vida.** Barra azul y valor real para mago/clérigo/paladín; el guerrero no tiene maná y la fila/barra queda oculta.
@@ -47,7 +48,7 @@
 ## 2. Pedidos parciales (implementados con límites)
 
 - [~] **Interfaz clon visual de AO.** Existen HUD, panel de personaje/objetivo y roster, pero no es un clon fiel: inventario/equipo están incompletos y falta comparar capturas lado a lado.
-- [~] **Lanzamiento legible.** Falta mostrar el nombre del hechizo sobre el personaje y usar animaciones auténticas cuando se verifiquen recursos.
+- [~] **FX de lanzamiento.** El nombre del hechizo ya se muestra sobre el lanzador; falta incorporar animaciones auténticas cuando se verifiquen recursos compatibles y distinguirlas del fallback.
 - [~] **FX de hechizos.** Se reutilizan tres efectos de AO como fallback; no todos los hechizos tienen animación original verificada.
 - [~] **Reglas contrastadas con AO Libre.** Nombres/daños de Imperium verificados; alcances, tiempos exactos y costos de maná siguen siendo aproximados o de práctica.
 - [~] **Nivel 40.** Vida/maná de Imperium usados, pero las fórmulas de atributos de AO Libre no se verificaron.
@@ -55,21 +56,20 @@
 - [~] **Estados y remociones.** Funcionan; falta variar mejor los momentos y confirmar terminología/estilo con una referencia AO concreta.
 - [~] **Cada clase con comportamiento propio.** Hay rangos, prioridades y retirada del mago; falta profundizar.
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
-- [~] **Referencia visual estable de AO.** Hay URLs anotadas, pero no una captura versionada en el repo con versión/resolución/procedencia.
-- [~] **Texto `ERRADO` sobre el lanzador.** Ya no se atribuye a esquiva del blanco, pero puede seguir apareciendo en la casilla apuntada en vez de sobre el personaje que erró.
+- [~] **Referencia visual estable de AO.** Se inspeccionaron las seis imágenes de la galería oficial (1023×770 o 1024×770); son referencias de estilo, pero no indican versión ni fecha de captura. El `Last-Modified` de los archivos no acredita la toma ni el cliente, y el «V:5» visible en una imagen no basta para fijar una versión verificable. Aún no hay una captura estable con versión/resolución/procedencia documentadas.
+- [x] **Texto `ERRADO` sobre el lanzador.** Las tres rutas de error de `resolveNpcAim`/`resolveTileAim` ahora anclan el texto al actor con `addFloatingText(actor, ...)`. Verificado en Chromium forzando fallos: la captura `/tmp/opencode/shots/errado-actor.png` muestra `ERRADO` sobre el personaje; consola limpia. `game.js` y `dist/game.js` sincronizados.
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
 
-- [ ] **Rotación de mapas (pedido textual, issues #47-#48).** Cada partida debe arrancar en un mapa distinto de una lista consensuada de lugares famosos de AO (ciudades, arenas, etc.); cambiar de mapa cada 5 kills. El bosque actual entre Nix y Ulla no le gusta al usuario. Falta proponer la lista y elegir juntos.
-- [ ] **Interfaz clon visual fiel de AO.** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas propias y de referencia al mismo tamaño; validar escritorio y móvil sin ocultar funciones.
+- [ ] **Rotación de mapas (pedido textual, issues #47-#48).** Propuesta pendiente de aprobación: Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272), los cinco mapas AO Libre con spawns registrados en `assets/ao/maps.json`. Cada partida debe arrancar en un mapa distinto de la lista acordada y cambiar cada 5 kills; el bosque actual entre Nix y Ulla no le gusta al usuario. No implementar hasta que el usuario apruebe o ajuste la lista.
+- [ ] **Interfaz clon visual fiel de AO.** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas propias y de referencia al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Avance 2026-11-14: corregido el overflow horizontal de `.spellbar-shortcut` en móvil; validado sin desbordamiento de página a 320, 390 y 1440 px. La tarea sigue pendiente: falta la referencia versionada/procedente y completar la comparación fiel del layout.
 - [ ] **Inventario funcional, equipamiento y objetos/pociones integrados** con la interfaz (hoy es una práctica de combate, no un clon completo).
-- [ ] **Nombre del hechizo lanzado sobre el personaje.**
 - [ ] **Animaciones auténticas de hechizos** cuando se encuentren/verifiquen recursos compatibles; distinguir visualmente el fallback.
 - [ ] **Chat lateral y sonidos de golpes/hechizos** si hay recursos licenciados.
 - [ ] **Escenarios de práctica 1v1, 2v2 y 3v3** con selector de formato.
 - [ ] **Multijugador en red y persistencia de personaje**, pospuestos hasta definir alcance y sostener las fases anteriores.
-- [ ] **Referencia visual AO estable** (versión, resolución, procedencia) y captura en el repo para comparar píxeles.
+- [ ] **Referencia visual AO estable** (versión, resolución, procedencia) y captura en el repo para comparar píxeles. Evaluación 2026-11-14: la galería oficial enlaza seis capturas que muestran el HUD completo, pero la página sólo usa el alt genérico «Screenshot»; no identifica versión/fecha de captura. Sus PNG miden 1023×770 (1–3) y 1024×770 (4–6), sin metadatos de versión o fecha. `Last-Modified: 2026-10-22` data la publicación del archivo, no la captura; «V:5» en pantalla no identifica una versión verificable. No se tomó esta galería como referencia estable ni se hizo aún comparación lado a lado.
 - [ ] **Auditoría de licencias/atribuciones por recurso** antes de redistribuir.
 - [ ] **Contraste completo con AO Libre:** ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y estadísticas de nivel 40. Registrar cada regla como confirmada, aproximada o decisión de práctica.
 - [ ] **Ajuste del combo:** confirmar Curar heridas graves vs Sanar; evaluar `Fuente de vida` 30-45 (wiki 2012); validar mago (Apocalipsis/Juicio Final), paladín y clérigo (Ráfaga + Sanar). No inventar valores «reales».
@@ -77,8 +77,8 @@
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
 - [x] **No esquivar hechizos clickeados por el jugador:** los hechizos de daño e Inmovilizar apuntados con click directo resuelven sobre el rival elegido aunque se mueva durante la mira. Verificado en Chromium; los tiros a casilla y el apoyo a aliados conservan su comportamiento. El filtro de rango/camino de selección de enemigos NPC sigue presente en `dist/game.js`; su comportamiento runtime no se aisló de forma concluyente en esta prueba.
-- [ ] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click.
-- [ ] **Proponer y acordar la lista de mapas famosos** para la rotación (el usuario pidió proponer los más famosos y elegir juntos).
+- [x] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click. Completado y verificado en Chromium; evidencia y detalles en la sección 2.
+- [ ] **Acordar la lista de mapas famosos** para la rotación: propuesta presentada en el ítem de rotación (Ullathorpe, Nix, Banderbill, Lindos y Arena, respaldados por mapas/spawns del subset AO Libre); falta la elección del usuario.
 - [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.
 
 ## 4. Pedidos explícitamente descartados o superseded

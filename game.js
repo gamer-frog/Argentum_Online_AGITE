@@ -513,7 +513,7 @@
       const accuracy = target.immobilized > 0 ? 1 : .82;
       if (Math.random() > accuracy) {
         // Errar un hechizo es fallo del lanzador, no esquiva del blanco.
-        addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status');
+        addFloatingText(actor, 'ERRADO', 'status');
         return;
       }
       npcCastSkill(actor, aim.spell?.skill, aim.spell?.index, target);
@@ -537,10 +537,10 @@
   // Resolución de un tiro a casilla libre: mismo telegrama humano (puede errar) y golpea a quien esté ahí.
   function resolveTileAim(actor, aim) {
     const skill = aim.spell?.skill ?? null;
-    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    if (!skill || (skill.type !== 'damage' && skill.type !== 'immobilize')) { addFloatingText(actor, 'ERRADO', 'status'); return; }
     const [ax, ay] = actorTile(actor);
     if (Math.abs(ax - aim.x) + Math.abs(ay - aim.y) > SPELL_VISION_RANGE) { addFloatingTextAt(aim.x, aim.y, 'fuera de vista', 'status'); return; }
-    if (Math.random() > .82) { addFloatingTextAt(aim.x, aim.y, 'ERRADO', 'status'); return; }
+    if (Math.random() > .82) { addFloatingText(actor, 'ERRADO', 'status'); return; }
     const victim = fighters.find(other => other.alive && actorTile(other)[0] === aim.x && actorTile(other)[1] === aim.y) ?? null;
     if (!victim) { addFloatingTextAt(aim.x, aim.y, 'al vacío', 'status'); return; }
     npcCastSkill(actor, skill, aim.spell.index, victim);
