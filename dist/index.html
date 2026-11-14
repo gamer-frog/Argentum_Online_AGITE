@@ -6,9 +6,6 @@
   <meta name="theme-color" content="#252525" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>Argentum Online — Cliente de prueba</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -27,7 +24,7 @@
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
-          <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div><div class="kill-progress" id="killProgress" aria-live="polite">0/5 BAJAS</div></div>
+          <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div></div>
           <div class="kill-feed" id="killFeed"><div class="feed-line"><b>La batalla te espera</b><span>—</span> partida local.</div></div>
           <div class="respawn-notice hidden" id="respawnNotice" role="status" aria-live="polite"><strong>HAS CAÍDO</strong><span>Reaparecés en <b id="respawnTimer" aria-hidden="true">2.4</b> s</span></div>
           <div class="mobile-joystick" id="joystick"><div class="joy-ring"><div class="joy-knob" id="joyKnob"></div></div></div>
