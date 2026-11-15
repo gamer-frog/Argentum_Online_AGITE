@@ -262,6 +262,25 @@
   window.addEventListener('resize', resize);
   resize();
 
+  // Móvil horizontal: el cargador de hechizos se reubica dentro del mundo, sobre la derecha.
+  // Es el mismo nodo (y los mismos listeners), así que escritorio y retrato no cambian.
+  const mobileCombatMedia = window.matchMedia('(orientation: landscape) and (max-height: 640px) and (pointer: coarse)');
+  const spellLoadout = document.querySelector('.spell-loadout');
+  const spellLoadoutHome = spellLoadout?.parentElement ?? null;
+  const spellLoadoutNext = spellLoadout?.nextElementSibling ?? null;
+  function syncMobileCombatLayout() {
+    const combat = mobileCombatMedia.matches;
+    document.body.classList.toggle('mobile-combat', combat);
+    const host = combat ? $('mobileActionCluster') : spellLoadoutHome;
+    if (spellLoadout && host && spellLoadout.parentElement !== host) {
+      if (combat) host.appendChild(spellLoadout);
+      else host.insertBefore(spellLoadout, spellLoadoutNext);
+    }
+    resize();
+  }
+  mobileCombatMedia.addEventListener('change', syncMobileCombatLayout);
+  syncMobileCombatLayout();
+
   function toast(message) {
     const el = $('toast'); el.textContent = message; el.classList.add('show');
     clearTimeout(lastToast); lastToast = setTimeout(() => el.classList.remove('show'), 1800);
@@ -1246,7 +1265,7 @@
       const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
       const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
       const x = msx + tilePx / 2, y = msy + tilePx / 2, lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
-      const color = readySkill.aimColor ?? DEFAULT_AIM_COLOR;
+      const color = spellDrag?.cancel ? '#e06a5e' : readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
       ctx.save(); ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
       ctx.lineWidth = Math.max(2, tilePx * .05); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .25;
@@ -1336,12 +1355,18 @@
   }
   function refreshHud() {
     if (!player) return;
-    $('healthBar').style.width = `${player.hp / player.maxHp * 100}%`;
+    const healthShare = `${player.hp / player.maxHp * 100}%`;
+    const manaShare = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
+    $('healthBar').style.width = healthShare;
     $('healthValue').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-    $('manaBar').style.width = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
+    $('manaBar').style.width = manaShare;
     $('manaValue').textContent = player.maxMana ? `${Math.floor(player.mana)} / ${player.maxMana}` : '—';
     // El guerrero no tiene maná: se oculta la fila y la barra completas, no solo el valor.
     $('resourceBlock')?.classList.toggle('no-mana', !(player.maxMana > 0));
+    // Vitales compactos del HUD táctil en horizontal; repiten el estado sin duplicar lógica.
+    $('mobileHealthBar').style.width = healthShare;
+    $('mobileManaBar').style.width = manaShare;
+    $('mobileVitals').classList.toggle('no-mana', !(player.maxMana > 0));
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
       button.disabled = !player.alive || !skill;
@@ -1361,6 +1386,7 @@
       $('targetStatus').textContent = 'Seleccioná un rival';
     }
     $('attackBtn').disabled = !targetAlive || !player.alive || paused || distance(player, target) > 1 || player.attackCd > 0;
+    $('mobileAttackBtn').disabled = $('attackBtn').disabled;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('targeted', actor.id === selected); }
@@ -1439,26 +1465,45 @@
     if (target) handleCanvasTarget(target);
     else if (selectedSkill !== null && point.tile) castSkillAtTile(selectedSkill, point.tile);
   }
+  function setSpellDragCancel(drag, cancel) {
+    if (!drag || drag.cancel === cancel) return;
+    drag.cancel = cancel;
+    drag.button.classList.toggle('cancel-aim', cancel);
+    $('spellCancelHint')?.classList.toggle('show', cancel);
+  }
   function cancelSpellDrag(pointerId = null) {
     if (spellDrag && (pointerId === null || spellDrag.pointerId === pointerId)) {
+      setSpellDragCancel(spellDrag, false);
       lastSpellGesture = { button: spellDrag.button, expiresAt: performance.now() + 1000 };
       spellDrag = null;
     }
     if (canvasPress && (pointerId === null || canvasPress.pointerId === pointerId)) canvasPress = null;
+    $('spellCancelHint')?.classList.remove('show');
     mouseTile = null;
   }
-  function pointFromEvent(event) {
-    const touchAimOffset = event.pointerType === 'touch' ? 80 : 0;
-    return canvasPointAtPointer(event.clientX, event.clientY - touchAimOffset);
+  // La mira táctil se separa del dedo como en Wild Rift; el mouse apunta donde está el cursor.
+  function touchAimDistance() { return Math.round(Math.min(96, Math.max(64, window.innerHeight * .16))); }
+  function pointFromEvent(event, offsetTouch = false) {
+    const offset = offsetTouch && event.pointerType === 'touch' ? touchAimDistance() : 0;
+    return canvasPointAtPointer(event.clientX, event.clientY - offset);
+  }
+  function pointerOverButton(event, button, padding = 14) {
+    if (!button) return false;
+    const rect = button.getBoundingClientRect();
+    return event.clientX >= rect.left - padding && event.clientX <= rect.right + padding &&
+      event.clientY >= rect.top - padding && event.clientY <= rect.bottom + padding;
   }
   function finishSpellDrag(event, cancelled = false) {
     if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
     const drag = spellDrag;
-    const point = cancelled ? null : pointFromEvent(event);
+    const point = cancelled ? null : pointFromEvent(event, true);
+    const shouldCancel = drag.cancel || (drag.moved && pointerOverButton(event, drag.button));
+    setSpellDragCancel(drag, false);
     spellDrag = null;
     mouseTile = null;
     lastSpellGesture = { button: drag.button, expiresAt: performance.now() + 1000 };
     if (cancelled) return true;
+    if (shouldCancel) { toast('Lanzamiento cancelado.'); return true; }
     if (drag.moved && point) resolveCanvasPointer(point, drag.index);
     else if (!drag.moved) selectSkill(drag.index);
     return true;
@@ -1473,10 +1518,13 @@
     return true;
   }
   function updatePointerAim(event) {
-    const point = pointFromEvent(event);
+    const dragging = Boolean(spellDrag && spellDrag.pointerId === event.pointerId);
+    const point = pointFromEvent(event, dragging);
     mouseTile = point?.tile ?? null;
-    if (spellDrag && spellDrag.pointerId === event.pointerId) {
+    if (dragging) {
       if (Math.hypot(event.clientX - spellDrag.startX, event.clientY - spellDrag.startY) > 8) spellDrag.moved = true;
+      // Volver al botón de origen cancela al soltar, como en Wild Rift.
+      setSpellDragCancel(spellDrag, spellDrag.moved && pointerOverButton(event, spellDrag.button));
     }
   }
   window.addEventListener('pointerdown', () => { audioReady = true; }, { once: true });
@@ -1524,6 +1572,30 @@
     if (selectedSkill !== null) { selectedSkill = null; refreshSkillSelection(); toast('Hechizo desarmado.'); }
   });
   $('attackBtn').addEventListener('click', () => attack());
+  $('mobileAttackBtn').addEventListener('click', () => attack());
+  const fullscreenButton = $('fullscreenBtn');
+  function syncFullscreenState() {
+    const active = Boolean(document.fullscreenElement);
+    fullscreenButton.setAttribute('aria-pressed', String(active));
+    fullscreenButton.title = active ? 'Salir de pantalla completa' : 'Pantalla completa';
+    fullscreenButton.setAttribute('aria-label', active ? 'Salir de pantalla completa' : 'Activar pantalla completa');
+    $('fullscreenIcon').textContent = active ? '↙' : '⛶';
+  }
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        screen.orientation?.unlock?.();
+      } else {
+        await (document.querySelector('.client-window').requestFullscreen?.() ?? document.documentElement.requestFullscreen());
+        try { await screen.orientation?.lock?.('landscape'); } catch (_) { /* Orientation lock is optional and browser-dependent. */ }
+      }
+    } catch (_) {
+      toast('La pantalla completa no está disponible en este navegador.');
+    }
+  });
+  document.addEventListener('fullscreenchange', syncFullscreenState);
+  syncFullscreenState();
   $('classSelect').addEventListener('change', event => applyClass(event.target.value));
   document.querySelectorAll('.spell-slot[data-skill]').forEach(button => {
     button.addEventListener('pointerdown', event => {
