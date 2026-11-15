@@ -1448,7 +1448,8 @@
     mouseTile = null;
   }
   function pointFromEvent(event) {
-    return canvasPointAtPointer(event.clientX, event.clientY);
+    const touchAimOffset = event.pointerType === 'touch' ? 80 : 0;
+    return canvasPointAtPointer(event.clientX, event.clientY - touchAimOffset);
   }
   function finishSpellDrag(event, cancelled = false) {
     if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
