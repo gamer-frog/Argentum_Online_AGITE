@@ -1440,7 +1440,10 @@
     else if (selectedSkill !== null && point.tile) castSkillAtTile(selectedSkill, point.tile);
   }
   function cancelSpellDrag(pointerId = null) {
-    if (spellDrag && (pointerId === null || spellDrag.pointerId === pointerId)) spellDrag = null;
+    if (spellDrag && (pointerId === null || spellDrag.pointerId === pointerId)) {
+      lastSpellGesture = { button: spellDrag.button, expiresAt: performance.now() + 1000 };
+      spellDrag = null;
+    }
     if (canvasPress && (pointerId === null || canvasPress.pointerId === pointerId)) canvasPress = null;
     mouseTile = null;
   }

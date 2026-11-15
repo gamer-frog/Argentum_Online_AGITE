@@ -94,16 +94,16 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
 .client-titlebar{height:18px;padding:0 6px;background:linear-gradient(#5b5b5b,#393939)}
 .client-brand{gap:5px}.client-brand strong{font-size:10px}.brand-gem{font-size:13px}.client-version{font-size:7px}
 .window-actions{gap:3px}.window-actions button{height:15px;min-width:20px;padding:0 4px;font-size:7px}
-.client-layout{grid-template-columns:minmax(0,1fr) clamp(190px,25.5vw,310px);grid-template-rows:auto 1fr;gap:4px;margin-top:3px;align-items:stretch}
-.game-console{grid-column:1/-1;position:relative;min-width:0;height:72px;overflow:hidden;border:1px solid #827253;border-right-color:#1d1b18;border-bottom-color:#171512;background:repeating-linear-gradient(0deg,#191916 0,#191916 2px,#20201b 2px,#20201b 4px);box-shadow:inset 1px 1px #60583f,inset 0 0 15px #000;}
+.client-layout{grid-template-columns:minmax(0,1fr) clamp(190px,25.5vw,310px);grid-template-rows:80px 1fr;gap:4px;margin-top:3px;align-items:stretch}
+.game-console{grid-column:1;grid-row:1;position:relative;min-width:0;height:72px;overflow:hidden;border:1px solid #827253;border-right-color:#1d1b18;border-bottom-color:#171512;background:repeating-linear-gradient(0deg,#191916 0,#191916 2px,#20201b 2px,#20201b 4px);box-shadow:inset 1px 1px #60583f,inset 0 0 15px #000;}
 .console-caption{height:17px;padding:2px 6px;border-bottom:1px solid #625840;background:linear-gradient(#413a2a,#25241e);color:#d8c895;font:8px Tahoma,Verdana,sans-serif;letter-spacing:.3px}
 .console-caption .status-light{display:inline-block;margin:0 5px 0 1px;vertical-align:middle}
-.game-console .kill-feed{position:static;display:block;max-width:none;margin:3px 6px;pointer-events:none}
+.game-console .kill-feed{position:static;display:block;max-width:none;margin:3px 6px;pointer-events:none}.game-console{height:80px}
 .game-console .feed-line{display:flex;width:max-content;max-width:100%;padding:0;border:0;background:transparent;color:#a6d68d;font:10px "Lucida Console",Consolas,monospace;line-height:1.55;white-space:normal}
 .game-console .feed-line b{color:#e8c86d}.game-console .feed-line span{color:#9a988a}
-.world-window{min-width:0;align-self:stretch}.world-toolbar{height:20px;padding:0 5px;gap:6px;font-size:8px}.world-toolbar>strong{font-size:9px}.toolbar-actions>button{height:16px;padding:0 5px;font-size:7px}
-.game-frame{height:clamp(300px,calc(100vh - 145px),820px);min-height:300px;border-width:2px}.game-top-hud{top:5px;left:5px;right:5px}.round-pill{height:20px;font-size:8px}.world-statusbar{height:19px;padding:0 5px;font-size:7px}
-.right-dock{align-content:start;gap:3px;max-height:calc(100vh - 98px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#74694e #242424}
+.world-window{grid-column:1;grid-row:2;min-width:0;min-height:0;align-self:stretch}.world-toolbar{height:20px;padding:0 5px;gap:6px;font-size:8px}.world-toolbar>strong{font-size:9px}.toolbar-actions>button{height:16px;padding:0 5px;font-size:7px}
+.game-frame{height:clamp(300px,calc(100vh - 170px),820px);min-height:300px;border-width:2px}.game-top-hud{top:5px;left:5px;right:5px}.round-pill{height:20px;font-size:8px}.world-statusbar{height:19px;padding:0 5px;font-size:7px}
+.right-dock{grid-column:2;grid-row:1/-1;align-content:start;gap:3px;max-height:calc(100vh - 28px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#74694e #242424}
 .dock-panel{padding:6px 7px;background:linear-gradient(#4c4c4c,#373737)}.panel-title{min-height:14px;margin-bottom:5px;padding-bottom:4px;font-size:8px}
 .character-summary{gap:7px}.character-paperdoll{width:42px;height:48px}.character-paperdoll>span{font-size:25px}.character-paperdoll small{font-size:6px}.character-info{gap:2px}.character-info select{height:19px;font-size:8px}.hero-name{font-size:10px}.character-faction{font-size:6px}.resource-block{margin-top:5px}.resource-row{font-size:7px}.resource-row b{font-size:7px}.health-track,.mana-track{height:7px}.character-stats{margin-top:5px;font-size:7px}
 .target-panel{column-gap:5px}.target-panel .panel-title{margin-bottom:4px}.target-copy{gap:2px}.target-copy strong{font-size:9px}.target-copy span{font-size:6px}.attack-button{min-height:25px;padding:0 5px}.attack-button b{font-size:7px}
