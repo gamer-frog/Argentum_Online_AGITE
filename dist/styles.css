@@ -123,6 +123,7 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
   body.mobile-combat .brand-gem{font-size:12px}
   body.mobile-combat .window-actions button{height:15px;min-width:20px;font-size:8px}
   body.mobile-combat .client-layout{display:flex;flex:1;min-height:0;margin:0;gap:0;overflow:hidden}
+  body.mobile-combat .project-roadmap{display:none!important}
   body.mobile-combat .game-console,body.mobile-combat .right-dock,body.mobile-combat .world-toolbar,body.mobile-combat .world-statusbar,body.mobile-combat .client-footer{display:none!important}
   body.mobile-combat .world-window{width:100%;height:100%;min-height:0;flex:1;border:0}
   body.mobile-combat .game-frame{width:100%;height:100%;min-height:0;border:1px solid #252525}
@@ -139,11 +140,11 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
   body.mobile-combat .mobile-attack{display:flex;width:clamp(44px,12vh,56px);height:clamp(38px,11vh,48px);flex:none;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid #e0c779;background:linear-gradient(#5b4b2d,#29251c);color:#f3d982;font-size:17px;box-shadow:0 2px 6px #0009;touch-action:manipulation}
   body.mobile-combat .mobile-attack small{font:6px var(--mono)}
   body.mobile-combat .spell-loadout{display:grid;width:clamp(48px,14vh,62px);max-width:none;grid-template-columns:1fr;gap:3px}
-  body.mobile-combat .spellbar-panel .spell-slot{width:100%;height:clamp(30px,9vh,43px);min-height:0;aspect-ratio:auto;padding:3px 1px 2px;gap:0;border:1px solid #999;background:linear-gradient(#555,#303030);touch-action:none}
-  body.mobile-combat .spellbar-panel .spell-slot kbd{top:1px;left:2px;min-width:10px;padding:0 2px;font-size:6px}
-  body.mobile-combat .spellbar-panel .spell-icon{font-size:14px;line-height:14px}
-  body.mobile-combat .spellbar-panel .spell-name{font-size:6px;line-height:1.05}
-  body.mobile-combat .spellbar-panel .spell-cost{font-size:5px;line-height:1}
+  body.mobile-combat .mobile-action-cluster .spell-slot{width:100%;height:clamp(30px,9vh,43px);min-height:0;aspect-ratio:auto;padding:3px 1px 2px;gap:0;border:1px solid #999;background:linear-gradient(#555,#303030);touch-action:none}
+  body.mobile-combat .mobile-action-cluster .spell-slot kbd{top:1px;left:2px;min-width:10px;padding:0 2px;font-size:6px}
+  body.mobile-combat .mobile-action-cluster .spell-icon{font-size:14px;line-height:14px}
+  body.mobile-combat .mobile-action-cluster .spell-name{font-size:6px;line-height:1.05}
+  body.mobile-combat .mobile-action-cluster .spell-cost{font-size:5px;line-height:1}
   body.mobile-combat .spell-slot.cancel-aim{border-color:#ff8a72;background:linear-gradient(#793e35,#42231f);box-shadow:0 0 10px #ff5b4388}
   body.mobile-combat .mobile-cancel-hint{position:absolute;z-index:6;top:50%;left:50%;display:none;padding:7px 10px;transform:translate(-50%,-50%);border:1px solid #ff9a7b;background:#291713eF;color:#ffe0cc;font:700 9px var(--mono);pointer-events:none}
   body.mobile-combat .mobile-cancel-hint.show{display:block}
