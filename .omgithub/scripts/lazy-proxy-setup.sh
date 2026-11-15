@@ -41,3 +41,4 @@ fi
 
 bash "$here/start-opencode-serve.sh" "" --wait >/dev/null 2>&1 || true
 echo "lazy proxy: WARP unavailable; runner network" >&2; record none; exit 1
+
