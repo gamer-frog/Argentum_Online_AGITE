@@ -7,10 +7,12 @@
 > - **Todas las refs**: `main`, `opencode-checkpoints/*`, `opencode-deployments/*`, `opencode-resume/*`, tags `save-*` y `graveyard-*`.
 >
 > No se agregó ninguna feature nueva. Estados: `[x]` verificado en Chromium con consola 0/0; `[~]` implementado con límites; `[ ]` pendiente. **Ante duda, ejecutar el próximo `[ ]` de este archivo antes que cualquier idea propia.** El usuario pidió explícitamente no hacer «mejoras random» (2026-11-12/13).
+>
+> **Auditoría del loop 2026-11-16:** se eliminaron duplicados entre secciones, se unificó la decisión de mapas (`D1`) y el alcance de inventario (`D2`), y se alineó la regla de publicación con la sesión actual (sin commit/push sin pedido explícito). Las decisiones abiertas y sus asunciones viven en `DECISIONS.md`; la cola viva, en `TODO.md`.
 
 ## 0. Reglas permanentes del usuario (proceso, no producto)
 
-- [x] Trabajar y publicar en `main`; no llenar el repo de branches. Push frecuente y preview siempre actualizado.
+- [x] Trabajar en `main`; no llenar el repo de branches. Publicar cuando el usuario lo pida y mantener el preview actualizado al publicar. En esta sesión: no commit ni push sin pedido explícito.
 - [x] No hacer mejoras no pedidas: ejecutar los pedidos concretos de este archivo.
 - [x] Verificar en navegador (`http://localhost:3002`) con consola 100% limpia antes de publicar; usar `?.` y código defensivo.
 - [x] Es una build request: no preguntar, asumir y avisar los supuestos al terminar.
@@ -25,6 +27,7 @@
 - [x] **Hechizos directos al rival clickeado.** Los lanzamientos de daño e Inmovilizar con click directo siguen al rival elegido durante la mira y resuelven sobre él aunque se mueva. Verificado en Chromium con Inmovilizar contra `chaoticPaladin` (se movió durante la mira y recibió el hechizo; textos «Inmovilizar» y «Paralizado»). No cambia tiros a casilla, apuntado NPC ni apoyo/hechizos sobre aliados.
 - [x] **Todos los hechizos se apuntan, incluida la cura.** «CURAR» no es instantáneo; tiempos de lanzamiento aleatorios; nadie lanza sin telégrafo.
 - [x] **Nombre del hechizo lanzado sobre el personaje.** Los lanzamientos efectivos muestran el nombre sobre el lanzador; verificado en Chromium durante combate real (por ejemplo, «Remover parálisis») junto con estados/daño. Consola limpia. No se modificó código porque la función ya estaba implementada.
+- [x] **Texto `ERRADO` sobre el lanzador.** Las tres rutas de error de `resolveNpcAim`/`resolveTileAim` anclan el texto al actor con `addFloatingText(actor, ...)`. Verificado en Chromium forzando fallos: `/tmp/opencode/shots/errado-actor.png` muestra `ERRADO` sobre el personaje; consola limpia. `game.js` y `dist/game.js` sincronizados.
 - [x] **Intervalo global de lanzamiento.** El `castCd` compartido impide spam; el melee también deja intervalo. Los NPC no clickean varias veces por segundo.
 - [x] **Visión como límite.** Nadie lanza fuera del área en pantalla (~11 casillas Manhattan), jugador y NPC, incluido apoyo a aliados; se revalida al resolver («fuera de vista»).
 - [x] **Maná visible debajo de la vida.** Barra azul y valor real para mago/clérigo/paladín; el guerrero no tiene maná y la fila/barra queda oculta.
@@ -47,7 +50,7 @@
 
 ## 2. Pedidos parciales (implementados con límites)
 
-- [~] **Interfaz clon visual de AO.** Existen HUD, panel de personaje/objetivo y roster, pero no es un clon fiel: inventario/equipo están incompletos y falta comparar capturas lado a lado.
+- [~] **Interfaz clon visual de AO.** Existen HUD, panel de personaje/objetivo y roster, pero no es un clon fiel: inventario/equipo están incompletos. La comparación lado a lado a 1023×770 se completó el 2026-11-15; la diferencia de proporción no se ajustó por falta de especificación (`D3`). El siguiente paso es `T1`: fase visual de inventario/equipo con `D2=A` (sin mecánicas).
 - [~] **FX de lanzamiento.** El nombre del hechizo ya se muestra sobre el lanzador; falta incorporar animaciones auténticas cuando se verifiquen recursos compatibles y distinguirlas del fallback.
 - [~] **FX de hechizos.** Se reutilizan tres efectos de AO como fallback; no todos los hechizos tienen animación original verificada.
 - [~] **Reglas contrastadas con AO Libre.** Nombres/daños de Imperium verificados; alcances, tiempos exactos y costos de maná siguen siendo aproximados o de práctica.
@@ -56,15 +59,14 @@
 - [~] **Estados y remociones.** Funcionan; falta variar mejor los momentos y confirmar terminología/estilo con una referencia AO concreta.
 - [~] **Cada clase con comportamiento propio.** Hay rangos, prioridades y retirada del mago; falta profundizar.
 - [~] **Más extracción de AO Libre.** El subset es limitado; falta auditoría de licencia/atribución por archivo.
-- [~] **Referencia visual de AO.** La galería oficial está disponible y sirve para comparar estilo/layout; se inspeccionaron sus seis imágenes (1023×770 o 1024×770). No indican versión ni fecha de captura. El `Last-Modified` de los archivos no acredita la toma ni el cliente, y el «V:5» visible en una imagen no basta para fijar una versión verificable. La comparación lado a lado con la captura actual se completó el 2026-11-15 a 1023×770; las diferencias observadas están documentadas en `HANDOFF.md`. No se ajustó el layout porque no hay especificación que justifique estrechar el panel y reducir el espacio de juego.
-- [x] **Texto `ERRADO` sobre el lanzador.** Las tres rutas de error de `resolveNpcAim`/`resolveTileAim` ahora anclan el texto al actor con `addFloatingText(actor, ...)`. Verificado en Chromium forzando fallos: la captura `/tmp/opencode/shots/errado-actor.png` muestra `ERRADO` sobre el personaje; consola limpia. `game.js` y `dist/game.js` sincronizados.
+- [~] **Referencia visual de AO.** La galería oficial está disponible y sirve para comparar estilo/layout; se inspeccionaron sus seis imágenes (1023×770 o 1024×770). No indican versión ni fecha de captura. El `Last-Modified` de los archivos no acredita la toma ni el cliente, y el «V:5» visible en una imagen no basta para fijar una versión verificable. La comparación lado a lado con la captura actual se completó el 2026-11-15 a 1023×770; el detalle está en `HISTORY.md`. No se ajustó el layout porque no hay especificación que justifique estrechar el panel y reducir el espacio de juego (`D3`).
 - [~] **Mira persistente / intenciones visibles.** Implementada en NPC; revisar duración y cambio de hechizo para que casi siempre se lea qué intentan hacer.
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
 
-- [ ] **Acordar la rotación de mapas (pedido textual, issues #47-#48).** Los cinco mapas extraídos con spawns en `assets/ao/maps.json` —Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272)— son una propuesta pendiente de aprobación; el bosque actual entre Nix y Ulla no le gusta al usuario. La lógica existente elige un mapa al azar del manifiesto al iniciar, avanza al siguiente en el orden del manifiesto cada 5 bajas y al reiniciar elige uno al azar distinto del actual; esto no garantiza inicios distintos entre partidas. La petición de usar la lista consensuada y asegurar mapas iniciales distintos aún no está implementada. No cambiar la lista ni la lógica hasta que el usuario la apruebe o ajuste.
-- [ ] **Interfaz clon visual fiel de AO.** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas propias y de referencia al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Avance 2026-11-14: el atajo de la barra fluye debajo del título móvil; las seis ranuras (4 habilidades + 2 pociones) se distribuyen en una fila de seis columnas, sin ranura huérfana; eliminadas las dependencias de Google Fonts y sincronizado `dist/`; retirado del HUD el contador «0/5 BAJAS», incompatible con el pedido de PvP infinito sin marcador. Chromium confirmó las 6 ranuras en una fila a 320, 390 y 1440 px, sin overflow horizontal ni interno, consola 0/0 y cero solicitudes a Google Fonts; tras retirar el contador, se revisaron las capturas a 1440×1000 y 390×844 y permanece visible el estado del mapa/arena. El 2026-11-15 se comparó la captura oficial y la actual lado a lado a 1023×770: la referencia tiene panel derecho más estrecho/denso e inventario/equipo funcionales; el HUD actual reserva más área al campo de batalla y esas secciones están en desarrollo. La diferencia se documentó, pero no se ajustó la proporción sin especificación que justifique reducir el área de juego. Pendiente definir y completar las diferencias de layout/producto con base suficiente, y continuar validando escritorio y móvil.
-- [ ] **Inventario funcional, equipamiento y objetos/pociones integrados** con la interfaz (hoy es una práctica de combate, no un clon completo).
+- [ ] **Acordar la rotación de mapas (`D1`; pedido textual, issues #47-#48).** Los cinco mapas extraídos con spawns en `assets/ao/maps.json` —Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272)— son la propuesta recomendada; el bosque actual entre Nix y Ullathorpe no le gusta al usuario. Opciones: A) aprobar la lista propuesta, B) ajustar la lista, C) mantener el manifiesto actual. La lógica existente elige un mapa al azar del manifiesto al iniciar, avanza al siguiente cada 5 bajas y al reiniciar elige uno al azar distinto del actual; no garantiza inicios distintos entre partidas. No cambiar la lista ni la lógica hasta que `D1` se resuelva.
+- [ ] **Interfaz clon visual fiel de AO (`T1`).** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Hecho: seis ranuras en una fila a 320/390/1440 px, sin Google Fonts y sin contador de bajas. La comparación a 1023×770 se completó el 2026-11-15: la referencia tiene panel más estrecho/denso e inventario/equipo funcionales; el HUD actual reserva más área al campo de batalla y esas secciones están incompletas. No se cambió la proporción (`D3`). Próximo paso: `T1`, fase visual de inventario/equipo (`D2=A`, sin mecánicas).
+- [ ] **Inventario funcional, equipamiento y objetos/pociones integrados (`D2`).** Hoy son secciones visuales incompletas. Opciones: A) fidelidad visual primero (asunción actual, `T1`), B) definir contrato de objetos y funcionalidad mínima, C) diferir. No inventar reglas de objetos ni mecánicas sin decisión.
 - [ ] **Animaciones auténticas de hechizos** cuando se encuentren/verifiquen recursos compatibles; distinguir visualmente el fallback.
 - [ ] **Chat lateral y sonidos de golpes/hechizos** si hay recursos licenciados.
 - [ ] **Escenarios de práctica 1v1, 2v2 y 3v3** con selector de formato.
@@ -76,10 +78,14 @@
 - [ ] **Agotamiento de maná del paladín** tras varios Remover Parálisis y necesidad de apoyo aliado (hoy los costos son de práctica).
 - [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
-- [x] **No esquivar hechizos clickeados por el jugador:** los hechizos de daño e Inmovilizar apuntados con click directo resuelven sobre el rival elegido aunque se mueva durante la mira. Verificado en Chromium; los tiros a casilla y el apoyo a aliados conservan su comportamiento. El filtro de rango/camino de selección de enemigos NPC sigue presente en `dist/game.js`; su comportamiento runtime no se aisló de forma concluyente en esta prueba.
-- [x] **Mover el texto `ERRADO` sobre el personaje lanzador**, no sobre la casilla del click. Completado y verificado en Chromium; evidencia y detalles en la sección 2.
-- [ ] **Aprobar o ajustar la lista de mapas para la rotación** descrita en el ítem anterior; la propuesta no modifica la lógica actual y sigue pendiente de decisión del usuario.
-- [ ] **Acelerar la visualización de cambios en live preview:** publicar cada subtarea verificada, sin acumular trabajo sin push.
+- [~] **Acelerar la visualización de cambios en live preview:** el loop deja cada tarea verificada y lista para publicar; en esta sesión se publica solo cuando el usuario lo pide explícitamente. No acumular tareas sin registrar estado.
+
+### 3.1 Decisiones abiertas
+
+El detalle, las opciones y la asunción vigente están en [`DECISIONS.md`](DECISIONS.md):
+
+- **D1 — Lista de mapas:** A) propuesta de cinco mapas (recomendada), B) ajustar, C) mantener manifiesto. Sin respuesta, no se toca la lista.
+- **D2 — Inventario/equipo:** A) visual primero (asunción actual), B) funcional mínimo, C) diferir.
 
 ## 4. Pedidos explícitamente descartados o superseded
 

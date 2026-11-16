@@ -42,6 +42,18 @@ python3 -m http.server 3000
 
 Abrí <http://localhost:3000>. No abras `index.html` directamente como archivo: la aplicación carga datos e imágenes mediante HTTP.
 
+## Loop de desarrollo
+
+El estado operativo, la cola de tareas y las decisiones del proyecto viven en [`00_cerebro_loop/`](00_cerebro_loop/):
+
+- [`README.md`](00_cerebro_loop/README.md) — manual del ciclo: elegir una tarea, verificarla y cerrarla.
+- [`TODO.md`](00_cerebro_loop/TODO.md) — qué se hace ahora y qué sigue.
+- [`DECISIONS.md`](00_cerebro_loop/DECISIONS.md) — decisiones abiertas y asunciones vigentes.
+- [`HANDOFF.md`](00_cerebro_loop/HANDOFF.md) — estado actual y próximo paso.
+- [`HISTORY.md`](00_cerebro_loop/HISTORY.md) — historial de acciones verificadas.
+
+Preflight local: `bash 00_cerebro_loop/verify.sh`. La validación final siempre se hace en navegador, en escritorio y móvil, con consola limpia.
+
 ## Controles
 
 - **Flechas o WASD:** moverse en dirección cardinal, un casillero por paso.
