@@ -14,7 +14,7 @@ Con un checkout completo de [ao-libre/ao-cliente](https://github.com/ao-libre/ao
 python3 scripts/extract_ao_assets.py /ruta/a/ao-cliente
 ```
 
-El resultado se genera en `assets/ao/`: incluye cinco mapas de 100×100 en `assets/ao/maps/<ID>.json` y un `maps.json` con nombres y coordenadas oficiales de aparición (coordenadas del servidor, base 1). El comportamiento actual elige al azar un mapa del manifiesto al iniciar, avanza al siguiente mapa en el orden del manifiesto cada cinco bajas y, al reiniciar, elige al azar uno distinto del mapa actual; si una carga falla, conserva el mapa actual. Esto no garantiza un mapa inicial distinto entre partidas. La propuesta de acordar una lista de rotación y asegurar inicios distintos sigue pendiente de aprobación. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
+El resultado se genera en `assets/ao/`: incluye cinco mapas de 100×100 en `assets/ao/maps/<ID>.json` y un `maps.json` con nombres y coordenadas oficiales de aparición (coordenadas del servidor, base 1). La rotación aprobada el 2026-11-16 (`D1`) usa **Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272)**, en ese orden. La partida inicia en un mapa al azar de esa lista, avanza al siguiente cada cinco bajas y, al reiniciar, elige un mapa distinto del inicio anterior y del actual; si ninguno de los otros carga, conserva el actual. Si una carga falla durante la rotación por bajas, también conserva el mapa actual. `ATTRIBUTION.txt` registra revisión, fuentes, créditos y cautelas de licencia. El prototipo mantiene sus actores y combate. Si faltan los datos gráficos, inicia una arena visual alternativa que no representa los gráficos auténticos de AO.
 
 ### Efectos y sonidos de hechizos
 
@@ -27,6 +27,8 @@ Se extrajeron de la revisión fijada del cliente tres efectos completos (animaci
 | Apocalipsis | 25 | 13 / 259 / 27 | Apocalipsis y Juicio Final del mago |
 
 Las tres asociaciones con habilidades del prototipo son aproximaciones para reutilizar recursos, no equivalencias de nombre, daño, alcance o reglas. Cuando están disponibles, el canvas dibuja la animación original sobre la casilla objetivo con los offsets de `fxs.ini`, y el audio usa el WAV correspondiente; sin esos recursos se conserva el efecto genérico y el tono de reserva. No hay un WAV asociado a las habilidades de curación actuales.
+
+Auditoría completa de los ocho hechizos del prototipo, con estado `original` / `reutilizado` / `reserva`, Grh, WAV y límites verificados: [`roadmap/fx-hechizos.md`](roadmap/fx-hechizos.md). Resultado: un FX original (Apocalipsis), tres reutilizados y cuatro en reserva.
 
 ### Alcance de las reglas de nivel 40
 

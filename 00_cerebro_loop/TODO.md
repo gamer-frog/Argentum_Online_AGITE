@@ -5,79 +5,42 @@
 
 ## Ahora
 
-### T1 — Inventario/equipamiento: fase 1 visual
+### T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)
 
 **Estado:** lista para empezar.
-**Depende de:** `D2` (asunción A: solo presentación, sin mecánicas).
-**Pedido:** interfaz clon visual de AO; inventario/equipo incompletos (`USER_REQUESTS.md` §2/§3).
+**Depende de:** nada; `D1` no la bloquea.
+**Pedido:** contrastar ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y nivel 40 con etiqueta confirmado/aproximado/práctica (`USER_REQUESTS.md`).
 
-**Alcance**
+**Alcance del primer corte**
 
-- Comparar el panel derecho actual con la captura de referencia a 1023×770.
-- Rehacer la presentación de inventario y equipamiento con estética AO: grilla/slots, marcos, jerarquía y estados vacíos honestos.
-- Reemplazar textos de «en desarrollo» por un estado vacío claro (por ejemplo, «sin objetos») solo si la referencia respalda la presentación.
-- Mantener la estructura de datos y la lógica actuales; no agregar objetos, pesos, requisitos ni equipamiento funcional.
+- Inventariar solo las reglas implementadas en `game.js` que afectan al combate actual: ataque adyacente, recuperación, pociones, alcance de hechizos, apuntado/telegrafiado, inmovilización/remoción y costos de maná.
+- Para cada regla: valor implementado, archivo/línea, fuente AO Libre fijada y etiqueta (`confirmado`, `aproximado` o `práctica`).
+- Escribir la matriz en `roadmap/reglas-combate.md` y enlazarla desde `README.md`.
 
 **No incluye**
 
-- Mecánicas de inventario/equipamiento, objetos, pociones integradas ni persistencia.
-- Cambiar el ancho global del HUD, la proporción del panel o el área de juego (`D3`).
-- Rotación de mapas ni cambios de balance.
+- Cambiar balance, daños, costos o tiempos.
+- Extraer assets nuevos ni interpretar la ausencia de un dato como valor cero.
+- Cubrir todavía el inventario funcional o el multijugador.
 
 **Criterios de aceptación**
 
-- [ ] Lista de brechas visuales (máximo 5) con captura de referencia y captura actual al mismo tamaño.
-- [ ] Cada cambio de HTML/CSS se puede trazar a una diferencia observada; nada inventado.
-- [ ] Inventario y equipo se leen como paneles AO, no como placeholders de dashboard.
-- [ ] Sin overflow ni contenido cortado a 1440×1000 y 390×844.
-- [ ] Consola 0 errores / 0 advertencias; controles básicos intactos.
-- [ ] `dist/` sincronizado; `bash 00_cerebro_loop/verify.sh` verde.
-- [ ] Evidencia y próximo paso registrados en `HISTORY.md` y `HANDOFF.md`.
-
-**Evidencia**
-
-- Referencia: galería oficial de `argentumonline.org` (1023×770 / 1024×770), inspeccionada el 2026-11-14.
-- Captura actual: `/tmp/opencode/shots/hud-current-1023x770.png`.
-- Recorte del panel derecho actual: `/tmp/opencode/shots/dock-current-1023x770.png`.
-- Comparación previa: `HISTORY.md` (2026-11-15).
-
-## Siguiente
-
-### T2 — Rotación de mapas
-
-**Estado:** bloqueada por `D1`.
-**Pedido:** empezar en mapas distintos de una lista acordada y cambiar cada 5 bajas; el bosque actual entre Nix y Ullathorpe no gusta.
-
-**Alcance al aprobarse**
-
-- Fijar la lista aprobada (propuesta: Ullathorpe 1, Nix 34, Banderbill 59, Lindos 62, Arena 272).
-- Garantizar un mapa inicial distinto entre partidas (sin repetir el inmediato anterior).
-- Mantener el avance cada 5 bajas y el fallback si un mapa no carga.
-- Verificar los cinco mapas en navegador y la rotación completa.
-
-**Criterio de desbloqueo:** `D1` resuelta en `DECISIONS.md`.
-
-### T3 — Animaciones auténticas de hechizos
-
-**Estado:** pendiente; requiere verificar recursos compatibles.
-**Pedido:** FX de lanzamiento/hechizos con animaciones originales y distinción clara del fallback (`USER_REQUESTS.md` §2).
-**Primer paso:** auditar `assets/ao/spellfx.json` y los Grh/WAV disponibles; registrar qué hechizos tienen animación verificada y cuáles siguen en fallback.
-
-### T4 — Contraste completo con AO Libre
-
-**Estado:** investigación continua; no bloquea T1.
-**Pedido:** ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y nivel 40, con etiqueta confirmado/aproximado/práctica.
-**Primer paso:** matriz de reglas con fuente y estado; empezar por lo que afecta al combate actual.
+- [ ] Cada fila tiene valor implementado, ubicación en el código, fuente y etiqueta.
+- [ ] Lo que no tenga fuente AO Libre dice explícitamente `sin dato`, no se completa por intuición.
+- [ ] No se toca código de producto; si se tocara, `verify.sh` + navegador 1440/390 + consola 0/0.
+- [ ] Evidencia y próximo paso en `HISTORY.md` y `HANDOFF.md`.
 
 ## Bloqueadas / requieren decisión
 
-- **D1 — Lista de mapas:** opciones A/B/C en `DECISIONS.md`. Mientras no se resuelva, no se toca la lista ni la lógica.
-- **D2 — Alcance de inventario/equipo:** A visual (asunción actual), B funcional mínimo, C diferir.
+- **D2 — Alcance de inventario/equipo:** A visual ejecutado en T1; B funcional mínimo sigue pendiente de decisión.
 - **Auditoría de licencias por recurso:** necesaria antes de redistribuir o ampliar assets; no bloquea el desarrollo local.
 - **Referencia visual estable con versión/fecha:** deseable; la galería oficial alcanza para estilo/layout, no para fidelidad de píxeles.
 
 ## Terminadas recientemente
 
+- [x] **T2 — Rotación de mapas (2026-11-16).** Lista fija Ullathorpe → Nix → Banderbill → Lindos → Arena; inicio aleatorio sin repetir el anterior al reiniciar; avance cada 5 bajas y fallback. Rotación completa verificada en navegador (5 cambios, 25 bajas) y capturas de los cinco mapas. Evidencia en `HISTORY.md`.
+- [x] **T3 — Auditoría de FX de hechizos (2026-11-16).** Tabla de los 8 hechizos: 1 original, 3 reutilizados y 4 en reserva; recursos, Grh, WAV y límites trazados en `roadmap/fx-hechizos.md`. Sin cambios de código.
+- [x] **T1 — Inventario/equipamiento, fase 1 visual (2026-11-16).** Grilla 5×7/35, equipo 2×2, títulos AO, ranuras biseladas y densidad ajustada; sin mecánicas. Verificado a 1023×770, 1440×1000, 390×844 y 320×720; consola 0/0. Evidencia en `HISTORY.md`.
 - [x] **Loop funcional (2026-11-16):** manual operativo, decisiones, cola única, historial separado, preflight y punteros legacy.
 - [x] **Comparación visual y ataque aislado (2026-11-15):** panel derecho más denso en la referencia; daño `-90` confirmado sobre `chaoticPaladin`; sin cambio de layout.
 - [x] **HUD sin contador de bajas (2026-11-14):** PvP infinito sin marcador; `dist/` sincronizado.

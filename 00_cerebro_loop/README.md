@@ -105,8 +105,9 @@ Comprobaciones mínimas:
 
 ## 8. Estado actual (2026-11-16)
 
-- **Build:** verde; `dist/` sincronizado; sin cambios de código pendientes de esta auditoría.
-- **Ahora:** `T1 — Inventario/equipamiento, fase 1 visual` (sin mecánicas de objetos).
-- **Bloqueado:** `T2 — Rotación de mapas`, a la espera de la decisión `D1`.
-- **Decisión abierta:** `D1` (lista de mapas) y `D2` (alcance de inventario/equipamiento).
+- **Build:** verde; `dist/` sincronizado.
+- **Completado:** `T1 — Inventario/equipamiento, fase 1 visual`; `T2 — Rotación de mapas` (lista 1→34→59→62→272, inicio distinto y rotación cada 5 bajas); `T3 — Auditoría de FX de hechizos` (`roadmap/fx-hechizos.md`).
+- **Ahora:** `T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)`.
+- **Bloqueado:** nada; `D1` resuelta.
+- **Decisión abierta:** `D2=B` (inventario funcional).
 - **Regla de publicación:** no commitear ni pushear sin pedido explícito del usuario.

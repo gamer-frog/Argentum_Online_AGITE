@@ -50,9 +50,9 @@
 
 ## 2. Pedidos parciales (implementados con límites)
 
-- [~] **Interfaz clon visual de AO.** Existen HUD, panel de personaje/objetivo y roster, pero no es un clon fiel: inventario/equipo están incompletos. La comparación lado a lado a 1023×770 se completó el 2026-11-15; la diferencia de proporción no se ajustó por falta de especificación (`D3`). El siguiente paso es `T1`: fase visual de inventario/equipo con `D2=A` (sin mecánicas).
+- [~] **Interfaz clon visual de AO.** Existen HUD, panel de personaje/objetivo y roster, pero no es un clon fiel: inventario/equipo están incompletos. La comparación lado a lado a 1023×770 se completó el 2026-11-15; la diferencia de proporción no se ajustó por falta de especificación (`D3`). **T1 completado el 2026-11-16:** inventario 5×7/35, equipo 2×2, títulos AO y ranuras biseladas, sin mecánicas ni cambio de ancho del HUD. Falta la funcionalidad de objetos (`D2=B`).
 - [~] **FX de lanzamiento.** El nombre del hechizo ya se muestra sobre el lanzador; falta incorporar animaciones auténticas cuando se verifiquen recursos compatibles y distinguirlas del fallback.
-- [~] **FX de hechizos.** Se reutilizan tres efectos de AO como fallback; no todos los hechizos tienen animación original verificada.
+- [~] **FX de hechizos.** Auditoría 2026-11-16 (`roadmap/fx-hechizos.md`): 1 FX original (Apocalipsis), 3 reutilizados (Juicio Final, Ráfaga Ígnea, Inmovilizar) y 4 en reserva (Sanar, Castigo Divino, Fuente de vida, Remover parálisis). No hay FX original de AO Libre para los seis hechizos de Imperium.
 - [~] **Reglas contrastadas con AO Libre.** Nombres/daños de Imperium verificados; alcances, tiempos exactos y costos de maná siguen siendo aproximados o de práctica.
 - [~] **Nivel 40.** Vida/maná de Imperium usados, pero las fórmulas de atributos de AO Libre no se verificaron.
 - [~] **Roles de clase.** La táctica está implementada; las etiquetas de rol no se validaron contra AO Libre.
@@ -64,10 +64,10 @@
 
 ## 3. Pedidos pendientes (lista perdida, rescatada)
 
-- [ ] **Acordar la rotación de mapas (`D1`; pedido textual, issues #47-#48).** Los cinco mapas extraídos con spawns en `assets/ao/maps.json` —Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272)— son la propuesta recomendada; el bosque actual entre Nix y Ullathorpe no le gusta al usuario. Opciones: A) aprobar la lista propuesta, B) ajustar la lista, C) mantener el manifiesto actual. La lógica existente elige un mapa al azar del manifiesto al iniciar, avanza al siguiente cada 5 bajas y al reiniciar elige uno al azar distinto del actual; no garantiza inicios distintos entre partidas. No cambiar la lista ni la lógica hasta que `D1` se resuelva.
-- [ ] **Interfaz clon visual fiel de AO (`T1`).** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Hecho: seis ranuras en una fila a 320/390/1440 px, sin Google Fonts y sin contador de bajas. La comparación a 1023×770 se completó el 2026-11-15: la referencia tiene panel más estrecho/denso e inventario/equipo funcionales; el HUD actual reserva más área al campo de batalla y esas secciones están incompletas. No se cambió la proporción (`D3`). Próximo paso: `T1`, fase visual de inventario/equipo (`D2=A`, sin mecánicas).
-- [ ] **Inventario funcional, equipamiento y objetos/pociones integrados (`D2`).** Hoy son secciones visuales incompletas. Opciones: A) fidelidad visual primero (asunción actual, `T1`), B) definir contrato de objetos y funcionalidad mínima, C) diferir. No inventar reglas de objetos ni mecánicas sin decisión.
-- [ ] **Animaciones auténticas de hechizos** cuando se encuentren/verifiquen recursos compatibles; distinguir visualmente el fallback.
+- [x] **Rotación de mapas (`D1` aprobada el 2026-11-16, pedido textual, issues #47-#48).** Lista fija en `game.js`: Ullathorpe (1) → Nix (34) → Banderbill (59) → Lindos (62) → Arena (272). Inicio aleatorio dentro de la lista, sin repetir el inicio anterior al reiniciar, avance cada 5 bajas y fallback al mapa actual si una carga falla. Verificado en navegador con la rotación completa (25 bajas) y capturas de los cinco mapas.
+- [ ] **Interfaz clon visual fiel de AO (`T1` completado en fase visual).** Reconstruir el layout con personaje/vida/stats/inventario/mapa a la derecha; usar la barra inferior de «objetos» como slots de hechizos; comparar capturas al mismo tamaño; validar escritorio y móvil sin ocultar funciones. Hecho: seis ranuras en una fila a 320/390/1440 px, sin Google Fonts y sin contador de bajas. La comparación a 1023×770 se completó el 2026-11-15: la referencia tiene panel más estrecho/denso e inventario/equipo funcionales; el HUD actual reserva más área al campo de batalla y esas secciones estaban incompletas. **2026-11-16:** inventario 5×7/35, equipo 2×2, títulos AO y ranuras biseladas; sin cambio de ancho (`D3`) ni mecánicas. Falta funcionalidad de objetos y pulido fino contra la referencia.
+- [ ] **Inventario funcional, equipamiento y objetos/pociones integrados (`D2`).** Hoy son secciones visuales sin objetos. La fase visual A se ejecutó en T1; sigue pendiente B) definir contrato de objetos y funcionalidad mínima. No inventar reglas de objetos ni mecánicas sin decisión.
+- [ ] **Animaciones auténticas de hechizos** cuando se encuentren/verifiquen recursos compatibles; distinguir visualmente el fallback. Auditoría local completa; solo Apocalipsis tiene FX original, porque los demás nombres no existen en AO Libre o carecen de recurso extraído.
 - [ ] **Chat lateral y sonidos de golpes/hechizos** si hay recursos licenciados.
 - [ ] **Escenarios de práctica 1v1, 2v2 y 3v3** con selector de formato.
 - [ ] **Multijugador en red y persistencia de personaje**, pospuestos hasta definir alcance y sostener las fases anteriores.
@@ -84,7 +84,7 @@
 
 El detalle, las opciones y la asunción vigente están en [`DECISIONS.md`](DECISIONS.md):
 
-- **D1 — Lista de mapas:** A) propuesta de cinco mapas (recomendada), B) ajustar, C) mantener manifiesto. Sin respuesta, no se toca la lista.
+- **D1 — Lista de mapas:** resuelta el 2026-11-16 con la lista Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272); implementada y verificada en `T2`.
 - **D2 — Inventario/equipo:** A) visual primero (asunción actual), B) funcional mínimo, C) diferir.
 
 ## 4. Pedidos explícitamente descartados o superseded

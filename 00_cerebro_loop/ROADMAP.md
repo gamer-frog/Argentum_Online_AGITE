@@ -14,10 +14,7 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T1** | Inventario/equipamiento, fase 1 visual | Lista | `D2` (asunción A) | Brechas documentadas, paneles AO sin overflow, 1440/390, consola 0/0, `dist/` sync |
-| **T2** | Rotación de mapas con lista acordada | Bloqueada | `D1` | Lista fijada, inicios distintos, rotación cada 5 bajas verificada |
-| **T3** | Animaciones auténticas de hechizos | Pendiente | Auditoría de `spellfx.json` | Cada hechizo con FX verificado o fallback explícito |
-| **T4** | Contraste completo con AO Libre | Investigación | Fuente fijada | Matriz regla → fuente → etiqueta (confirmado/aproximado/práctica) |
+| **T4** | Matriz de reglas del combate actual vs AO Libre (primer corte) | Ahora | Fuente fijada | Cada fila con valor, código, fuente y etiqueta; `sin dato` explícito |
 
 ## Después
 
@@ -34,7 +31,7 @@
 
 ## Bloqueos y decisiones
 
-- **D1 — Lista de mapas:** propuesta Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62), Arena (272). Sin aprobación no se cambia la lista ni la lógica.
+- **D1 — Lista de mapas:** aprobada el 2026-11-16 e implementada en `T2`: Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272).
 - **D2 — Inventario/equipo:** visual primero (A) vs funcional mínimo (B) vs diferir (C). Asunción actual: A.
 - **D3 — Proporción del HUD:** cerrada; no estrechar sin especificación.
 - **D4 — PvP infinito:** cerrada; sin contador ni condición de victoria.
@@ -44,6 +41,9 @@
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-16 | T2: rotación de mapas aprobada | `HISTORY.md`; lista 1→34→59→62→272; 5 cambios/25 bajas; 5 capturas |
+| 2026-11-16 | T3: auditoría de FX de hechizos | `HISTORY.md`; `roadmap/fx-hechizos.md`; 1 original / 3 reutilizados / 4 reserva |
+| 2026-11-16 | T1: inventario/equipamiento, fase 1 visual | `HISTORY.md`; 5×7/35, equipo 2×2, capturas T1 |
 | 2026-11-16 | Loop funcional: manual, decisiones, cola, historial, preflight | `README.md`, `DECISIONS.md`, `TODO.md`, `HISTORY.md`, `verify.sh` |
 | 2026-11-15 | Comparación HUD y ataque aislado | `HISTORY.md`; daño `-90`; sin cambio de layout |
 | 2026-11-14 | HUD sin contador de bajas | `HISTORY.md`; `dist/` sync |

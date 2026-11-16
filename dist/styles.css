@@ -150,3 +150,25 @@ body{background:#242424;font-family:Tahoma,Verdana,sans-serif}
   body.mobile-combat .mobile-cancel-hint.show{display:block}
   body.mobile-combat:fullscreen .client-window{padding:2px}
 }
+
+/* T1 — Inventario/equipamiento: fidelidad visual AO, sin mecánicas de objetos.
+   Grilla 5×7 y equipo 2×2 tomados de la captura oficial a 1023×770.
+   No cambia el ancho del dock ni el área de juego. */
+.inventory-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+.inventory-slot{aspect-ratio:1.54;border:1px solid #0d0d0d;border-top-color:#666;border-left-color:#666;outline:0;background:linear-gradient(145deg,#2c2c2c,#212121);box-shadow:inset 0 0 0 1px #333,inset 0 2px 5px #0008}
+.inventory-slot:hover{background:linear-gradient(145deg,#363636,#292929)}
+.inventory-note{margin:3px 0 0;color:#b8ae8e;font:7px Tahoma,Verdana,sans-serif;letter-spacing:.2px}
+.equipment-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.equipment-slot{aspect-ratio:auto;min-height:40px;border:1px solid #0d0d0d;border-top-color:#666;border-left-color:#666;outline:0;background:linear-gradient(145deg,#2c2c2c,#222);box-shadow:inset 0 0 0 1px #333,inset 0 1px 4px #0007}
+.equipment-slot span{font-size:16px}
+.equipment-slot small{font-size:7px;line-height:1.2;letter-spacing:.2px}
+@media(max-width:760px){
+  .inventory-slot{aspect-ratio:1.35}
+  .equipment-slot{min-height:36px}
+  .equipment-slot span{font-size:14px}
+  .equipment-slot small{font-size:6px}
+}
+@media(max-width:420px){
+  .inventory-slot{aspect-ratio:1.3}
+  .equipment-slot{min-height:32px}
+}

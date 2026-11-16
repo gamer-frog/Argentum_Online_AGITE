@@ -5,22 +5,6 @@
 
 ## Abiertas
 
-### D1 — Lista de mapas para la rotación
-
-**Contexto.** El usuario pidió empezar cada partida en un mapa distinto, elegido de una lista de ubicaciones famosas, y cambiar de mapa cada 5 bajas. La lógica actual ya toma mapas del manifiesto `assets/ao/maps.json`, avanza cada 5 bajas y al reiniciar evita repetir el mapa inmediato, pero no garantiza un inicio distinto entre partidas ni usa una lista aprobada. El bosque actual entre Nix y Ullathorpe no le gusta al usuario.
-
-**Opciones.**
-
-- **A. Aprobar la lista propuesta (recomendada):** Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272). Son los cinco mapas ya extraídos, con spawns oficiales registrados.
-- **B. Ajustar la lista:** el usuario elige otras ubicaciones o quita alguna; puede requerir extraer mapas adicionales con `scripts/extract_ao_assets.py`.
-- **C. Mantener el manifiesto actual:** no fijar lista; conservar el comportamiento vigente y solo garantizar inicios distintos.
-
-**Recomendación.** A, porque no requiere extracción nueva y cubre ciudades + arena.
-
-**Asunción mientras no haya respuesta.** No cambiar la lista ni la lógica. `T2` queda bloqueada; el loop avanza con `T1`.
-
-**Impacto si se aprueba A.** Cambio acotado en `game.js` (orden/lista inicial y garantía de no repetir al reiniciar), sincronización de `dist/game.js`, verificación de carga de los cinco mapas y de la rotación cada 5 bajas.
-
 ### D2 — Alcance de inventario/equipamiento
 
 **Contexto.** Hoy son secciones visuales incompletas, sin objetos ni reglas. No hay una especificación de objetos, slots, pesos, requisitos ni interacción. Implementar mecánicas inventadas contradice el pedido de «clon exacto» y la regla de no hacer mejoras random.
@@ -33,11 +17,15 @@
 
 **Recomendación.** A para la próxima iteración; B solo después de acordar reglas.
 
-**Asunción mientras no haya respuesta.** Se ejecuta A: solo presentación, sin mecánicas ni objetos falsos.
+**Asunción mientras no haya respuesta.** Se ejecuta A: solo presentación, sin mecánicas ni objetos falsos. **A ejecutada en T1 el 2026-11-16** (grilla 5×7/35, equipo 2×2). B queda pendiente de una decisión de producto adicional.
 
-**Impacto si se aprueba A.** Cambios en `index.html`/`styles.css` y `dist/`, comparación a 1023×770, validación 1440×1000 y 390×844. No toca `game.js` salvo que la estructura lo exija.
+**Impacto si se aprueba A.** Cambios en `index.html`/`styles.css` y `dist/`, comparación a 1023×770, validación 1440×1000 y 390×844. No toca `game.js` salvo que la estructura lo exija. **Completado:** ver `HISTORY.md` (2026-11-16).
 
 ## Cerradas
+
+### D1 — Lista de mapas para la rotación
+
+**Decisión (2026-11-16).** Se aprueba la opción A: la rotación usa **Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272)**, en ese orden. El inicio de cada partida se elige al azar dentro de la lista y no repite el mapa inicial de la partida anterior. La rotación sigue avanzando cada 5 bajas; si un mapa no carga, se conserva el mapa actual. Implementado y verificado en `T2`.
 
 ### D3 — Proporción del HUD
 

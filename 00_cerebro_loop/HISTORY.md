@@ -3,6 +3,42 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-16 · [T2] Rotación de mapas aprobada (`D1=A`)
+Se implementó la lista aprobada y se desacopló del orden accidental de `maps.json`.
+
+- **Lista fija:** `APPROVED_MAP_IDS = [1, 34, 59, 62, 272]` → Ullathorpe → Nix → Banderbill → Lindos → Arena. `mapRotation` se arma desde el manifiesto y cae al manifiesto completo si la lista no tuviera mapas válidos.
+- **Inicio:** `randomMap` elige al azar dentro de la lista; se registra `lastStartMapId`.
+- **Reinicio:** `loadResetMap` prueba primero mapas distintos del inicio anterior y del actual, en orden aleatorio; si no hay, conserva la garantía de no repetir el inicio anterior; si ningún otro carga, mantiene el mapa actual.
+- **Rotación:** cada 5 bajas avanza al siguiente de la lista. Si la carga falla, la partida continúa en el mapa actual.
+- **Debug:** `AO_DEBUG()` expone `mapId`, `mapRotation`, `killsTowardRotation` y `lastStartMapId` como lectura.
+
+Verificación en navegador: 5 cambios consecutivos en el orden aprobado, cada uno disparado por la quinta baja (25 bajas en total), y captura de los cinco mapas. Reinicios repetidos no repitieron el inicio anterior. A 1440×1000 y 390×844 no hubo overflow; consola 0/0. Capturas: `/tmp/opencode/shots/t2-map-{1,34,59,62,272}.png`, `t2-desktop-1440x1000.png`, `t2-mobile-390x844.png`. `dist/game.js` sincronizado; preflight verde.
+
+## 2026-11-16 · [T3] Auditoría de FX de hechizos
+Se auditó el render de hechizos contra los recursos locales, sin modificar código. Resultado completo en [`roadmap/fx-hechizos.md`](../roadmap/fx-hechizos.md).
+
+- **Manifiesto local:** `assets/ao/spellfx.json` contiene solo tres hechizos AO: Dardo Mágico (2 → FX 15, Grh 275, WAV 114, 2 loops), Paralizar (9 → FX 8, Grh 183, WAV 16, offsetY 32) y Apocalipsis (25 → FX 13, Grh 259, WAV 27).
+- **Animaciones:** las tres láminas están completas (Grh 275: 8 cuadros, ciclo de 444 ms; 183: 10 cuadros, ciclo de 555 ms; 259: 21 cuadros, ciclo de 1166 ms). `game.js` calcula la duración con `speed × (loops + 1)` y dibuja el Grh sobre la casilla objetivo.
+- **Audio:** existen `114.wav`, `16.wav` y `27.wav`; no hay WAV de curación ni de limpieza de estados.
+- **Ocho hechizos del prototipo:** 1 original (Apocalipsis), 3 reutilizados (Juicio Final → Apocalipsis; Ráfaga Ígnea → Dardo Mágico; Inmovilizar → Paralizar) y 4 en reserva (Sanar, Castigo Divino, Fuente de vida, Remover parálisis).
+- **Límite verificado:** los seis hechizos de Imperium no existen en AO Libre según [`roadmap/hechizos-referencia.md`](../roadmap/hechizos-referencia.md); no hay FX original que extraer con la fuente fijada. No se infiere propósito para las otras 36 animaciones del recorte local.
+- **Observación:** el campo `fx` del manifiesto no se consume en el render; se usa directamente `animation`. Queda documentado para no presentar `fx` como el Grh dibujado.
+
+No se agregaron assets ni se cambiaron daños, costos o tiempos. `bash 00_cerebro_loop/verify.sh` verde; al no tocar código de producto no se repitió el playtest de navegador.
+
+## 2026-11-16 · [T1] Inventario/equipamiento: fase 1 visual
+Se comparó el panel derecho con la captura oficial `https://www.argentumonline.org/assets/images/screenshots/1.png` (1023×770). Brechas detectadas y cambios aplicados, todos trazables a la referencia:
+
+1. **Grilla:** la referencia usa 5 columnas × 7 filas; el HUD tenía 5×4 (20). Se pasó a 35 ranuras y capacidad `0 / 35`.
+2. **Títulos:** la referencia no etiqueta las secciones como «en desarrollo». Se reemplazó por `INVENTARIO` y `EQUIPAMIENTO`, con una nota discreta `SIN OBJETOS · PRÁCTICA` / `SIN EQUIPO · PRÁCTICA` para no simular funcionalidad.
+3. **Equipo:** la referencia muestra 2 columnas × 2 filas con ranuras amplias; el HUD tenía 4 columnas en una fila. Se pasó a 2×2 con icono y etiqueta.
+4. **Superficie de ranura:** se reemplazó el borde plano por bisel oscuro con luz superior/izquierda, sombra interior y fondo degradado, como las ranuras de la captura.
+5. **Densidad:** se redujeron gaps, márgenes y notas para que las 7 filas entren a 1023×770 sin scrollbar y sin tocar el ancho del dock ni el área de juego.
+
+No se agregaron objetos, mecánicas ni reglas de inventario/equipamiento. `index.html` y `styles.css` se sincronizaron con `dist/`.
+
+Verificación: `bash 00_cerebro_loop/verify.sh` verde. A 1023×770 el dock mide 741/741 px (sin scrollbar); a 1440×1000, 945/945; a 390×844 y 320×720 no hay overflow horizontal; consola 0 errores / 0 advertencias. Capturas: `/tmp/opencode/shots/t1-hud-1023x770.png`, `t1-dock-final-1023x770.png`, `t1-desktop-1440x1000.png` y `t1-mobile-390x844.png`.
+
 ## 2026-11-16 · [C] Auditoría y reconstrucción del loop
 Se revisaron `PROTOCOL.md`, `USER_REQUESTS.md`, `ROADMAP.md`, `TODO.md`, `HANDOFF.md`, `CEMETERY.md`, los duplicados legacy de la raíz y el estado real del repo. Se detectaron y corrigieron: contradicciones entre «publicar siempre» y «no publicar sin pedido», tareas completadas duplicadas en secciones de pendientes, dos ítems distintos para la misma decisión de mapas, roadmap con backlog repetido y afirmaciones obsoletas sobre la comparación visual, y un HANDOFF convertido en historial de 15 KB sin próximo paso único. Se creó este historial, un manual operativo (`README.md`), un registro de decisiones (`DECISIONS.md`) y un preflight (`verify.sh`); `HANDOFF.md` quedó como estado actual y `TODO.md` como cola de una tarea por ciclo. Los duplicados `HANDOFF.md`, `todo.md` y `user-requests.md` de la raíz se convirtieron en punteros a la fuente canónica. No se modificó código de producto ni se hizo commit/push.
 
