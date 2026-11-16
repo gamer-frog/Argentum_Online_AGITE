@@ -117,7 +117,8 @@
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
   let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
-  let mouseTile = null; // Casilla bajo el cursor: alimenta la mira en vivo del hechizo preparado.
+  let mouseTile = null; // Casilla bajo el cursor: resuelve el lanzamiento a casilla.
+  let mousePoint = null; // Punto libre en píxeles: la mira sigue el cursor sin saltar de casilla.
   let spellDrag = null, canvasPress = null, lastSpellGesture = null;
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
@@ -1300,13 +1301,20 @@
       }
       ctx.restore();
     }
-    // Mira en vivo del hechizo preparado: línea del personaje al cursor, misma estética que la mira de los bots.
+    // Mira en vivo del hechizo preparado: línea del personaje al punto libre del cursor.
+    // El punto no se ajusta a la casilla; solo el lanzamiento resuelve el objetivo o la casilla al soltar.
     const readyIndex = spellDrag?.index ?? selectedSkill;
     const readySkill = readyIndex === null ? null : skillAt(readyIndex);
-    if (readySkill && player.alive && !paused && mouseTile) {
+    if (readySkill && player.alive && !paused && (mousePoint || mouseTile)) {
       const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
-      const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
-      const x = msx + tilePx / 2, y = msy + tilePx / 2, lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
+      let x, y;
+      if (mousePoint) {
+        x = clamp(mousePoint.x, 0, W); y = clamp(mousePoint.y, 0, H);
+      } else {
+        const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
+        x = msx + tilePx / 2; y = msy + tilePx / 2;
+      }
+      const lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
       const color = spellDrag?.cancel ? '#e06a5e' : readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
       ctx.save(); ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
@@ -1319,6 +1327,8 @@
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
       ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      // Punto central: marca exactamente dónde está el cursor libre, sin imán de casilla.
+      ctx.beginPath(); ctx.arc(x, y, Math.max(2, tilePx * .075), 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     // Apoyo aliado pendiente: anillo verde punteado que se cierra sobre el aliado mientras llega la ayuda.
@@ -1474,12 +1484,15 @@
     return [tx, ty];
   }
   function actorAtPointer(x, y) {
-    const [cx, cy] = position(player), range = visibleRange(cx, cy); let best = null, bestScore = Infinity;
+    const [cx, cy] = position(player); let best = null, bestScore = Infinity;
+    // Hitbox generosa alrededor del sprite: la puntería libre no obliga a caer en el centro de la casilla.
+    const padX = tilePx * .45, padTop = tilePx * .5, padBottom = tilePx * .2;
     for (const actor of fighters) {
       if (!actor.alive) continue;
       const [ax, ay] = position(actor), [sx, sy] = screenTile(ax, ay, cx, cy);
-      if (x >= sx - 5 && x <= sx + tilePx + 5 && y >= sy - tilePx * 1.2 && y <= sy + tilePx) {
-        const score = Math.hypot(x - (sx + tilePx / 2), y - (sy + tilePx / 2)); if (score < bestScore) { best = actor; bestScore = score; }
+      if (x >= sx - padX && x <= sx + tilePx + padX && y >= sy - tilePx * 1.2 - padTop && y <= sy + tilePx + padBottom) {
+        const score = Math.hypot(x - (sx + tilePx / 2), y - (sy + tilePx / 2 - tilePx * .15));
+        if (score < bestScore) { best = actor; bestScore = score; }
       }
     }
     return best;
@@ -1516,9 +1529,10 @@
     if (canvasPress && (pointerId === null || canvasPress.pointerId === pointerId)) canvasPress = null;
     $('spellCancelHint')?.classList.remove('show');
     mouseTile = null;
+    mousePoint = null;
   }
-  // La mira táctil se separa del dedo como en Wild Rift; el mouse apunta donde está el cursor.
-  function touchAimDistance() { return Math.round(Math.min(96, Math.max(64, window.innerHeight * .16))); }
+  // La mira táctil se separa un poco del dedo para no quedar tapada, sin perder el seguimiento libre.
+  function touchAimDistance() { return Math.round(Math.min(48, Math.max(28, window.innerHeight * .06))); }
   function pointFromEvent(event, offsetTouch = false) {
     const offset = offsetTouch && event.pointerType === 'touch' ? touchAimDistance() : 0;
     return canvasPointAtPointer(event.clientX, event.clientY - offset);
@@ -1529,14 +1543,19 @@
     return event.clientX >= rect.left - padding && event.clientX <= rect.right + padding &&
       event.clientY >= rect.top - padding && event.clientY <= rect.bottom + padding;
   }
+  function pointerOverSpellRail(event) {
+    // Soltar sobre los botones del riel cancela; el riel está encima del canvas y no debe disparar al ras.
+    return Boolean(document.elementFromPoint?.(event.clientX, event.clientY)?.closest?.('.spell-rail'));
+  }
   function finishSpellDrag(event, cancelled = false) {
     if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
     const drag = spellDrag;
     const point = cancelled ? null : pointFromEvent(event, true);
-    const shouldCancel = drag.cancel || (drag.moved && pointerOverButton(event, drag.button));
+    const shouldCancel = drag.cancel || (drag.moved && (pointerOverButton(event, drag.button) || pointerOverSpellRail(event)));
     setSpellDragCancel(drag, false);
     spellDrag = null;
     mouseTile = null;
+    mousePoint = null;
     lastSpellGesture = { button: drag.button, expiresAt: performance.now() + 1000 };
     if (cancelled) return true;
     if (shouldCancel) { toast('Lanzamiento cancelado.'); return true; }
@@ -1550,17 +1569,19 @@
     canvasPress = null;
     const point = cancelled ? null : pointFromEvent(event);
     mouseTile = null;
+    mousePoint = null;
     if (!cancelled && point) resolveCanvasPointer(point, press.skillIndex);
     return true;
   }
   function updatePointerAim(event) {
     const dragging = Boolean(spellDrag && spellDrag.pointerId === event.pointerId);
     const point = pointFromEvent(event, dragging);
+    mousePoint = point ? { x: point.x, y: point.y } : null;
     mouseTile = point?.tile ?? null;
     if (dragging) {
       if (Math.hypot(event.clientX - spellDrag.startX, event.clientY - spellDrag.startY) > 8) spellDrag.moved = true;
-      // Volver al botón de origen cancela al soltar, como en Wild Rift.
-      setSpellDragCancel(spellDrag, spellDrag.moved && pointerOverButton(event, spellDrag.button));
+      // Volver al riel o al botón de origen cancela al soltar, como en Wild Rift.
+      setSpellDragCancel(spellDrag, spellDrag.moved && (pointerOverButton(event, spellDrag.button) || pointerOverSpellRail(event)));
     }
   }
   window.addEventListener('pointerdown', () => { audioReady = true; }, { once: true });
@@ -1588,7 +1609,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) cancelSpellDrag(); });
   canvas.addEventListener('pointermove', event => updatePointerAim(event));
   canvas.addEventListener('pointerleave', event => {
-    if (!spellDrag && !canvasPress) mouseTile = null;
+    if (!spellDrag && !canvasPress) { mouseTile = null; mousePoint = null; }
   });
   canvas.addEventListener('pointerdown', event => {
     if (event.button !== 0 || spellDrag) return;
@@ -1598,6 +1619,7 @@
     if (!point) return;
     canvasPress = { pointerId: event.pointerId, skillIndex: selectedSkill };
     mouseTile = point.tile;
+    mousePoint = { x: point.x, y: point.y };
     try { canvas.setPointerCapture(event.pointerId); } catch {}
   });
   canvas.addEventListener('pointerup', event => finishCanvasPress(event));
@@ -1642,9 +1664,10 @@
       spellDrag = { pointerId: event.pointerId, index: Number(button.dataset.skill), button, startX: event.clientX, startY: event.clientY, moved: false };
       const point = pointFromEvent(event);
       mouseTile = point?.tile ?? null;
+      mousePoint = point ? { x: point.x, y: point.y } : null;
       try { button.setPointerCapture(event.pointerId); } catch {}
     });
-    button.addEventListener('pointermove', updatePointerAim);
+    button.addEventListener('pointermove', event => { if (spellDrag?.pointerId === event.pointerId) updatePointerAim(event); });
     button.addEventListener('pointerup', event => finishSpellDrag(event));
     button.addEventListener('pointercancel', event => finishSpellDrag(event, true));
     button.addEventListener('lostpointercapture', event => finishSpellDrag(event, true));
@@ -1684,6 +1707,10 @@
     mapRotation: activeMapRotation().map(map => map.id),
     killsTowardRotation,
     lastStartMapId,
+    // Solo lectura: la mira libre debe seguir el cursor en píxeles, no el centro de la casilla.
+    aimPoint: mousePoint ? { x: Math.round(mousePoint.x), y: Math.round(mousePoint.y) } : null,
+    aimTile: mouseTile ? { x: mouseTile[0], y: mouseTile[1] } : null,
+    draggingSkill: spellDrag?.index ?? null,
     // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
     supportPriority: (() => {
       const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);

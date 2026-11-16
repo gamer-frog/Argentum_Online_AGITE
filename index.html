@@ -28,6 +28,14 @@
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
+          <section class="dock-panel spellbar-panel spell-rail" aria-label="Barra de hechizos y habilidades">
+            <div class="spellbar-heading">
+              <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
+              <span class="spellbar-shortcut">ATAJOS · 1–4 HECHIZOS · 5–6 POCIONES · E INMO · Q REMO · ESPACIO PEGAR</span>
+            </div>
+            <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="3" type="button" aria-pressed="false"><kbd>4</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (5)"><kbd>5</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (6)"><kbd>6</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
+            <p class="spell-hint" id="spellHint">Mantené y arrastrá una habilidad para apuntar; soltá para lanzar.</p>
+          </section>
           <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div></div>
           <div class="respawn-notice hidden" id="respawnNotice" role="status" aria-live="polite"><strong>HAS CAÍDO</strong><span>Reaparecés en <b id="respawnTimer" aria-hidden="true">2.4</b> s</span></div>
           <div class="mobile-vitals no-mana" id="mobileVitals" aria-hidden="true"><div class="mobile-vital health"><i id="mobileHealthBar"></i></div><div class="mobile-vital mana"><i id="mobileManaBar"></i></div></div>
@@ -82,14 +90,6 @@
           <p class="inventory-note">SIN EQUIPO · PRÁCTICA</p>
         </section>
 
-        <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
-      <div class="spellbar-heading">
-        <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
-        <span class="spellbar-shortcut">ATAJOS · 1–4 HECHIZOS · 5–6 POCIONES · E INMO · Q REMO · ESPACIO PEGAR</span>
-      </div>
-      <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="3" type="button" aria-pressed="false"><kbd>4</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (5)"><kbd>5</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (6)"><kbd>6</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
-      <p class="spell-hint" id="spellHint">Mantené y arrastrá una habilidad para apuntar; soltá para lanzar.</p>
-        </section>
         <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
           <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
             <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-sacred">GUERRERO</b><small>TÚ</small></span></div>
