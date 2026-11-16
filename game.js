@@ -21,6 +21,8 @@
   if (!MAP_CANDIDATES.includes('assets/ao/')) MAP_CANDIDATES.push('assets/ao/');
   let MAP_URL = MAP_CANDIDATES[0];
   const CHARACTER_LEVEL = 40;
+  // Lista aprobada en D1 (2026-11-16): orden fijo de la rotación de mapas.
+  const APPROVED_MAP_IDS = [1, 34, 59, 62, 272];
   const ACTORS = [
     { id: 'player', name: 'GUERRERO', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
     { id: 'sacredMage', name: 'MAGO', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
@@ -110,7 +112,7 @@
   const SELF_CARE_HP = .5;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
-  let mapManifest = [], currentMap = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
+  let mapManifest = [], mapRotation = [], currentMap = null, lastStartMapId = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
@@ -168,6 +170,40 @@
     if (!response.ok) throw new Error(`Could not load ${url}: ${response.status}`);
     return response.json();
   }
+  function activeMapRotation() {
+    return mapRotation.length ? mapRotation : mapManifest;
+  }
+  function randomMap(list) {
+    return list.length ? list[Math.floor(Math.random() * list.length)] : null;
+  }
+  function shuffled(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  // Reinicio: prioriza un mapa distinto del inicio anterior y del actual; si no hay,
+  // conserva al menos la garantía de no repetir el inicio anterior.
+  async function loadResetMap(transitionId) {
+    const rotation = activeMapRotation();
+    const preferred = rotation.filter(map => map.id !== lastStartMapId && map.id !== currentMap?.id);
+    const fallback = rotation.filter(map => map.id !== lastStartMapId);
+    const preferredIds = new Set(preferred.map(map => map.id));
+    const candidates = [...shuffled(preferred), ...shuffled(fallback.filter(map => !preferredIds.has(map.id)))];
+    for (const candidate of candidates) {
+      if (transitionId !== mapTransitionId) return null;
+      try {
+        const data = await fetchJson(`${MAP_URL}maps/${candidate.id}.json`);
+        if (transitionId !== mapTransitionId) return null;
+        return { map: candidate, data };
+      } catch (error) {
+        console.warn(`No se pudo cargar ${candidate.name} al reiniciar; se prueba otro mapa.`, error);
+      }
+    }
+    return null;
+  }
   async function loadAssets() {
     try {
       for (let index = 0; index < MAP_CANDIDATES.length; index++) {
@@ -177,14 +213,19 @@
             fetchJson(MAP_URL + 'maps.json'), fetchJson(MAP_URL + 'grhs.json'), fetchJson(MAP_URL + 'characters.json')
           ]);
           mapManifest = manifest.maps || [];
+          mapRotation = APPROVED_MAP_IDS
+            .map(id => mapManifest.find(map => map.id === id))
+            .filter(Boolean);
+          if (!mapRotation.length) mapRotation = mapManifest.slice();
           grhs = graphicData; characters = characterData;
           break;
         } catch (error) {
           if (index === MAP_CANDIDATES.length - 1) throw error;
         }
       }
-      currentMap = mapManifest[Math.floor(Math.random() * mapManifest.length)];
+      currentMap = randomMap(activeMapRotation());
       if (!currentMap) throw new Error('No authentic AO maps were listed in maps.json');
+      lastStartMapId = currentMap.id;
       mapData = await fetchJson(`${MAP_URL}maps/${currentMap.id}.json`);
       try {
         const response = await fetch(MAP_URL + 'spellfx.json');
@@ -812,13 +853,14 @@
     refreshHud();
   }
   async function rotateMapAfterKills() {
-    if (mapChangeInProgress || resetInProgress || mapManifest.length < 2) return;
+    const rotation = activeMapRotation();
+    if (mapChangeInProgress || resetInProgress || rotation.length < 2) return;
     mapChangeInProgress = true;
     const transitionId = ++mapTransitionId;
     try {
       while (killsTowardRotation >= 5 && transitionId === mapTransitionId) {
-        const currentIndex = mapManifest.findIndex(map => map.id === currentMap?.id);
-        const nextMap = mapManifest[(currentIndex + 1 + mapManifest.length) % mapManifest.length];
+        const currentIndex = rotation.findIndex(map => map.id === currentMap?.id);
+        const nextMap = rotation[(currentIndex + 1 + rotation.length) % rotation.length];
         const nextData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
         if (transitionId !== mapTransitionId) return;
         mapData = nextData; currentMap = nextMap; killsTowardRotation -= 5;
@@ -1398,17 +1440,11 @@
     const transitionId = ++mapTransitionId;
     mapChangeInProgress = false;
     try {
-      const alternatives = mapManifest.filter(map => map.id !== currentMap?.id);
-      const nextMap = alternatives.length ? alternatives[Math.floor(Math.random() * alternatives.length)] : null;
-      if (nextMap) {
-        try {
-          const nextMapData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
-          if (transitionId !== mapTransitionId) return;
-          currentMap = nextMap; mapData = nextMapData;
-          spawnActorsOnMap(currentMap);
-        } catch (error) {
-          console.warn('No se pudo elegir un mapa nuevo al reiniciar; se conserva el mapa actual.', error);
-        }
+      const next = await loadResetMap(transitionId);
+      if (next) {
+        currentMap = next.map; mapData = next.data;
+        lastStartMapId = currentMap.id;
+        spawnActorsOnMap(currentMap);
       }
       if (transitionId !== mapTransitionId) return;
       killsTowardRotation = 0;
@@ -1643,6 +1679,11 @@
   // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
   window.AO_DEBUG = () => ({
     elapsed: Number(elapsed.toFixed(2)), paused,
+    map: currentMap?.name ?? null,
+    mapId: currentMap?.id ?? null,
+    mapRotation: activeMapRotation().map(map => map.id),
+    killsTowardRotation,
+    lastStartMapId,
     // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
     supportPriority: (() => {
       const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);
