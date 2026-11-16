@@ -5,29 +5,28 @@
 
 ## Ahora
 
-### T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)
+### T5 — Combo, maná y `Fuente de vida` (confirmación y propuesta)
 
-**Estado:** lista para empezar.
-**Depende de:** nada; `D1` no la bloquea.
-**Pedido:** contrastar ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y nivel 40 con etiqueta confirmado/aproximado/práctica (`USER_REQUESTS.md`).
+**Estado:** lista para empezar; `T4` ya dejó la referencia.
+**Depende de:** `T4` (completada).
+**Pedido:** confirmar la equivalencia `Curar heridas graves` vs `Sanar`; evaluar `Fuente de vida` 30-45 (wiki 2012); medir el agotamiento de maná del paladín con los costos actuales (`USER_REQUESTS.md`).
 
-**Alcance del primer corte**
+**Alcance**
 
-- Inventariar solo las reglas implementadas en `game.js` que afectan al combate actual: ataque adyacente, recuperación, pociones, alcance de hechizos, apuntado/telegrafiado, inmovilización/remoción y costos de maná.
-- Para cada regla: valor implementado, archivo/línea, fuente AO Libre fijada y etiqueta (`confirmado`, `aproximado` o `práctica`).
-- Escribir la matriz en `roadmap/reglas-combate.md` y enlazarla desde `README.md`.
+- Cruzar los tres puntos con [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) y [`roadmap/hechizos-referencia.md`](../roadmap/hechizos-referencia.md).
+- Medir en combate real cuántos `Remover parálisis` puede lanzar el paladín antes de quedarse sin maná y si necesita apoyo.
+- Proponer ajustes concretos con fuente y etiqueta. **No aplicar cambios de balance sin aprobación explícita.**
 
 **No incluye**
 
-- Cambiar balance, daños, costos o tiempos.
-- Extraer assets nuevos ni interpretar la ausencia de un dato como valor cero.
-- Cubrir todavía el inventario funcional o el multijugador.
+- Inventario funcional (`D2=B`), multijugador o assets nuevos.
+- Cambiar nombres o daños por intuición.
 
 **Criterios de aceptación**
 
-- [ ] Cada fila tiene valor implementado, ubicación en el código, fuente y etiqueta.
-- [ ] Lo que no tenga fuente AO Libre dice explícitamente `sin dato`, no se completa por intuición.
-- [ ] No se toca código de producto; si se tocara, `verify.sh` + navegador 1440/390 + consola 0/0.
+- [ ] Cada propuesta tiene valor actual, fuente, etiqueta y efecto esperado.
+- [ ] Si no hay fuente para un valor, se dice `sin dato` y no se inventa.
+- [ ] Si se aprueba tocar código: `game.js` + `dist/game.js`, `verify.sh` y navegador 1440/390 con consola 0/0.
 - [ ] Evidencia y próximo paso en `HISTORY.md` y `HANDOFF.md`.
 
 ## Bloqueadas / requieren decisión
@@ -38,6 +37,7 @@
 
 ## Terminadas recientemente
 
+- [x] **T4 — Matriz de reglas del combate actual vs AO Libre, primer corte (2026-11-16).** Matriz en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) con ataque adyacente, intervalos, daño, alcance, apuntado, inmovilización/remoción, costos de maná, stamina, pociones y nivel 40; cada fila con código, fuente y etiqueta. Sin cambios de código. Evidencia en `HISTORY.md`.
 - [x] **T2 — Rotación de mapas (2026-11-16).** Lista fija Ullathorpe → Nix → Banderbill → Lindos → Arena; inicio aleatorio sin repetir el anterior al reiniciar; avance cada 5 bajas y fallback. Rotación completa verificada en navegador (5 cambios, 25 bajas) y capturas de los cinco mapas. Evidencia en `HISTORY.md`.
 - [x] **T3 — Auditoría de FX de hechizos (2026-11-16).** Tabla de los 8 hechizos: 1 original, 3 reutilizados y 4 en reserva; recursos, Grh, WAV y límites trazados en `roadmap/fx-hechizos.md`. Sin cambios de código.
 - [x] **T1 — Inventario/equipamiento, fase 1 visual (2026-11-16).** Grilla 5×7/35, equipo 2×2, títulos AO, ranuras biseladas y densidad ajustada; sin mecánicas. Verificado a 1023×770, 1440×1000, 390×844 y 320×720; consola 0/0. Evidencia en `HISTORY.md`.

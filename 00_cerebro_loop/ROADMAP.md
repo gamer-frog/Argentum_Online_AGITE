@@ -14,13 +14,12 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T4** | Matriz de reglas del combate actual vs AO Libre (primer corte) | Ahora | Fuente fijada | Cada fila con valor, código, fuente y etiqueta; `sin dato` explícito |
+| **T5** | Combo, maná y `Fuente de vida` | Ahora | T4 | Propuesta con valor actual, fuente, etiqueta y efecto; sin aplicar balance sin aprobación |
 
 ## Después
 
 | ID | Tarea | Depende | Nota |
 | --- | --- | --- | --- |
-| **T5** | Combo, maná y `Fuente de vida` | T4 | Confirmar Curar heridas graves vs Sanar; evaluar 30-45 y agotamiento del paladín |
 | **T6** | Variar estados, remociones y persecución | T4 + playtest | Menos patrones, sin pares quietos; terminología AO |
 | **T7** | Inventario/equipamiento funcional | T1 + `D2` B | Requiere contrato de objetos; no inventar reglas |
 | **T8** | Chat lateral y sonidos licenciados | Auditoría de licencias | Solo con assets compatibles |
@@ -41,6 +40,7 @@
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-16 | T4: matriz de reglas de combate vs AO Libre (primer corte) | `HISTORY.md`; `roadmap/reglas-combate.md`; etiquetas confirmado/aproximado/práctica/sin dato |
 | 2026-11-16 | T2: rotación de mapas aprobada | `HISTORY.md`; lista 1→34→59→62→272; 5 cambios/25 bajas; 5 capturas |
 | 2026-11-16 | T3: auditoría de FX de hechizos | `HISTORY.md`; `roadmap/fx-hechizos.md`; 1 original / 3 reutilizados / 4 reserva |
 | 2026-11-16 | T1: inventario/equipamiento, fase 1 visual | `HISTORY.md`; 5×7/35, equipo 2×2, capturas T1 |

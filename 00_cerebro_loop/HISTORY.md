@@ -3,6 +3,18 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-16 · [T4] Matriz de reglas del combate vs AO Libre (primer corte)
+Se compararon estáticamente las reglas ya implementadas en `game.js` contra la revisión fijada del servidor AO Libre, sin cambiar balance, daños, costos ni tiempos. Resultado completo en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md), enlazado desde `README.md`.
+
+- **Fuentes fijadas:** `ao-libre/ao-server` @ `ca6ad7ff428a585475373474ec5640eabe05961b`: `Server.ini`, `Dat/Hechizos.dat`, `Dat/obj.dat`, `Dat/Balance.dat`, `Codigo/SistemaCombate.bas`, `modHechizos.bas`, `General.bas`, `modNuevoTimer.bas`, `Protocol.bas`, `ModAreas.bas`, `InvUsuario.bas`, `Trabajo.bas`, `Admin.bas` y `mMainLoop.bas`.
+- **Cobertura:** ataque adyacente y dirección, intervalos de golpe/lanzamiento/poción, daño y precisión melee, alcance de hechizos (rectangular AO 11×9 vs Manhattan 11), apuntado/telegrafiado, inmovilización/parálisis y remoción, costos de maná de los ocho hechizos, `MinSkill`, stamina, regeneración de vida/maná, pociones y nivel 40.
+- **Hallazgos:** solo Apocalipsis e Inmovilizar comparten nombre con AO Libre; Remover parálisis se corresponde con Devolver Movilidad. Los otros cinco son de Imperium o no tienen equivalente. AO usa arma + clase + atributos para el daño, intervalos más lentos (1,5 s ataque, 1,4 s lanzamiento, 1,2 s poción), visión rectangular 11×9, stamina y `MinSkill`. El prototipo usa tabla plana por clase, 0,62/0,9/1,1 s, Manhattan 11, sin stamina ni `MinSkill`, con 6 de maná por segundo siempre y pociones porcentuales infinitas.
+- **Etiquetas:** cada fila quedó como `confirmado`, `aproximado`, `práctica` o `sin dato`. La tabla de estadísticas de nivel 40 por clase no está en la revisión fijada: se marcó `sin dato` y no se completó por intuición.
+- **Correcciones de documentación:** en `README.md` se alinearon las teclas de poción 4/5 → 5/6, las habilidades 1–3 → 1–4, se agregaron los atajos E/Q, se corrigió la afirmación de que los hechizos se lanzan «a cualquier distancia» (hoy rige Manhattan ≤ 11), el telégrafo de «0,6 s» (hoy 0,38–0,62 s para hechizos) y se aclaró que las pociones están implementadas como recurso de práctica, no como objeto de inventario.
+- **Verificación de citas:** se contrastaron las líneas de `game.js` y de la revisión fijada; se corrigieron rangos (`CalcularDano` 322-461, chequeo de visión 3461-3464) y se documentó que los `range` 7/6/2/1 de `CLASS_PROFILES` son datos no leídos: el límite real es `SPELL_VISION_RANGE = 11`. También se precisó que `Paralizado` e `Inmovilizado` comparten `Counters.Paralisis`, que `Inmovilizado` además impide girar y que la reducción a ≈1,5 s solo aplica a clases sin maná.
+
+Se actualizaron `README.md`, `TODO.md`, `ROADMAP.md`, `HANDOFF.md`, `USER_REQUESTS.md` y `00_cerebro_loop/README.md`; la cola queda en `T5`. No se tocó código de producto ni se extrajeron assets. `bash 00_cerebro_loop/verify.sh` quedó verde (sintaxis, `dist/` sincronizado, 10 JSON, `git diff --check` y 11 Markdown con enlaces locales válidos). Al ser un cambio documental no se repitió el playtest de navegador; la última validación de producto sigue siendo la de `T2` (rotación completa, 1440×1000 y 390×844, consola 0/0).
+
 ## 2026-11-16 · [T2] Rotación de mapas aprobada (`D1=A`)
 Se implementó la lista aprobada y se desacopló del orden accidental de `maps.json`.
 

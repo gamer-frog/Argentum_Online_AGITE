@@ -1,6 +1,6 @@
 # HANDOFF — estado actual
 
-> **Actualizado:** 2026-11-16 · **Rama:** `main` (T1, T2 y T3 completados; sin commit ni push).
+> **Actualizado:** 2026-11-16 · **Rama:** `main` (T1, T2, T3 y T4 completados; sin commit ni push).
 > Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
 
 ## Snapshot
@@ -8,38 +8,35 @@
 | Campo | Estado |
 | --- | --- |
 | Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-16 verde |
-| Tarea actual | `T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)` |
-| Última completada | `T2 — Rotación de mapas` |
-| Bloqueo | Ninguno; `D1` resuelta |
+| Tarea actual | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
+| Última completada | `T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)` |
+| Bloqueo | Ninguno; `T4` cerrada; `D1` resuelta |
 | Decisiones abiertas | `D2=B` (inventario funcional) |
 | Publicación | Sin commit ni push: no fue pedido explícitamente |
 | Navegador | 2026-11-16: T2 verificado con rotación completa (5 mapas, 25 bajas), capturas de los cinco mapas, 1440×1000 y 390×844 sin overflow; consola 0/0 |
 
 ## Última acción completada
 
-**2026-11-16 · [T2] Rotación de mapas aprobada (`D1=A`).**
+**2026-11-16 · [T4] Matriz de reglas del combate actual vs AO Libre (primer corte).**
 
-Se fijó la lista aprobada en `game.js` (`APPROVED_MAP_IDS`) y se separó la rotación del orden accidental de `maps.json`:
+Se compararon estáticamente las reglas implementadas en `game.js` contra la revisión fijada del servidor AO Libre, sin cambiar balance ni código de producto. El resultado quedó en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) y enlazado desde `README.md`.
 
-1. **Lista:** Ullathorpe (1) → Nix (34) → Banderbill (59) → Lindos (62) → Arena (272).
-2. **Inicio:** aleatorio dentro de la lista.
-3. **Reinicio:** elige al azar un mapa distinto del inicio anterior y del actual; si ninguno carga, conserva el actual.
-4. **Rotación:** avance cada 5 bajas, en el orden aprobado.
-5. **Fallback:** si un mapa no carga durante la rotación, la partida continúa en el mapa actual.
+- **Cobertura:** ataque adyacente y dirección, intervalos de golpe/lanzamiento/poción, daño y precisión melee, alcance de hechizos, apuntado/telegrafiado, inmovilización/parálisis y remoción, costos de maná de los ocho hechizos, `MinSkill`, stamina, regeneración de vida/maná, pociones y nivel 40.
+- **Diferencia principal:** AO usa arma + clase + atributos para el daño, visión rectangular 11×9, intervalos de 1,5 s / 1,4 s / 1,2 s, stamina y `MinSkill`. El prototipo usa tabla plana por clase, Manhattan 11, 0,62 s / 0,9 s / 1,1 s, sin stamina ni `MinSkill`, con 6 de maná por segundo siempre y pociones porcentuales infinitas.
+- **Equivalencias:** solo Apocalipsis e Inmovilizar comparten nombre con AO Libre; Remover parálisis se corresponde con Devolver Movilidad. Los otros cinco hechizos son de Imperium o no tienen equivalente. La tabla de nivel 40 por clase quedó como `sin dato`.
 
-Evidencia en navegador: 5 cambios consecutivos en el orden aprobado, cada uno al completar 5 bajas (25 bajas totales), y captura de los cinco mapas. `AO_DEBUG` ahora expone `mapId`, `mapRotation`, `killsTowardRotation` y `lastStartMapId` como lectura. Preflight verde; consola 0/0 a 1440×1000 y 390×844. Capturas: `/tmp/opencode/shots/t2-map-{1,34,59,62,272}.png`, `t2-desktop-1440x1000.png` y `t2-mobile-390x844.png`.
+Preflight verde; al ser un cambio documental no se repitió el playtest de navegador. La última validación de producto sigue siendo la de `T2` (rotación completa, 1440×1000 y 390×844, consola 0/0).
 
 ## Próximo paso inmediato
 
-**T4 — Matriz de reglas del combate actual vs AO Libre (primer corte).**
+**T5 — Combo, maná y `Fuente de vida` (confirmación y propuesta).**
 
-1. Leer `game.js` y listar solo las reglas que afectan al combate actual: ataque adyacente, recuperación, pociones, alcance de hechizos, apuntado/telegrafiado, inmovilización/remoción y maná.
-2. Para cada regla, anotar valor implementado, archivo/línea, fuente AO Libre fijada y etiqueta `confirmado`, `aproximado`, `práctica` o `sin dato`.
-3. Escribir `roadmap/reglas-combate.md` y enlazarlo desde `README.md`.
-4. No cambiar balance ni extraer assets. Si no se toca código, no hace falta playtest.
-5. Registrar evidencia y próximo paso en `HISTORY.md` y este archivo.
+1. Cruzar `Curar heridas graves` vs `Sanar`, `Fuente de vida` 30-45 y el agotamiento de maná del paladín con `roadmap/reglas-combate.md` y `roadmap/hechizos-referencia.md`.
+2. Medir en combate real cuántos `Remover parálisis` lanza el paladín antes de quedarse sin maná y si necesita apoyo.
+3. Proponer ajustes con valor actual, fuente, etiqueta y efecto esperado. **No aplicar balance sin aprobación explícita.**
+4. Si se aprueba tocar código: `game.js` + `dist/game.js`, `verify.sh` y navegador 1440/390 con consola 0/0.
 
-**No hacer todavía:** mecánicas de inventario (`D2=B`), cambios de balance, extracción de assets nuevos, rediseño global del HUD.
+**No hacer todavía:** mecánicas de inventario (`D2=B`), cambios de balance sin aprobación, extracción de assets nuevos, rediseño global del HUD.
 
 ## Cómo retomar en 60 segundos
 
@@ -59,7 +56,7 @@ playwright-cli console
 - `http://localhost:3002` sirve `dist/` vía `start.sh`, que copia `index.html`, `styles.css`, `game.js`, `favicon.svg` y `assets/ao/` al arrancar.
 - Jugable: mover, objetivo (Tab/clic), atacar (F/Enter/Espacio), hechizos 1-4 con apuntado, pociones 5-6, esquiva, pausa y reinicio.
 - NPCs combaten de forma continua; curas, remociones y apoyo operativos.
-- La última validación de producto (2026-11-16) confirmó la rotación completa de mapas: 1 → 34 → 59 → 62 → 272 → 1, con un cambio cada 5 bajas; los cinco mapas cargaron y se capturaron. A 1440×1000 y 390×844 no hubo overflow y la consola quedó 0/0. No se repitió el playtest completo de combate.
+- La última validación de producto (2026-11-16) confirmó la rotación completa de mapas: 1 → 34 → 59 → 62 → 272 → 1, con un cambio cada 5 bajas; los cinco mapas cargaron y se capturaron. A 1440×1000 y 390×844 no hubo overflow y la consola quedó 0/0. `T4` fue solo documental y no repitió el playtest de combate; el preflight quedó verde.
 
 ## Decisiones abiertas
 
