@@ -3,6 +3,19 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-16 · [P] Puntería libre al arrastrar y botones de hechizos sobre la derecha
+Pedido textual: «La puntería de arrastrar debería ser libre y no condicionada por la cuadrícula… Además los botones de hechizos por ahora pongámoslos sobre la parte derecha de la pantalla».
+
+- **Puntería libre:** la mira del hechizo preparado ya no se dibuja en el centro de la casilla bajo el cursor. Se agregó `mousePoint` (píxeles dentro del canvas) junto a `mouseTile` (casilla que resuelve el lanzamiento). La línea, el círculo, la cruz y un punto central siguen al cursor con precisión de píxel; el ajuste a casilla queda solo en la resolución del lanzamiento (`castSkillAtTile`), que es la regla de AO.
+- **Hitbox:** `actorAtPointer` usa un margen proporcional a `tilePx` (45 % a los lados, 50 % arriba, 20 % abajo) en vez de 5 px fijos, y mide la distancia contra el centro del sprite; ya no hay que caer en el centro exacto de la casilla.
+- **Táctil:** el desplazamiento de la mira respecto del dedo bajó de 64-96 px a 28-48 px, así el punto apuntado queda cerca del dedo pero visible, sin perder seguimiento libre.
+- **Riel derecho:** el panel «HECHIZOS Y HABILIDADES» dejó el dock y ahora es `.spell-rail` dentro de `.game-frame`, anclado a `right:8px` y centrado verticalmente, en grilla de 2×3. Son los mismos botones y listeners (no se duplicó HTML). En el riel se ocultan el epígrafe, la ayuda y el nombre largo; quedan tecla, icono, coste y el `title` con el nombre completo. El dock derecho queda con personaje, objetivo, inventario y equipamiento.
+- **Cancelación:** soltar sobre cualquier punto del riel cancela el lanzamiento (`pointerOverSpellRail`), igual que volver al botón de origen; el riel captura sus clics para que no se dispare «al ras» detrás.
+- **Móvil horizontal:** sin cambios; el cargador se sigue moviendo a `mobileActionCluster` y el riel vacío se oculta con `display:none!important`.
+- **Debug:** `AO_DEBUG()` expone además `aimPoint`, `aimTile` y `draggingSkill` como lectura para poder auditar la mira libre.
+
+Verificación en Chromium (`http://localhost:8117`): con el puntero en (400,300) → (405,307) → (402,303) el punto de mira siguió 1:1 mientras la casilla quedó fija en (43,46); al armar la mira cambiaron 583 píxeles en el punto libre contra 0 en un punto de control. Arrastre real con mouse desde el riel: `draggingSkill=2` y mira en (872,358); al soltar, `null` y sin errores. Soltar sobre el riel mostró `cancel-aim` y el aviso «Lanzamiento cancelado». Capturas: `/tmp/opencode/realdrag.png`, `rail2.png`, `v-1920x1080.png`, `v-1280x720.png`, `v-1024x768.png`, `v-390x844.png`; consola 0 errores / 0 advertencias. `index.html`, `styles.css` y `game.js` sincronizados con `dist/`; `bash 00_cerebro_loop/verify.sh` verde.
+
 ## 2026-11-16 · [T4] Matriz de reglas del combate vs AO Libre (primer corte)
 Se compararon estáticamente las reglas ya implementadas en `game.js` contra la revisión fijada del servidor AO Libre, sin cambiar balance, daños, costos ni tiempos. Resultado completo en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md), enlazado desde `README.md`.
 

@@ -64,6 +64,7 @@ Preflight local: `bash 00_cerebro_loop/verify.sh`. La validación final siempre 
 - **Clic en un rival, en la lista o Tab:** seleccionar objetivo.
 - **F o Enter:** atacar al rival cuando esté en un casillero adyacente.
 - **Clic en una habilidad o teclas 1–4:** seleccionarla; luego elegí un rival para una habilidad ofensiva o tu personaje para curarte.
+- **Arrastrar una habilidad:** mantené presionada la ranura y soltá sobre el campo. La mira sigue al puntero con libertad de píxel, sin imán de casilla; el lanzamiento se resuelve al soltar y soltar otra vez sobre el riel cancela. En escritorio el riel de hechizos está sobre el borde derecho del mundo; en móvil horizontal, a la derecha de la pantalla.
 - **E / Q:** armar Inmovilizar / Remover parálisis.
 - **Teclas 5 y 6:** beber una poción roja (vida) o azul (maná). Son ilimitadas para la práctica, pero beber ocupa al personaje: no podés atacar ni lanzar hechizos mientras dura la acción, y un golpe o hechizo reciente tampoco te deja beber hasta recuperarte.
 - **Esquiva:** los NPC anuncian algunos ataques con una línea y una mira; moverte durante el apuntado puede evitar el impacto.

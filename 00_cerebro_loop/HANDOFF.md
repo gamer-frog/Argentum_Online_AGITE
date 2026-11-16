@@ -1,6 +1,6 @@
 # HANDOFF — estado actual
 
-> **Actualizado:** 2026-11-16 · **Rama:** `main` (T1, T2, T3 y T4 completados; sin commit ni push).
+> **Actualizado:** 2026-11-16 · **Rama:** `main` (T1, T2, T3, T4 y el pedido de puntería libre completados; sin commit ni push).
 > Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
 
 ## Snapshot
@@ -9,23 +9,22 @@
 | --- | --- |
 | Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-16 verde |
 | Tarea actual | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
-| Última completada | `T4 — Matriz de reglas del combate actual vs AO Libre (primer corte)` |
+| Última completada | `P — Puntería libre al arrastrar + riel de hechizos a la derecha` |
 | Bloqueo | Ninguno; `T4` cerrada; `D1` resuelta |
 | Decisiones abiertas | `D2=B` (inventario funcional) |
 | Publicación | Sin commit ni push: no fue pedido explícitamente |
-| Navegador | 2026-11-16: T2 verificado con rotación completa (5 mapas, 25 bajas), capturas de los cinco mapas, 1440×1000 y 390×844 sin overflow; consola 0/0 |
+| Navegador | 2026-11-16: puntería libre verificada en Chromium (mira 1:1 con el cursor, arrastre real y cancelación sobre el riel), 1920×1080 / 1280×720 / 1024×768 / 390×844 y consola 0/0 |
 
 ## Última acción completada
 
-**2026-11-16 · [T4] Matriz de reglas del combate actual vs AO Libre (primer corte).**
+**2026-11-16 · [P] Puntería libre al arrastrar y botones de hechizos sobre la derecha.**
 
-Se compararon estáticamente las reglas implementadas en `game.js` contra la revisión fijada del servidor AO Libre, sin cambiar balance ni código de producto. El resultado quedó en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) y enlazado desde `README.md`.
+- **Mira libre:** se separó el punto apuntado (`mousePoint`, en píxeles) de la casilla que resuelve el lanzamiento (`mouseTile`). La línea, el círculo y el punto central siguen al cursor sin imán de casilla; el ajuste a casilla queda solo al soltar, porque así lo exige la regla de hechizos de AO.
+- **Hitbox más generosa** en `actorAtPointer` (margen proporcional a `tilePx`) y **mira táctil más cerca del dedo** (28-48 px en vez de 64-96 px).
+- **Riel derecho:** el panel de hechizos ya no vive en el dock; ahora es `.spell-rail` sobre el borde derecho del mundo, en grilla 2×3, con los mismos botones y listeners. Soltar sobre el riel cancela el lanzamiento.
+- **Móvil horizontal:** intacto; el cargador se sigue moviendo a `mobileActionCluster`.
 
-- **Cobertura:** ataque adyacente y dirección, intervalos de golpe/lanzamiento/poción, daño y precisión melee, alcance de hechizos, apuntado/telegrafiado, inmovilización/parálisis y remoción, costos de maná de los ocho hechizos, `MinSkill`, stamina, regeneración de vida/maná, pociones y nivel 40.
-- **Diferencia principal:** AO usa arma + clase + atributos para el daño, visión rectangular 11×9, intervalos de 1,5 s / 1,4 s / 1,2 s, stamina y `MinSkill`. El prototipo usa tabla plana por clase, Manhattan 11, 0,62 s / 0,9 s / 1,1 s, sin stamina ni `MinSkill`, con 6 de maná por segundo siempre y pociones porcentuales infinitas.
-- **Equivalencias:** solo Apocalipsis e Inmovilizar comparten nombre con AO Libre; Remover parálisis se corresponde con Devolver Movilidad. Los otros cinco hechizos son de Imperium o no tienen equivalente. La tabla de nivel 40 por clase quedó como `sin dato`.
-
-Preflight verde; al ser un cambio documental no se repitió el playtest de navegador. La última validación de producto sigue siendo la de `T2` (rotación completa, 1440×1000 y 390×844, consola 0/0).
+Verificado en Chromium: mira 1:1 con el cursor aunque la casilla no cambie (583 píxeles cambiados en el punto libre vs. 0 en el control), arrastre real `draggingSkill=2` → `null` al soltar, cancelación sobre el riel con aviso «Lanzamiento cancelado», cuatro resoluciones sin overflow y consola 0/0.
 
 ## Próximo paso inmediato
 
