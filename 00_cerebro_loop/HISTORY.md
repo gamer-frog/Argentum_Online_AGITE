@@ -3,6 +3,18 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-17 · [P2] Riel de una columna y mira vectorial tipo Wild Rift
+Corrección del pedido anterior: «los poderes… deben ser una sola columna… 1x6 verticalmente sobre la parte derecha» y «la mira no funciona bien, pensá en cómo lo usan en Wild Rift». Supersede el formato 2×3 y la mira que seguía la posición absoluta del puntero.
+
+- **Riel:** `.spell-rail` pasa a `grid-template-columns: var(--rail-slot)`, una sola columna de 6 ranuras (4 habilidades + 2 pociones), 54 px de ancho y 284 px de alto a 1440×1000, centrada a la derecha del mundo. Icono a 19 px y coste a 6 px; el nombre sigue en el `title`.
+- **Mira vectorial (Wild Rift):** al mantener una ranura, la mira nace en el personaje (siempre en el centro del canvas) y se orienta con el **vector desde el punto de apoyo**, no con la posición del dedo. Recorrido muerto de 14 px, alcance máximo a 96 px de arrastre (64 px en táctil) y `reach = ratio × (SPELL_VISION_RANGE × tilePx)`. La mira se pega al borde de la pantalla si el alcance la excede.
+- **Enganche:** si la mira cae sobre un objetivo válido (rival para daño/inmovilizar; vos o un aliado para curar/remover), se pega a su sprite y dibuja corchetes. Al soltar se lanza sobre el objetivo; si no hay enganche, se lanza a la casilla de la mira (con mínimo de 0,6 casillas para evitar autodaño).
+- **Cancelar:** volver a menos de 12 px del punto de apoyo cancela (el botón de origen se marca en rojo). Antes cancelaba soltar en cualquier parte del riel, lo que hacía imposible apuntar hacia la derecha; se corrigió.
+- **Alcance visible:** anillo punteado tenue con el alcance real del hechizo mientras se arrastra.
+- **Móvil horizontal:** el clúster de acción se corrió a `right: clamp(7px, 6vw, 40px)` para dejar recorrido de arrastre hacia la derecha; el riel sigue oculto y el cargador se mueve a `mobileActionCluster`.
+
+Verificación en Chromium (`http://localhost:8117`, 1440×1000): riel 54×284 px con `grid-template-columns: 42px` y 6 ranuras. Dead zone: a 8 px de arrastre la mira queda en el personaje; a 22/40/70/110 px el alcance fue 43/140/300/440 px (tope exacto). Arrastre real con mouse hacia arriba-izquierda: `dragAim {x:146,y:234,reach:440,maxRange:440,tile:[58,35]}`. Arrastre sintético de 6,08 casillas: la mira enganchó `chaoticPaladin` y al soltar el jugador quedó `aiming:true` con `aimSpell:"Carga"`. Tap sin arrastre sigue seleccionando la habilidad y volver al apoyo muestra «Lanzamiento cancelado». `AO_DEBUG()` expone `dragAim`. Consola 0 errores / 0 advertencias; capturas `/tmp/opencode/wr-drag.png`, `rail3.png`. `index.html`, `styles.css` y `game.js` sincronizados con `dist/`; `bash 00_cerebro_loop/verify.sh` verde.
+
 ## 2026-11-16 · [P] Puntería libre al arrastrar y botones de hechizos sobre la derecha
 Pedido textual: «La puntería de arrastrar debería ser libre y no condicionada por la cuadrícula… Además los botones de hechizos por ahora pongámoslos sobre la parte derecha de la pantalla».
 

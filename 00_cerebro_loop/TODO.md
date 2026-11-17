@@ -37,7 +37,7 @@
 
 ## Terminadas recientemente
 
-- [x] **P — Puntería libre al arrastrar + riel de hechizos a la derecha (2026-11-16).** Mira en píxeles sin imán de casilla, hitbox proporcional, mira táctil más cerca del dedo y panel de hechizos sobre el borde derecho del mundo. Sin cambios de reglas ni de balance. Evidencia en `HISTORY.md`.
+- [x] **P — Puntería libre al arrastrar + riel de hechizos a la derecha (2026-11-16, formato final P2 el 2026-11-17).** Mira vectorial estilo Wild Rift (nace en el personaje, la orienta el arrastre, engancha objetivos) y riel de una columna × 6 sobre el borde derecho del mundo. Sin cambios de reglas ni de balance. Evidencia en `HISTORY.md`.
 - [x] **T4 — Matriz de reglas del combate actual vs AO Libre, primer corte (2026-11-16).** Matriz en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) con ataque adyacente, intervalos, daño, alcance, apuntado, inmovilización/remoción, costos de maná, stamina, pociones y nivel 40; cada fila con código, fuente y etiqueta. Sin cambios de código. Evidencia en `HISTORY.md`.
 - [x] **T2 — Rotación de mapas (2026-11-16).** Lista fija Ullathorpe → Nix → Banderbill → Lindos → Arena; inicio aleatorio sin repetir el anterior al reiniciar; avance cada 5 bajas y fallback. Rotación completa verificada en navegador (5 cambios, 25 bajas) y capturas de los cinco mapas. Evidencia en `HISTORY.md`.
 - [x] **T3 — Auditoría de FX de hechizos (2026-11-16).** Tabla de los 8 hechizos: 1 original, 3 reutilizados y 4 en reserva; recursos, Grh, WAV y límites trazados en `roadmap/fx-hechizos.md`. Sin cambios de código.

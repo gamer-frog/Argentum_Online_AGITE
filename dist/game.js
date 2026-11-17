@@ -119,6 +119,13 @@
   let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
   let mouseTile = null; // Casilla bajo el cursor: resuelve el lanzamiento a casilla.
   let mousePoint = null; // Punto libre en píxeles: la mira sigue el cursor sin saltar de casilla.
+  // Arrastre tipo Wild Rift: la mira sale del personaje y se orienta con el vector desde el botón,
+  // no con la posición absoluta del dedo/cursor. Se engancha al rival si pasa cerca.
+  let dragAim = null; // { x, y, reach, maxRange, tile, target }
+  const DRAG_AIM_DEADZONE = 14; // px de recorrido antes de mover la mira
+  const DRAG_AIM_CANCEL = 12;   // volver a este radio desde el apoyo cancela al soltar
+  const DRAG_AIM_FULL = 96;     // px de recorrido que equivalen al alcance máximo
+  const DRAG_AIM_FULL_TOUCH = 64; // en táctil el pulgar tiene menos recorrido útil
   let spellDrag = null, canvasPress = null, lastSpellGesture = null;
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
@@ -1301,23 +1308,28 @@
       }
       ctx.restore();
     }
-    // Mira en vivo del hechizo preparado: línea del personaje al punto libre del cursor.
-    // El punto no se ajusta a la casilla; solo el lanzamiento resuelve el objetivo o la casilla al soltar.
+    // Mira del hechizo preparado. Dos modos, como en Wild Rift:
+    //  - arrastre: la mira nace en el personaje y la orienta el vector desde el botón (con tope de alcance);
+    //  - mouse/teclado: el punto sigue al cursor sin imán de casilla.
+    // En ambos casos el ajuste a casilla ocurre recién al resolver el lanzamiento.
     const readyIndex = spellDrag?.index ?? selectedSkill;
     const readySkill = readyIndex === null ? null : skillAt(readyIndex);
-    if (readySkill && player.alive && !paused && (mousePoint || mouseTile)) {
+    const aim = spellDrag ? dragAim : mousePoint;
+    if (readySkill && player.alive && !paused && aim) {
       const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
-      let x, y;
-      if (mousePoint) {
-        x = clamp(mousePoint.x, 0, W); y = clamp(mousePoint.y, 0, H);
-      } else {
-        const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
-        x = msx + tilePx / 2; y = msy + tilePx / 2;
-      }
       const lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
+      const x = clamp(aim.x, 0, W), y = clamp(aim.y, 0, H);
       const color = spellDrag?.cancel ? '#e06a5e' : readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
-      ctx.save(); ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
+      ctx.save();
+      // Alcance máximo: anillo tenue alrededor del personaje mientras se arrastra (referencia de rango).
+      if (spellDrag && aim.maxRange) {
+        ctx.globalAlpha = .16; ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, tilePx * .04);
+        ctx.setLineDash([tilePx * .22, tilePx * .18]);
+        ctx.beginPath(); ctx.arc(lineX, lineY, aim.maxRange, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
       ctx.lineWidth = Math.max(2, tilePx * .05); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .25;
       ctx.beginPath(); ctx.moveTo(lineX, lineY); ctx.lineTo(x, y); ctx.stroke();
       ctx.setLineDash([tilePx * .14, tilePx * .1]);
@@ -1327,8 +1339,19 @@
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
       ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
-      // Punto central: marca exactamente dónde está el cursor libre, sin imán de casilla.
+      // Punto central: marca exactamente dónde cae el hechizo.
       ctx.beginPath(); ctx.arc(x, y, Math.max(2, tilePx * .075), 0, Math.PI * 2); ctx.fill();
+      // Objetivo enganchado: corchetes sobre el sprite, para saber que el arrastre ya lo fijó.
+      if (aim.target) {
+        const half = tilePx * .58, top = y - tilePx * .95, bottom = y + tilePx * .35, tick = tilePx * .3;
+        ctx.globalAlpha = .95; ctx.lineWidth = Math.max(2, tilePx * .07); ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(x - half, top + tick); ctx.lineTo(x - half, top); ctx.lineTo(x - half + tick, top);
+        ctx.moveTo(x + half - tick, top); ctx.lineTo(x + half, top); ctx.lineTo(x + half, top + tick);
+        ctx.moveTo(x - half, bottom - tick); ctx.lineTo(x - half, bottom); ctx.lineTo(x - half + tick, bottom);
+        ctx.moveTo(x + half - tick, bottom); ctx.lineTo(x + half, bottom); ctx.lineTo(x + half, bottom - tick);
+        ctx.stroke();
+      }
       ctx.restore();
     }
     // Apoyo aliado pendiente: anillo verde punteado que se cierra sobre el aliado mientras llega la ayuda.
@@ -1530,37 +1553,70 @@
     $('spellCancelHint')?.classList.remove('show');
     mouseTile = null;
     mousePoint = null;
+    dragAim = null;
   }
-  // La mira táctil se separa un poco del dedo para no quedar tapada, sin perder el seguimiento libre.
-  function touchAimDistance() { return Math.round(Math.min(48, Math.max(28, window.innerHeight * .06))); }
-  function pointFromEvent(event, offsetTouch = false) {
-    const offset = offsetTouch && event.pointerType === 'touch' ? touchAimDistance() : 0;
-    return canvasPointAtPointer(event.clientX, event.clientY - offset);
+  // Dirección y alcance del arrastre: se mide el vector desde el punto donde se apoyó el botón,
+  // igual que un stick de Wild Rift. La mira nunca salta al dedo ni a una casilla.
+  function refreshDragAim(event) {
+    if (!spellDrag) { dragAim = null; return 0; }
+    const dx = event.clientX - spellDrag.startX, dy = event.clientY - spellDrag.startY;
+    const len = Math.hypot(dx, dy);
+    if (len > DRAG_AIM_DEADZONE) spellDrag.moved = true;
+    const skill = skillAt(spellDrag.index);
+    const [cx, cy] = position(player);
+    const originX = W / 2, originY = H / 2;
+    const maxRange = Math.max(tilePx, SPELL_VISION_RANGE * tilePx);
+    const full = event.pointerType === 'touch' ? DRAG_AIM_FULL_TOUCH : DRAG_AIM_FULL;
+    const span = Math.max(1, full - DRAG_AIM_DEADZONE);
+    const ratio = clamp((len - DRAG_AIM_DEADZONE) / span, 0, 1);
+    const reach = ratio * maxRange;
+    const ux = len > .0001 ? dx / len : 0, uy = len > .0001 ? dy / len : 0;
+    // La mira no puede salir de la pantalla: se pega al borde, como el indicador de Wild Rift.
+    let x = clamp(originX + ux * reach, 8, W - 8), y = clamp(originY + uy * reach, 8, H - 8);
+    // Enganche: si la mira cae sobre un objetivo válido, se pega a su sprite.
+    let target = null;
+    if (spellDrag.moved && skill) {
+      const hit = actorAtPointer(x, y);
+      if (hit) {
+        const wantsAlly = skill.type === 'heal' || skill.type === 'cleanse';
+        const valid = wantsAlly ? !isEnemy(player, hit) : (hit !== player && isEnemy(player, hit));
+        if (valid) target = hit;
+      }
+    }
+    if (target) {
+      const [tx, ty] = position(target), [sx, sy] = screenTile(tx, ty, cx, cy);
+      x = sx + tilePx / 2; y = sy + tilePx / 2;
+    }
+    dragAim = {
+      x, y, reach, maxRange, ratio, target,
+      tile: target ? actorTile(target) : tileAtPointer(x, y)
+    };
+    return len;
   }
-  function pointerOverButton(event, button, padding = 14) {
-    if (!button) return false;
-    const rect = button.getBoundingClientRect();
-    return event.clientX >= rect.left - padding && event.clientX <= rect.right + padding &&
-      event.clientY >= rect.top - padding && event.clientY <= rect.bottom + padding;
-  }
-  function pointerOverSpellRail(event) {
-    // Soltar sobre los botones del riel cancela; el riel está encima del canvas y no debe disparar al ras.
-    return Boolean(document.elementFromPoint?.(event.clientX, event.clientY)?.closest?.('.spell-rail'));
+  function pointFromEvent(event) {
+    return canvasPointAtPointer(event.clientX, event.clientY);
   }
   function finishSpellDrag(event, cancelled = false) {
     if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
     const drag = spellDrag;
-    const point = cancelled ? null : pointFromEvent(event, true);
-    const shouldCancel = drag.cancel || (drag.moved && (pointerOverButton(event, drag.button) || pointerOverSpellRail(event)));
+    // Última lectura del vector antes de soltar: manda la posición real del puntero, no la de la caché.
+    const len = refreshDragAim(event);
+    const aim = dragAim;
+    // Cancelar = volver al punto de apoyo (no todo el riel: si no, apuntar a la derecha sería imposible).
+    const shouldCancel = drag.moved && len <= DRAG_AIM_CANCEL;
     setSpellDragCancel(drag, false);
     spellDrag = null;
     mouseTile = null;
     mousePoint = null;
+    dragAim = null;
     lastSpellGesture = { button: drag.button, expiresAt: performance.now() + 1000 };
     if (cancelled) return true;
     if (shouldCancel) { toast('Lanzamiento cancelado.'); return true; }
-    if (drag.moved && point) resolveCanvasPointer(point, drag.index);
-    else if (!drag.moved) selectSkill(drag.index);
+    if (!drag.moved) { selectSkill(drag.index); return true; }
+    if (!aim) return true;
+    if (aim.target) { castSkill(drag.index, aim.target); return true; }
+    if (aim.tile && aim.reach >= tilePx * .6) { castSkillAtTile(drag.index, aim.tile); return true; }
+    toast('Arrastrá hacia un rival o una casilla para lanzar.');
     return true;
   }
   function finishCanvasPress(event, cancelled = false) {
@@ -1575,14 +1631,17 @@
   }
   function updatePointerAim(event) {
     const dragging = Boolean(spellDrag && spellDrag.pointerId === event.pointerId);
-    const point = pointFromEvent(event, dragging);
+    if (dragging) {
+      // Mientras se arrastra, la mira la manda el vector desde el botón (estilo Wild Rift);
+      // el dedo/cursor no arrastra la mira ni la pega a la casilla.
+      const len = refreshDragAim(event);
+      // Volver al punto de apoyo cancela al soltar, como en Wild Rift.
+      setSpellDragCancel(spellDrag, spellDrag.moved && len <= DRAG_AIM_CANCEL);
+      return;
+    }
+    const point = pointFromEvent(event);
     mousePoint = point ? { x: point.x, y: point.y } : null;
     mouseTile = point?.tile ?? null;
-    if (dragging) {
-      if (Math.hypot(event.clientX - spellDrag.startX, event.clientY - spellDrag.startY) > 8) spellDrag.moved = true;
-      // Volver al riel o al botón de origen cancela al soltar, como en Wild Rift.
-      setSpellDragCancel(spellDrag, spellDrag.moved && (pointerOverButton(event, spellDrag.button) || pointerOverSpellRail(event)));
-    }
   }
   window.addEventListener('pointerdown', () => { audioReady = true; }, { once: true });
   window.addEventListener('keydown', event => {
@@ -1662,9 +1721,7 @@
       event.preventDefault();
       audioReady = true;
       spellDrag = { pointerId: event.pointerId, index: Number(button.dataset.skill), button, startX: event.clientX, startY: event.clientY, moved: false };
-      const point = pointFromEvent(event);
-      mouseTile = point?.tile ?? null;
-      mousePoint = point ? { x: point.x, y: point.y } : null;
+      dragAim = null;
       try { button.setPointerCapture(event.pointerId); } catch {}
     });
     button.addEventListener('pointermove', event => { if (spellDrag?.pointerId === event.pointerId) updatePointerAim(event); });
@@ -1711,6 +1768,12 @@
     aimPoint: mousePoint ? { x: Math.round(mousePoint.x), y: Math.round(mousePoint.y) } : null,
     aimTile: mouseTile ? { x: mouseTile[0], y: mouseTile[1] } : null,
     draggingSkill: spellDrag?.index ?? null,
+    // Solo lectura: mira del arrastre (dirección/alcance y objetivo enganchado).
+    dragAim: dragAim ? {
+      x: Math.round(dragAim.x), y: Math.round(dragAim.y),
+      reach: Math.round(dragAim.reach), maxRange: Math.round(dragAim.maxRange),
+      tile: dragAim.tile, target: dragAim.target?.id ?? null
+    } : null,
     // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
     supportPriority: (() => {
       const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);

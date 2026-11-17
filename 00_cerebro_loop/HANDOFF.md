@@ -7,24 +7,24 @@
 
 | Campo | Estado |
 | --- | --- |
-| Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-16 verde |
+| Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-17 verde |
 | Tarea actual | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
-| Última completada | `P — Puntería libre al arrastrar + riel de hechizos a la derecha` |
+| Última completada | `P2 — Riel de una columna + mira vectorial tipo Wild Rift` |
 | Bloqueo | Ninguno; `T4` cerrada; `D1` resuelta |
 | Decisiones abiertas | `D2=B` (inventario funcional) |
 | Publicación | Sin commit ni push: no fue pedido explícitamente |
-| Navegador | 2026-11-16: puntería libre verificada en Chromium (mira 1:1 con el cursor, arrastre real y cancelación sobre el riel), 1920×1080 / 1280×720 / 1024×768 / 390×844 y consola 0/0 |
+| Navegador | 2026-11-17: riel 1×6 y mira vectorial verificados en Chromium (dead zone, topes de alcance, enganche y lanzamiento), 1440×1000 y consola 0/0 |
 
 ## Última acción completada
 
-**2026-11-16 · [P] Puntería libre al arrastrar y botones de hechizos sobre la derecha.**
+**2026-11-17 · [P2] Riel de una columna + mira vectorial tipo Wild Rift.**
 
-- **Mira libre:** se separó el punto apuntado (`mousePoint`, en píxeles) de la casilla que resuelve el lanzamiento (`mouseTile`). La línea, el círculo y el punto central siguen al cursor sin imán de casilla; el ajuste a casilla queda solo al soltar, porque así lo exige la regla de hechizos de AO.
-- **Hitbox más generosa** en `actorAtPointer` (margen proporcional a `tilePx`) y **mira táctil más cerca del dedo** (28-48 px en vez de 64-96 px).
-- **Riel derecho:** el panel de hechizos ya no vive en el dock; ahora es `.spell-rail` sobre el borde derecho del mundo, en grilla 2×3, con los mismos botones y listeners. Soltar sobre el riel cancela el lanzamiento.
-- **Móvil horizontal:** intacto; el cargador se sigue moviendo a `mobileActionCluster`.
+- **Riel:** los 6 botones (4 habilidades + 2 pociones) quedaron en una sola columna vertical sobre el borde derecho del mundo: 54×284 px a 1440×1000. Icono más grande y coste corto; el nombre completo sigue en el `title`.
+- **Mira:** al arrastrar una ranura, la mira nace en el personaje y la orienta el **vector desde el punto de apoyo** (estilo Wild Rift), no la posición del dedo. 14 px de zona muerta, alcance máximo a 96 px de arrastre (64 px en táctil), tope por `SPELL_VISION_RANGE` y por el borde de la pantalla, y anillo tenue con el alcance real.
+- **Enganche y cancelación:** al pasar sobre un objetivo válido la mira se pega al sprite y muestra corchetes; al soltar se lanza sobre él o sobre la casilla apuntada. Volver a menos de 12 px del apoyo cancela (antes cancelaba todo el riel, lo que impedía apuntar a la derecha).
+- **Móvil horizontal:** el clúster de acción se corrió a `right: clamp(7px, 6vw, 40px)` para dejar recorrido de arrastre; el riel sigue oculto y el cargador se mueve a `mobileActionCluster`.
 
-Verificado en Chromium: mira 1:1 con el cursor aunque la casilla no cambie (583 píxeles cambiados en el punto libre vs. 0 en el control), arrastre real `draggingSkill=2` → `null` al soltar, cancelación sobre el riel con aviso «Lanzamiento cancelado», cuatro resoluciones sin overflow y consola 0/0.
+Verificado en Chromium: a 8/22/40/70/110 px de arrastre el alcance fue 0/43/140/300/440 px (tope exacto); un arrastre de 6,08 casillas enganchó `chaoticPaladin` y al soltar el jugador quedó `aiming:true` con `aimSpell:"Carga"`; tap sin arrastre sigue seleccionando y volver al apoyo muestra «Lanzamiento cancelado»; consola 0/0.
 
 ## Próximo paso inmediato
 
