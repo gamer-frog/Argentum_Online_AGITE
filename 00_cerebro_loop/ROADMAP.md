@@ -14,7 +14,7 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T6** | Variar ritmos de combate y persecución | Ahora | T4 + playtest T5 | Jitter dentro de los valores vigentes; sin cambios de balance; métricas de 90 s antes/después |
+| **T9** | Escenarios 1v1 / 2v2 / 3v3 con selector de formato | Ahora | T1/T5 + arena de T2 | Tres formatos jugables reutilizando la arena; sin matchmaking ni balance nuevo |
 
 ## Después
 
@@ -22,7 +22,6 @@
 | --- | --- | --- | --- |
 | **T7** | Inventario/equipamiento funcional | T1 + `D2` B | Requiere contrato de objetos; no inventar reglas |
 | **T8** | Chat lateral y sonidos licenciados | Auditoría de licencias | Solo con assets compatibles |
-| **T9** | Escenarios 1v1 / 2v2 / 3v3 | T1/T5 | Selector de formato; reutilizar arena |
 | **T10** | Multijugador y persistencia | T7/T9 + alcance | Pospuesto; requiere backend |
 | **T11** | Auditoría de licencias/atribución por recurso | — | Antes de redistribuir o ampliar assets |
 | **T12** | Referencia visual estable con versión/fecha | — | La galería oficial sirve para estilo, no para píxeles |
@@ -39,6 +38,7 @@
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-18 | T6: ritmos de combate y persecución (mago acosado corregido) | `HISTORY.md`; probes de 90 s y 45 s; tramo bajo presión 10,75 s → 1,75 s |
 | 2026-11-18 | T5: combo, maná y `Fuente de vida` (confirmación y propuesta) | `HISTORY.md`; `roadmap/reglas-combate.md`; `roadmap/hechizos-referencia.md`; probe de 120 s |
 | 2026-11-16 | T4: matriz de reglas de combate vs AO Libre (primer corte) | `HISTORY.md`; `roadmap/reglas-combate.md`; etiquetas confirmado/aproximado/práctica/sin dato |
 | 2026-11-16 | T2: rotación de mapas aprobada | `HISTORY.md`; lista 1→34→59→62→272; 5 cambios/25 bajas; 5 capturas |

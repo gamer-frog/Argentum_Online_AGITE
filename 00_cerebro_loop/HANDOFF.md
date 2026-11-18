@@ -1,6 +1,6 @@
 # HANDOFF — estado actual
 
-> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1, T2, T3, T4, T5 y los pedidos de puntería completados; sin commit ni push).
+> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1, T2, T3, T4, T5, T6 y los pedidos de puntería completados; sin commit ni push).
 > Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
 
 ## Snapshot
@@ -8,32 +8,32 @@
 | Campo | Estado |
 | --- | --- |
 | Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-18 verde |
-| Tarea actual | `T6 — Variar ritmos de combate y persecución (sin balance)` |
-| Última completada | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
-| Bloqueo | Ninguno; `T4`/`T5` cerradas; propuestas de balance pendientes de aprobación |
-| Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` |
+| Tarea actual | `T9 — Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato` |
+| Última completada | `T6 — Ritmos de combate y persecución (corrección del mago acosado)` |
+| Bloqueo | Ninguno para `T9`; `T7` depende de `D2` y `T8` de la auditoría de licencias |
+| Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` (`D7`) |
 | Publicación | Sin commit ni push: no fue pedido explícitamente |
-| Navegador | 2026-11-18: probe de maná de 120 s en Chromium (797 muestras, Lindos → Arena, consola 0/0); última validación de layout 2026-11-17 (riel 1×6 y mira vectorial, 1440×1000 y 390×844) |
+| Navegador | 2026-11-18: T6 validado en Chromium 1440×1000 y 390×844 (capturas en `/tmp/opencode/captures-t6/`, consola 0/0); probes de ritmo de 90 s y de pares de 45 s. Layout sin cambios desde el riel 1×6 del 2026-11-17 |
 
 ## Última acción completada
 
-**2026-11-18 · [T5] Combo, maná y `Fuente de vida`: confirmación y propuesta.**
+**2026-11-18 · [T6] Ritmos de combate y persecución: variación vigente y mago acosado corregido.**
 
-- **`Sanar` vs `Curar Heridas Graves`:** verificado contra `Dat/Hechizos.dat` @ `ca6ad7ff…`. AO #5 cura **12-35** por **40** maná, 5 stamina y `MinSkill=38`; el prototipo cura **40-45** por **220**. No son equivalentes: el nombre y el rango son de Imperium Classic. Tampoco coincide con la wiki 2012 (50-90 / 1000). No se renombra; una futura fidelidad AO requeriría agregar el hechizo.
-- **`Fuente de vida` 30-45:** la wiki 2012 publica 30-45 / 300, Classic 25-32, AO no lo tiene. Subir solo la curación mejora +5 a +13 por lanzamiento (eficiencia 0,114-0,145 → 0,136-0,205), pero no arregla el maná. Propuesta `práctica` sin aplicar.
-- **Maná del paladín:** 1000 de reserva, limpieza 330, regeneración 6/s, cooldown 2,5 s → **3 limpiezas** consecutivas; la 4.ª llega a los ~53 s (con coste 300, a los ~38 s). `Inmovilizar` + `Fuente` dejan 430: una sola limpieza.
-- **Medición real:** 120 s, 797 muestras, Lindos → Arena. Maná mínimo 85 y 13; **23 muestras** con el paladín paralizado y <330 (un tramo continuo de ≈1,6 s sin poder limpiarse); 5 muertes. Necesita apoyo cuando baja de 330. Una limpieza del jugador confirmó el descuento de 330 (1000 → 670, «Removida»).
+- **Lo que ya estaba:** el código tiene variación real de ritmo (paso 0,82-1,22×, ráfagas de 2-4 casilleros, pausas de IA aleatorias, apuntado 0,36-0,62 s y recuperación 0,85-1,15 s, apoyo 0,3-1,8 s). La medición de 90 s no mostró NPC plantado sin objetivo ni oscilaciones: 1-3 % sin objetivo, cero tramos >1 s, 0-2 reversiones.
+- **El bloqueo:** el mago sagrado acumuló **43 muestras (≈10,75 s)** bajo presión sin lanzar, porque la rama de retirada hacía `continue` antes de las tiradas de hechizo. Solo huía en círculos.
+- **Corrección:** la retirada se resuelve en el bloque de movimiento común, con respaldo por ruta si el paso está bloqueado. El mago y el clérigo apuntan **mientras retroceden**; el mago sigue sin golpear a melee. Sin cambios de daños, costos, curaciones, alcances, cooldowns ni `STEP_DURATION`.
+- **Resultado:** tramo máximo bajo presión 43 → **7 muestras (1,75 s)**; apuntando bajo presión 2 → 12; lanzamientos bajo presión 0 → 3. Pares adyacentes sin daño/mira/paso: máximo **1,25 s**, que es el intervalo normal de golpe. Sin bloqueos.
 
-Verificado en Chromium (`http://localhost:3002`, 1440×1000) con consola 0/0. Propuestas documentadas con fuente y etiqueta, sin aplicar; `game.js` y `dist/` sin cambios.
+Verificado en Chromium (`http://localhost:3002`, 1440×1000 y 390×844) con consola 0/0; `game.js` y `dist/game.js` sincronizados y `verify.sh` verde. Detalle y números en `HISTORY.md`.
 
 ## Próximo paso inmediato
 
-**T6 — Variar ritmos de combate y persecución (sin balance).**
+**T9 — Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato.**
 
-1. Medir los patrones repetidos actuales: cooldowns fijos, intervalo de ataque, pausas de la IA y persecución.
-2. Introducir variación dentro de los valores vigentes (jitter de tiempos y decisión), sin cambiar daños, costos, curaciones, alcances ni reglas.
-3. Corregir oscilaciones o bloqueos (pares que se persiguen sin cerrar distancia, NPC plantado sin objetivo, cara a cara sin atacar).
-4. Playtest de 90 s antes/después con métricas; `game.js` + `dist/game.js`, `verify.sh` y navegador 1440/390 con consola 0/0.
+1. Leer cómo se arma la arena (mapa 272, `spawnActorsOnMap`, `arenaOffsets`) y el HUD del mapa.
+2. Agregar el selector de formato reutilizando los actores existentes; el jugador ocupa un cupo sagrado.
+3. Mantener intacta la rotación de ciudad (`D1`) y todas las reglas de combate.
+4. Verificar los tres formatos en Chromium 1440/390 con consola 0/0 y registrar evidencia.
 
 **Pendiente de aprobación (no hacer sin pedido):** aplicar las propuestas de `T5` (limpieza 330 → 300 y `Fuente de vida` 30-45).
 
@@ -57,7 +57,7 @@ playwright-cli console
 - `http://localhost:3002` sirve `dist/` vía `start.sh`, que copia `index.html`, `styles.css`, `game.js`, `favicon.svg` y `assets/ao/` al arrancar.
 - Jugable: mover, objetivo (Tab/clic), atacar (F/Enter/Espacio), hechizos 1-4 con apuntado, pociones 5-6, esquiva, pausa y reinicio.
 - NPCs combaten de forma continua; curas, remociones y apoyo operativos.
-- La última validación de producto (2026-11-18) fue el probe de maná de T5: 120 s de combate, 797 muestras, mapa Lindos → Arena, consola 0/0. La última validación de layout sigue siendo la de 2026-11-17/16: riel 1×6 y rotación completa 1 → 34 → 59 → 62 → 272 a 1440×1000 y 390×844.
+- La última validación de producto (2026-11-18, T6) fue en Chromium: probes de ritmo de 90 s y de pares adyacentes de 45 s, más movimiento, poción y selección de habilidad; capturas 1440×1000 y 390×844 en `/tmp/opencode/captures-t6/`, consola 0/0. La última validación de layout sigue siendo la de 2026-11-17/16: riel 1×6 y rotación completa 1 → 34 → 59 → 62 → 272 a 1440×1000 y 390×844.
 
 ## Decisiones abiertas
 
