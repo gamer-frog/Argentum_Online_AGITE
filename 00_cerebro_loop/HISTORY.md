@@ -3,6 +3,17 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-18 · [T5] Combo, maná y `Fuente de vida`: confirmación y propuesta
+Se cerró la verificación pendiente de T4 sin tocar código de producto ni aplicar balance. Resultado en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md#capacidad-de-maná-del-paladín-t5) y [`roadmap/hechizos-referencia.md`](../roadmap/hechizos-referencia.md#verificación-t5-2026-11-18-sanar-vs-curar-heridas-graves).
+
+- **`Sanar` vs `Curar Heridas Graves`:** se descargaron de nuevo `Dat/Hechizos.dat` y `Codigo/modHechizos.bas` de `ao-libre/ao-server` @ `ca6ad7ff…`. AO #5 cura **12-35** por **40** maná, 5 stamina y `MinSkill=38`; el prototipo cura **40-45** por **220** sin stamina ni `MinSkill`. **No son equivalentes**: el nombre y el rango 40-45 son de Imperium Classic; AO cura menos de la mitad y cuesta 5,5× menos maná. La restricción «solo clérigo» también es del prototipo: `PuedeLanzar` solo exige `MinSkill`, maná y stamina. Se documentó que una futura fidelidad AO requeriría agregar el hechizo, no renombrar `Sanar`.
+- **`Fuente de vida` 30-45:** la wiki 2012 publica 30-45 por 300; el prototipo usa 25-32 por 220 (Classic) y AO no tiene el hechizo. Subir solo la curación mejora +5 a +13 de vida por lanzamiento (eficiencia 0,114-0,145 → 0,136-0,205), pero no resuelve el maná. Queda como propuesta `práctica`, sin aplicar.
+- **Capacidad de maná del paladín:** reserva 1000, coste de limpieza 330, regeneración 6/s, cooldown 2,5 s. La ráfaga es de **3 limpiezas** (990); la 4.ª exige ~48 s de regeneración (disponible a los ~53 s). Con el coste AO de 300, la 4.ª llegaría a los ~38 s. Una poción azul compra una limpieza extra inmediata. `Inmovilizar` (350) + `Fuente de vida` (220) dejan solo 430: una limpieza.
+- **Medición real:** 120 s de combate en Chromium (`http://localhost:3002`, 1440×1000), mapa Lindos → Arena a los 58,2 s, 797 muestras cada 150 ms. Maná mínimo **85** y **13** en los dos paladines; **23 muestras** con el paladín paralizado y menos de 330 de maná (un tramo continuo de ≈1,6 s sin poder limpiarse); 5 muertes de paladín; caídas observadas de 350/330/220/40 correspondientes a `Inmovilizar`/`Remover parálisis`/`Fuente de vida`/`Castigo Divino`. Una limpieza del jugador paladín confirmó el descuento real de 330 (1000 → 670, «Removida»). **Necesita apoyo** cuando baja de 330: la IA solo se autolimpia si tiene maná y, si no, depende de un mago/clérigo aliado.
+- **Propuestas (sin aplicar):** (1) `Remover parálisis` 330 → 300 (AO #10), etiqueta `aproximado`; (2) `Fuente de vida` 25-32 → 30-45 manteniendo 220, etiqueta `práctica`; (3) no renombrar `Sanar`; (4) no subir el coste de `Fuente` a 300 sin revisar la reserva; (5) `Inmovilizar` 350 mezcla `Paralizar` (450) e `Inmovilizar` (300), queda `sin dato` para un costo único. Recomendación: aplicar 1+2 juntas solo con aprobación explícita.
+
+Verificación: `bash 00_cerebro_loop/verify.sh` verde; consola del navegador 0 errores / 0 advertencias durante el probe. No se tocaron `game.js`, `styles.css`, `index.html` ni `dist/`.
+
 ## 2026-11-17 · [P2] Riel de una columna y mira vectorial tipo Wild Rift
 Corrección del pedido anterior: «los poderes… deben ser una sola columna… 1x6 verticalmente sobre la parte derecha» y «la mira no funciona bien, pensá en cómo lo usan en Wild Rift». Supersede el formato 2×3 y la mira que seguía la posición absoluta del puntero.
 

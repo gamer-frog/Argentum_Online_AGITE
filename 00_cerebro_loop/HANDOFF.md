@@ -1,39 +1,41 @@
 # HANDOFF — estado actual
 
-> **Actualizado:** 2026-11-16 · **Rama:** `main` (T1, T2, T3, T4 y el pedido de puntería libre completados; sin commit ni push).
+> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1, T2, T3, T4, T5 y los pedidos de puntería completados; sin commit ni push).
 > Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
 
 ## Snapshot
 
 | Campo | Estado |
 | --- | --- |
-| Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-17 verde |
-| Tarea actual | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
-| Última completada | `P2 — Riel de una columna + mira vectorial tipo Wild Rift` |
-| Bloqueo | Ninguno; `T4` cerrada; `D1` resuelta |
-| Decisiones abiertas | `D2=B` (inventario funcional) |
+| Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-18 verde |
+| Tarea actual | `T6 — Variar ritmos de combate y persecución (sin balance)` |
+| Última completada | `T5 — Combo, maná y Fuente de vida (confirmación y propuesta)` |
+| Bloqueo | Ninguno; `T4`/`T5` cerradas; propuestas de balance pendientes de aprobación |
+| Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` |
 | Publicación | Sin commit ni push: no fue pedido explícitamente |
-| Navegador | 2026-11-17: riel 1×6 y mira vectorial verificados en Chromium (dead zone, topes de alcance, enganche y lanzamiento), 1440×1000 y consola 0/0 |
+| Navegador | 2026-11-18: probe de maná de 120 s en Chromium (797 muestras, Lindos → Arena, consola 0/0); última validación de layout 2026-11-17 (riel 1×6 y mira vectorial, 1440×1000 y 390×844) |
 
 ## Última acción completada
 
-**2026-11-17 · [P2] Riel de una columna + mira vectorial tipo Wild Rift.**
+**2026-11-18 · [T5] Combo, maná y `Fuente de vida`: confirmación y propuesta.**
 
-- **Riel:** los 6 botones (4 habilidades + 2 pociones) quedaron en una sola columna vertical sobre el borde derecho del mundo: 54×284 px a 1440×1000. Icono más grande y coste corto; el nombre completo sigue en el `title`.
-- **Mira:** al arrastrar una ranura, la mira nace en el personaje y la orienta el **vector desde el punto de apoyo** (estilo Wild Rift), no la posición del dedo. 14 px de zona muerta, alcance máximo a 96 px de arrastre (64 px en táctil), tope por `SPELL_VISION_RANGE` y por el borde de la pantalla, y anillo tenue con el alcance real.
-- **Enganche y cancelación:** al pasar sobre un objetivo válido la mira se pega al sprite y muestra corchetes; al soltar se lanza sobre él o sobre la casilla apuntada. Volver a menos de 12 px del apoyo cancela (antes cancelaba todo el riel, lo que impedía apuntar a la derecha).
-- **Móvil horizontal:** el clúster de acción se corrió a `right: clamp(7px, 6vw, 40px)` para dejar recorrido de arrastre; el riel sigue oculto y el cargador se mueve a `mobileActionCluster`.
+- **`Sanar` vs `Curar Heridas Graves`:** verificado contra `Dat/Hechizos.dat` @ `ca6ad7ff…`. AO #5 cura **12-35** por **40** maná, 5 stamina y `MinSkill=38`; el prototipo cura **40-45** por **220**. No son equivalentes: el nombre y el rango son de Imperium Classic. Tampoco coincide con la wiki 2012 (50-90 / 1000). No se renombra; una futura fidelidad AO requeriría agregar el hechizo.
+- **`Fuente de vida` 30-45:** la wiki 2012 publica 30-45 / 300, Classic 25-32, AO no lo tiene. Subir solo la curación mejora +5 a +13 por lanzamiento (eficiencia 0,114-0,145 → 0,136-0,205), pero no arregla el maná. Propuesta `práctica` sin aplicar.
+- **Maná del paladín:** 1000 de reserva, limpieza 330, regeneración 6/s, cooldown 2,5 s → **3 limpiezas** consecutivas; la 4.ª llega a los ~53 s (con coste 300, a los ~38 s). `Inmovilizar` + `Fuente` dejan 430: una sola limpieza.
+- **Medición real:** 120 s, 797 muestras, Lindos → Arena. Maná mínimo 85 y 13; **23 muestras** con el paladín paralizado y <330 (un tramo continuo de ≈1,6 s sin poder limpiarse); 5 muertes. Necesita apoyo cuando baja de 330. Una limpieza del jugador confirmó el descuento de 330 (1000 → 670, «Removida»).
 
-Verificado en Chromium: a 8/22/40/70/110 px de arrastre el alcance fue 0/43/140/300/440 px (tope exacto); un arrastre de 6,08 casillas enganchó `chaoticPaladin` y al soltar el jugador quedó `aiming:true` con `aimSpell:"Carga"`; tap sin arrastre sigue seleccionando y volver al apoyo muestra «Lanzamiento cancelado»; consola 0/0.
+Verificado en Chromium (`http://localhost:3002`, 1440×1000) con consola 0/0. Propuestas documentadas con fuente y etiqueta, sin aplicar; `game.js` y `dist/` sin cambios.
 
 ## Próximo paso inmediato
 
-**T5 — Combo, maná y `Fuente de vida` (confirmación y propuesta).**
+**T6 — Variar ritmos de combate y persecución (sin balance).**
 
-1. Cruzar `Curar heridas graves` vs `Sanar`, `Fuente de vida` 30-45 y el agotamiento de maná del paladín con `roadmap/reglas-combate.md` y `roadmap/hechizos-referencia.md`.
-2. Medir en combate real cuántos `Remover parálisis` lanza el paladín antes de quedarse sin maná y si necesita apoyo.
-3. Proponer ajustes con valor actual, fuente, etiqueta y efecto esperado. **No aplicar balance sin aprobación explícita.**
-4. Si se aprueba tocar código: `game.js` + `dist/game.js`, `verify.sh` y navegador 1440/390 con consola 0/0.
+1. Medir los patrones repetidos actuales: cooldowns fijos, intervalo de ataque, pausas de la IA y persecución.
+2. Introducir variación dentro de los valores vigentes (jitter de tiempos y decisión), sin cambiar daños, costos, curaciones, alcances ni reglas.
+3. Corregir oscilaciones o bloqueos (pares que se persiguen sin cerrar distancia, NPC plantado sin objetivo, cara a cara sin atacar).
+4. Playtest de 90 s antes/después con métricas; `game.js` + `dist/game.js`, `verify.sh` y navegador 1440/390 con consola 0/0.
+
+**Pendiente de aprobación (no hacer sin pedido):** aplicar las propuestas de `T5` (limpieza 330 → 300 y `Fuente de vida` 30-45).
 
 **No hacer todavía:** mecánicas de inventario (`D2=B`), cambios de balance sin aprobación, extracción de assets nuevos, rediseño global del HUD.
 
@@ -55,12 +57,13 @@ playwright-cli console
 - `http://localhost:3002` sirve `dist/` vía `start.sh`, que copia `index.html`, `styles.css`, `game.js`, `favicon.svg` y `assets/ao/` al arrancar.
 - Jugable: mover, objetivo (Tab/clic), atacar (F/Enter/Espacio), hechizos 1-4 con apuntado, pociones 5-6, esquiva, pausa y reinicio.
 - NPCs combaten de forma continua; curas, remociones y apoyo operativos.
-- La última validación de producto (2026-11-16) confirmó la rotación completa de mapas: 1 → 34 → 59 → 62 → 272 → 1, con un cambio cada 5 bajas; los cinco mapas cargaron y se capturaron. A 1440×1000 y 390×844 no hubo overflow y la consola quedó 0/0. `T4` fue solo documental y no repitió el playtest de combate; el preflight quedó verde.
+- La última validación de producto (2026-11-18) fue el probe de maná de T5: 120 s de combate, 797 muestras, mapa Lindos → Arena, consola 0/0. La última validación de layout sigue siendo la de 2026-11-17/16: riel 1×6 y rotación completa 1 → 34 → 59 → 62 → 272 a 1440×1000 y 390×844.
 
 ## Decisiones abiertas
 
 - **D1 — Lista de mapas:** resuelta el 2026-11-16. Lista implementada: Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272).
 - **D2 — Inventario/equipo:** A visual ya ejecutado en T1; B funcional mínimo sigue pendiente de decisión. Sin respuesta no se agregan mecánicas.
+- **D7 — Propuestas de balance de T5:** limpieza 330 → 300 y `Fuente de vida` 30-45 quedaron documentadas, no aplicadas. Sin respuesta, `game.js` conserva 330/220.
 
 ## Reglas operativas
 

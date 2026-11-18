@@ -47,9 +47,53 @@ Los daños y curaciones ya se compararon en [`hechizos-referencia.md`](hechizos-
 | Inmovilizar (mago, clérigo, paladín) | 350 | `Inmovilizar` #24: 300 maná, 44 stamina, `MinSkill=60`. | **Aproximado**: mismo hechizo y efecto; costo adaptado. |
 | Remover parálisis (mago, clérigo, paladín) | 330 | `Devolver Movilidad` #10: 300 maná, 44 stamina, `MinSkill=45`. | **Aproximado**: mismo efecto; costo adaptado. |
 | Ráfaga Ígnea (clérigo) | 230 | Sin nombre equivalente. No se asume que `Dardo Mágico` #2 (10 maná, `MinSkill=6`) sea el mismo hechizo. | **Práctica**: nombre y costo de Imperium. |
-| Sanar (clérigo) | 220 | Sin nombre equivalente. No se asume equivalencia con `Curar Heridas Leves` #3 ni `Curar Heridas Graves` #5 sin verificar daño, clase y requisitos. | **Práctica**: nombre y costo de Imperium. |
+| Sanar (clérigo) | 220 | `Curar Heridas Graves` #5: **12-35** por **40** maná, 5 stamina, `MinSkill=38` (verificado 2026-11-18). No es equivalente: el nombre y el rango 40-45 son de Imperium Classic; AO cura menos de la mitad y cuesta 5,5× menos maná. | **Práctica**: nombre, curación y costo de Imperium; el homólogo AO existe pero no coincide. |
 | Castigo Divino (paladín) | 40 | Sin hechizo con ese nombre en `Hechizos.dat`. | **Práctica**: no hay equivalente AO que comparar. |
 | Fuente de vida (paladín) | 220 | Sin hechizo con ese nombre en `Hechizos.dat`. | **Práctica**: no hay equivalente AO que comparar. |
+
+## Capacidad de maná del paladín (T5)
+
+Reserva de 1000 (`game.js:78`), coste de `Remover parálisis` 330 (`game.js:80`), regeneración de 6/s (`MANA_REGEN` en `game.js:50`, aplicada en `game.js:1120`), cooldown de limpieza 2,5 s y recarga global 0,9 s (`game.js:653-656`). El maná se descuenta al resolver el lanzamiento (`game.js:651-652`) y se devuelve si el objetivo no estaba paralizado (`game.js:669-674`).
+
+**Ráfaga teórica** (sin otros gastos, sin pociones y con parálisis disponible en cada intento):
+
+| Momento | Con coste 330 (actual) | Con coste 300 (AO #10) |
+| --- | ---: | ---: |
+| Inicio | 1000 | 1000 |
+| 1.er `Remover parálisis` (t=0) | 670 | 700 |
+| 2.º (t=2,5 s) | 355 | 385 |
+| 3.º (t=5,0 s) | 40 | 100 |
+| 4.º (t=7,5 s) | 55 → **bloqueado** | 115 → **bloqueado** |
+| 4.º disponible tras regenerar | ~53 s (48,3 s de espera) | ~38 s (33,3 s) |
+
+- **Tres limpiezas consecutivas** es el máximo en ambos casos; la cuarta exige casi un minuto de regeneración pasiva.
+- Una **poción azul** restaura 450 (45 % de 1000) y compra **una limpieza extra inmediata** (40 → 490), a cambio de 1,1 s de bloqueo.
+- El paladín compite por la misma reserva: `Inmovilizar` 350 y `Fuente de vida` 220. Después de usar ambos quedan 430, es decir **una sola limpieza** (100 restantes). Si además usa `Castigo Divino` (40), la reserva baja a 390.
+- La IA solo intenta la autolimpieza si `mana >= 330` (`game.js:972-976`); si no, queda paralizada y depende de un aliado.
+
+**Medición en combate real (2026-11-18).** Probe de 120 s en Chromium (`http://localhost:3002`, 1440×1000), mapa Lindos → Arena a los 58,2 s, 797 muestras cada 150 ms:
+
+- Maná mínimo observado: **85** (`sacredPaladin`) y **13** (`chaoticPaladin`).
+- **23 muestras** con el paladín **paralizado y con menos de 330 de maná**; el primer tramo continuo observado duró ≈1,6 s (`sacredPaladin`, 290-295): no pudo limpiarse.
+- **5 muertes** de paladín (3 sagrado, 2 caótico) en los 120 s.
+- Caídas de maná observadas compatibles con el código: **350** (`Inmovilizar`), **330** (`Remover parálisis`), **220** (`Fuente de vida`) y **40** (`Castigo Divino`).
+- El texto flotante «Removida» apareció en 166 muestras; como el texto persiste varios frames, **no** es un conteo de lanzamientos, sino evidencia de que la remoción ocurre en combate.
+
+**¿Necesita apoyo?** Sí, cuando la reserva baja de 330. El paladín puede limpiar a aliados (la IA de `cleanse` no está limitada por `SUPPORT_CLASSES`, que solo gatea curas), y a su vez puede recibir limpieza de magos y clérigos, que priorizan aliados congelados (`updateNpcSupport`, `game.js:992-1000`). No hay un pedido explícito de apoyo: el paladín congelado y sin maná queda a merced de la prioridad del aliado.
+
+## Propuestas de T5 (sin aplicar)
+
+Ninguna de estas propuestas se aplicó: `game.js` no cambió. Requieren aprobación explícita.
+
+| # | Propuesta | Valor actual | Fuente | Etiqueta | Efecto esperado |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `Remover parálisis`: 330 → **300** de maná | 330 | AO Libre `Devolver Movilidad` #10: 300 maná, 44 stamina, `MinSkill=45` | **Aproximado**: mismo efecto; sigue sin exigir stamina ni `MinSkill` | La ráfaga sigue siendo 3 limpiezas, pero la 4.ª llega a los ~38 s en vez de ~53 s y quedan 100 de reserva en vez de 10. |
+| 2 | `Fuente de vida`: curación 25-32 → **30-45**, costo 220 | 25-32 / 220 | Wiki Imperium AO 2012: 30-45 / 300 | **Práctica** (Imperium); AO no tiene ese hechizo | +5 a +13 de vida por lanzamiento; eficiencia 0,114-0,145 → 0,136-0,205 de vida por maná. No resuelve el agotamiento. |
+| 3 | `Sanar`: dejarlo en 40-45 / 220 y **no** renombrarlo | 40-45 / 220 | AO #5 cura 12-35 por 40; Classic 40-45; wiki 50-90 por 1000 | **Práctica** | Evita presentar como AO un valor de Imperium; si se quiere AO, hay que agregar `Curar Heridas Graves` como hechizo aparte. |
+| 4 | `Fuente de vida`: costo 220 → **300** | 220 | Wiki 2012: 300 | **Práctica** | Empeora el maná del paladín; no se recomienda sin revisar la reserva o la regeneración. |
+| 5 | `Inmovilizar`: nombre/costo | 350 | AO #24 `Inmovilizar`: 300; AO #9 `Paralizar`: 450 | **Sin dato** para un único costo | El efecto implementado es el de `Paralizar` (bloquea movimiento y apuntado), pero el nombre es `Inmovilizar`: no hay un valor AO único para esa fusión. Requiere decisión de producto, no un ajuste de balance. |
+
+**Recomendación.** Si se aprueba un cambio mínimo, aplicar **1 + 2** juntas: la 1 mejora la disponibilidad de la limpieza sin tocar la curación, y la 2 sube la supervivencia del paladín sin empeorar el maná. La 2 sola no arregla la limpieza; la 1 sola no arregla la curación. La 4 queda descartada salvo que se revise la reserva completa. La 3 no es un cambio: es la decisión de no presentar `Sanar` como AO.
 
 ## Recuperación, pociones y recursos
 
@@ -71,16 +115,19 @@ Los daños y curaciones ya se compararon en [`hechizos-referencia.md`](hechizos-
 5. **Faltan dos requisitos de AO:** stamina (ataque y hechizos) y `MinSkill` de Magia. El prototipo solo exige maná, objetivo y cooldown.
 6. **La recuperación no sigue a AO:** no hay regeneración pasiva de vida ni meditación; en cambio hay 6 de maná por segundo siempre. Las pociones son porcentuales e infinitas, mientras AO usa valores fijos o una fórmula por nivel y consume el objeto.
 7. **Ninguna fila quedó como `confirmado` en este primer corte:** incluso las reglas que existen en AO cambian valor, geometría o requisitos. La etiqueta se reserva para una réplica sin cambio material y no se forzó para inflar la tabla.
+8. **T5 confirmó dos puntos y midió uno:** `Sanar` no equivale a `Curar Heridas Graves` (AO cura 12-35 por 40; el prototipo 40-45 por 220); `Fuente de vida` 30-45 es una mejora de práctica de la wiki 2012, no un valor AO; y el paladín se queda sin maná para limpiarse en combate real (mínimos de 13-85, 23 muestras paralizado con menos de 330). Las propuestas quedan sin aplicar.
 
 ## Sin dato / límites
 
 - **Estadísticas de nivel 40 por clase:** la revisión fijada no ofrece una tabla directamente comparable; por eso no se afirma que vida/maná del prototipo sean los de AO. El `README.md` ya documenta que son valores de práctica.
 - **Fórmula exacta de `UsuarioImpacto`:** se verificó que existe y que usa habilidad/agilidad (`SistemaCombate.bas:1258-1270`), pero no se replica en el prototipo; no se presenta el 78% de los NPC como equivalente.
-- **Hechizos de Imperium:** daños, curaciones y costos están documentados en [`hechizos-referencia.md`](hechizos-referencia.md); esta matriz no los vuelve a validar contra AO porque no existen con ese nombre en la fuente fijada.
+- **Hechizos de Imperium:** daños, curaciones y costos están documentados en [`hechizos-referencia.md`](hechizos-referencia.md); esta matriz no los vuelve a validar contra AO porque no existen con ese nombre en la fuente fijada. T5 verificó la excepción de `Sanar`: su homólogo por efecto es `Curar Heridas Graves` #5, pero los valores no coinciden (12-35 por 40 vs 40-45 por 220).
 - **Comportamiento de `Paralizado` vs `Inmovilizado` en AO:** la fuente distingue ambos flags y comparte el contador; no se afirma que el prototipo replique todas sus restricciones de acción. Solo se documenta la diferencia de duración y la fusión en un único estado.
 
 ## Verificación
 
 - Comparación estática con la revisión fijada: descarga de `Server.ini`, `Dat/Hechizos.dat`, `Dat/obj.dat`, `Dat/Balance.dat` y los módulos citados; lectura de las líneas indicadas.
+- T5 (2026-11-18): `Dat/Hechizos.dat` y `Codigo/modHechizos.bas` se descargaron de nuevo desde la revisión fijada para leer los campos del hechizo 5 (`Curar Heridas Graves`), 10 (`Devolver Movilidad`) y el chequeo `MinSkill`/maná/stamina.
+- Medición de producto en Chromium (`http://localhost:3002`, 1440×1000, consola 0 errores / 0 advertencias): 120 s de combate real, 797 muestras de maná de ambos paladines, mapa Lindos → Arena; una limpieza del jugador paladín confirmó el descuento real de 330 (1000 → 670 con «Removida»).
 - No se modificó código de producto ni se extrajeron assets.
 - `bash 00_cerebro_loop/verify.sh` quedó verde; al ser un cambio documental no requiere un nuevo playtest de navegador. La última validación de producto sigue siendo la de `T2` (rotación completa, 1440×1000 y 390×844, consola 0/0).

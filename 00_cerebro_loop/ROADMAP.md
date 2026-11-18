@@ -1,6 +1,6 @@
 # ROADMAP — orden del backlog
 
-> **Actualizado:** 2026-11-16. Este archivo ordena el trabajo; no redefine pedidos ni decisiones.
+> **Actualizado:** 2026-11-18. Este archivo ordena el trabajo; no redefine pedidos ni decisiones.
 > Pedidos: [`USER_REQUESTS.md`](USER_REQUESTS.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Cola viva: [`TODO.md`](TODO.md).
 
 ## Criterio de orden
@@ -14,13 +14,12 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T5** | Combo, maná y `Fuente de vida` | Ahora | T4 | Propuesta con valor actual, fuente, etiqueta y efecto; sin aplicar balance sin aprobación |
+| **T6** | Variar ritmos de combate y persecución | Ahora | T4 + playtest T5 | Jitter dentro de los valores vigentes; sin cambios de balance; métricas de 90 s antes/después |
 
 ## Después
 
 | ID | Tarea | Depende | Nota |
 | --- | --- | --- | --- |
-| **T6** | Variar estados, remociones y persecución | T4 + playtest | Menos patrones, sin pares quietos; terminología AO |
 | **T7** | Inventario/equipamiento funcional | T1 + `D2` B | Requiere contrato de objetos; no inventar reglas |
 | **T8** | Chat lateral y sonidos licenciados | Auditoría de licencias | Solo con assets compatibles |
 | **T9** | Escenarios 1v1 / 2v2 / 3v3 | T1/T5 | Selector de formato; reutilizar arena |
@@ -40,6 +39,7 @@
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-18 | T5: combo, maná y `Fuente de vida` (confirmación y propuesta) | `HISTORY.md`; `roadmap/reglas-combate.md`; `roadmap/hechizos-referencia.md`; probe de 120 s |
 | 2026-11-16 | T4: matriz de reglas de combate vs AO Libre (primer corte) | `HISTORY.md`; `roadmap/reglas-combate.md`; etiquetas confirmado/aproximado/práctica/sin dato |
 | 2026-11-16 | T2: rotación de mapas aprobada | `HISTORY.md`; lista 1→34→59→62→272; 5 cambios/25 bajas; 5 capturas |
 | 2026-11-16 | T3: auditoría de FX de hechizos | `HISTORY.md`; `roadmap/fx-hechizos.md`; 1 original / 3 reutilizados / 4 reserva |

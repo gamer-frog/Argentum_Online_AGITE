@@ -21,6 +21,23 @@
 
 **Impacto si se aprueba A.** Cambios en `index.html`/`styles.css` y `dist/`, comparación a 1023×770, validación 1440×1000 y 390×844. No toca `game.js` salvo que la estructura lo exija. **Completado:** ver `HISTORY.md` (2026-11-16).
 
+### D7 — Aplicar las propuestas de balance de T5
+
+**Contexto.** T5 midió el maná del paladín y confirmó que `Sanar` no equivale a `Curar Heridas Graves`. Dejó propuestas con fuente y etiqueta, pero **no las aplicó** porque el protocolo prohíbe cambiar balance sin aprobación.
+
+**Opciones.**
+
+- **A. Aplicar 1+2:** `Remover parálisis` 330 → 300 (AO #10) y `Fuente de vida` 25-32 → 30-45 con coste 220 (wiki 2012). Medir con el mismo probe de 90/120 s.
+- **B. Aplicar solo 1:** mejora la disponibilidad de la limpieza; no toca la curación.
+- **C. Aplicar solo 2:** mejora la supervivencia del paladín; no arregla la limpieza.
+- **D. No aplicar:** el prototipo queda como práctica de Imperium.
+
+**Recomendación.** A, con medición antes/después. Si el paladín sigue muriendo, revisar la reserva o la regeneración en una tarea aparte en vez de seguir bajando costos sin fuente.
+
+**Asunción mientras no haya respuesta.** No se aplica nada: `game.js` conserva 330/220. `T6` no toca estos valores.
+
+**Impacto si se aprueba.** `game.js` + `dist/game.js`, playtest de combate y actualización de `roadmap/reglas-combate.md`/`HISTORY.md`; no cambia el layout.
+
 ## Cerradas
 
 ### D1 — Lista de mapas para la rotación
