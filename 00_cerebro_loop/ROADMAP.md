@@ -14,16 +14,15 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T11** | Auditoría de licencias/atribución por recurso | Ahora | — | Tabla por familia de recursos; desbloquea `T8`; sin tocar código ni assets |
+| **T8** | Chat lateral local (sin audio nuevo) | Ahora | `T11` + `T1` | Mensajes locales en el historial; sin red ni sonidos; layout 1440/390 y consola 0/0 |
 
 ## Después
 
 | ID | Tarea | Depende | Nota |
 | --- | --- | --- | --- |
 | **T7** | Inventario/equipamiento funcional | T1 + `D2` B | Requiere contrato de objetos; no inventar reglas |
-| **T8** | Chat lateral y sonidos licenciados | Auditoría de licencias | Solo con assets compatibles |
+| **T8b** | Sonidos nuevos de golpes/hechizos | `T8` + L5 | Solo con autoría/licencia compatible; no ampliar audio sin auditar |
 | **T10** | Multijugador y persistencia | T7/T9 + alcance | Pospuesto; requiere backend |
-| **T12** | Referencia visual estable con versión/fecha | — | La galería oficial sirve para estilo, no para píxeles |
 
 ## Bloqueos y decisiones
 
@@ -31,12 +30,14 @@
 - **D2 — Inventario/equipo:** visual primero (A) vs funcional mínimo (B) vs diferir (C). Asunción actual: A.
 - **D3 — Proporción del HUD:** cerrada; no estrechar sin especificación.
 - **D4 — PvP infinito:** cerrada; sin contador ni condición de victoria.
-- **D5 — Publicación:** sin commit/push salvo pedido explícito.
+- **D5 — Publicación:** publicar en `origin/main` al cerrar cada tarea (pedido 2026-11-18); nunca `--force`.
 
 ## Completado (resumen)
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-18 | T12: referencia visual versionada | `HISTORY.md`; `roadmap/referencia-visual.md`; `frmMain.frm` 1022×767 px, revisión `7d32d61…` |
+| 2026-11-18 | T11: auditoría de licencias y atribución por recurso | `HISTORY.md`; `roadmap/licencias-recursos.md`; AGPL-3.0; 203/203 PNG y 3/3 WAV idénticos |
 | 2026-11-18 | T9: escenarios 1v1 / 2v2 / 3v3 con selector de formato | `HISTORY.md`; selector en la barra; 2/4/6/8 activos; práctica fija en la arena |
 | 2026-11-18 | T6: ritmos de combate y persecución (mago acosado corregido) | `HISTORY.md`; probes de 90 s y 45 s; tramo bajo presión 10,75 s → 1,75 s |
 | 2026-11-18 | T5: combo, maná y `Fuente de vida` (confirmación y propuesta) | `HISTORY.md`; `roadmap/reglas-combate.md`; `roadmap/hechizos-referencia.md`; probe de 120 s |

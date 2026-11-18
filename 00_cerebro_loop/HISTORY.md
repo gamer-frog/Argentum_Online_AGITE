@@ -3,6 +3,28 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-18 · [T12] Referencia visual estable con versión y fecha
+Se fijó una referencia **versionada y reproducible** del HUD en **`roadmap/referencia-visual.md`**, sin tocar producto ni assets.
+
+- **Fuente primaria:** `CODIGO/Formularios/frmMain.frm` del cliente `ao-libre/ao-cliente` en la revisión `7d32d61759d6b95069aba72ae12bed03c1d13700` (commit del **2025-09-22T05:18:21Z**). Archivo de 112.869 bytes, SHA-256 `1769e4e4…ab83ff`.
+- **Geometría:** superficie del formulario **1022×767 px** (`ScaleWidth`/`ScaleHeight`) y conversión exacta **15 twips = 1 px** (`ClientWidth` 15.330, `ClientHeight` 11.505). Se tabularon las regiones: chat (8,20,628×111), entrada (24,160,713×24), viewport (12,155,736×608), minimapa (645,28,100×100), panel derecho (792–993), inventario/equipo (792,128,198×297), acciones (y=376), estadísticas (y=504–562), rejilla de botones (y=568–657) y barra inferior (y=677–744).
+- **Referencia secundaria:** la galería oficial sigue siendo solo estilo: seis capturas de 1023×770/1024×770, sin versión ni fecha de captura; `Last-Modified: 2026-10-22` no acredita la toma. La geometría del formulario corrobora el tamaño de la ventana y permite comparar proporciones sin depender de esas capturas.
+- **Límites explícitos:** se puede comparar superficie, posición y tamaño de regiones, y alturas de filas; **no** colores/skins (`.frx`), tipografía VB6 ni iconos de GUI no importados. No se copiaron coordenadas al CSS responsive ni se cambió el layout (`D3`).
+
+Verificación: hash y geometría reproducidos con `curl` + parser incluido en el documento; `bash 00_cerebro_loop/verify.sh` verde y enlaces locales válidos. Documento enlazado desde `roadmap/producto-recuperado.md`.
+
+## 2026-11-18 · [T11] Auditoría de licencias y atribución por recurso
+Se auditó el subset `assets/ao/` contra la revisión fijada del cliente y se documentó todo en **`roadmap/licencias-recursos.md`**. **No se modificaron assets, código de producto ni reglas.**
+
+- **Licencia upstream confirmada:** `LICENSE` del cliente `7d32d61…` es **AGPL-3.0** (texto completo, 34.520 bytes) y GitHub API la reporta como `agpl-3.0`; el servidor `ca6ad7f…` también declara `agpl-3.0`. La fuente de créditos es `INIT/Creditos.txt`.
+- **Copias exactas:** se comparó el SHA de blob Git de cada archivo local con el árbol upstream. **203/203 PNG** de `graphics/` y **3/3 WAV** de `audio/` son idénticos byte a byte; mapas y JSON (`grhs`, `characters`, `maps`, `spellfx`) son datos derivados, no copias.
+- **Tabla por familia:** 11 filas (láminas, Grh, personajes, mapas, manifiesto, FX, audio, `map.json`, `ATTRIBUTION.txt`, código/UI propio y datos del servidor) con origen, licencia, atribución, estado `confirmado` / `aproximado` / `sin dato` y si es redistribuible.
+- **Atribuciones obligatorias:** programación, colaboración gráfica (ReyarB, Aizanoth, guidota), indexación, mapas (ReyarB), testeo, traducción, remasterizaciones musicales, webmaster y mantenimiento. Se conservan en `ATTRIBUTION.txt`; la fuente **no asigna autoría por PNG/Grh/WAV**.
+- **Bloqueos:** B1 código propio sin `LICENSE`; B2 obligación de AGPL §13 (ofrecer fuente si se sirve por red); B3 licencia por medio no documentada; B4 medios de terceros no identificados; B5 nombre/marca; B6 sin cadena de títulos por archivo. Acciones L1–L6 registradas, sin ejecutar (requieren decisión de producto).
+- **Hallazgo H4:** `assets/ao/map.json` es una copia legacy que el cliente **no** carga y difiere de `maps/272.json` en `tiles[43][31].b` (`true` vs `false`). Se documenta; no se toca en T11.
+
+Verificación: comparación reproducida con `git hash-object` contra el árbol de la revisión fijada; `bash 00_cerebro_loop/verify.sh` verde y enlaces locales válidos. Documento enlazado desde `README.md`, el inventario y `roadmap/producto-recuperado.md`.
+
 ## 2026-11-18 · [T9] Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato
 Se agregó un selector de formato en la barra del mapa y se reutilizó la arena existente (mapa 272). **No se cambiaron clases, daños, costos, curaciones, alcances ni reglas.**
 
