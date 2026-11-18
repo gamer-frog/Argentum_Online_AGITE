@@ -12,7 +12,7 @@
 | Última completada | `T12 — Referencia visual estable con versión y fecha` |
 | Bloqueo | Ninguno para `T8`; `T7` depende de `D2`; `T8b` (sonidos) depende de `L5` |
 | Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` (`D7`) |
-| Publicación | `origin/main` al día: `097e79f` (T6), `932bccf` (T9), `e79a189` y `103d7eb` (T11) |
+| Publicación | `origin/main` al día: `097e79f` (T6), `932bccf` (T9), `103d7eb` (T11) y `ef035dd` (T12) |
 | Navegador | 2026-11-18: T9 validado en Chromium 1440×1000 y 390×844 (capturas en `/tmp/opencode/shots/t9-*.png`, consola 0/0); 2/4/6/8 activos y práctica fija en la arena |
 
 ## Última acción completada
