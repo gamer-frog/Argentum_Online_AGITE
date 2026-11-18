@@ -22,13 +22,14 @@
 ## Procedencia, crédito y licencia
 
 - La procedencia, revisión y créditos generales recuperados de `INIT/Creditos.txt` se conservan en [`../assets/ao/ATTRIBUTION.txt`](../assets/ao/ATTRIBUTION.txt). Ese archivo acredita, entre otros, mapas a ReyarB y enumera colaboradores gráficos, pero **no asigna autoría individual a cada PNG/Grh**.
-- El repositorio upstream incluye licencia AGPL-3.0 y el whitepaper citado por el proyecto describe el código y los recursos con licencia GPL. El subset no contiene una investigación de licencia por archivo ni prueba de que cada medio tenga idéntica concesión. Antes de redistribuir, conservar los avisos upstream y revisar la licencia/condiciones de los recursos concretos; este inventario no sustituye asesoramiento legal.
+- El repositorio upstream declara **AGPL-3.0** en su raíz (`LICENSE`) y GitHub API la reporta como `agpl-3.0`, tanto para el cliente como para el servidor fijados. El subset no contiene una cesión de licencia por archivo ni prueba de que cada medio tenga idéntica concesión. Antes de redistribuir, conservar los avisos upstream y revisar las condiciones de los recursos concretos; ni este inventario ni la auditoría sustituyen asesoramiento legal.
 - Los PNG y WAV son copias upstream; JSON son datos derivados/recortados por el extractor. No se declara que los recursos sean obra original de este prototipo.
+- La auditoría detallada por familia, atribuciones obligatorias, bloqueos y obligaciones de AGPL §13 está en [`licencias-recursos.md`](licencias-recursos.md). Confirmó que **203/203 PNG y 3/3 WAV son idénticos byte a byte** al upstream fijado; los mapas y JSON son derivados. También detectó que `map.json` es una copia legacy que el cliente no carga y que difiere de `maps/272.json` en una casilla.
 
 ## Ausencias y siguientes verificaciones
 
 1. Obtener y fijar una referencia visual estable del cliente (versión, resolución y procedencia) y comparar capturas con la misma composición.
 2. Probar en navegador cada una de las tres animaciones y sonidos, documentando pantalla, objetivo, offsets y resultado; no extrapolar esa prueba al resto del catálogo.
-3. Completar la auditoría de condiciones de redistribución y créditos específicos por recurso cuando la fuente los proporcione.
+3. ~~Completar la auditoría de condiciones de redistribución y créditos específicos por recurso cuando la fuente los proporcione.~~ **Hecho (T11, 2026-11-18):** [`licencias-recursos.md`](licencias-recursos.md); la autoría por archivo sigue sin dato en la fuente.
 4. Decidir qué otros mapas, personajes, GUI, iconos y sonidos hacen falta antes de ampliar el extractor. No ampliar el subset por inercia.
 5. Mantener fuera del inventario de recursos importados las clases, estadísticas y reglas aproximadas hasta verificarlas contra datos/código de la revisión elegida.
