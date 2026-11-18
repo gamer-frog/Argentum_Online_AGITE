@@ -1,6 +1,6 @@
 # HANDOFF — estado actual
 
-> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1–T6, T9, T11 y los pedidos de puntería completados y publicados en `origin/main`).
+> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1–T6, T9, T11, T12 y los pedidos de puntería completados y publicados en `origin/main`).
 > Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
 
 ## Snapshot
@@ -8,33 +8,32 @@
 | Campo | Estado |
 | --- | --- |
 | Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-18 verde |
-| Tarea actual | `T12 — Referencia visual estable con versión y fecha` |
-| Última completada | `T11 — Auditoría de licencias y atribución por recurso` |
-| Bloqueo | Ninguno para `T12`; `T7` depende de `D2`; `T8` queda condicionado por la licencia de audio/GUI (L5) |
+| Tarea actual | `T8 — Chat lateral local (sin audio nuevo)` |
+| Última completada | `T12 — Referencia visual estable con versión y fecha` |
+| Bloqueo | Ninguno para `T8`; `T7` depende de `D2`; `T8b` (sonidos) depende de `L5` |
 | Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` (`D7`) |
-| Publicación | `origin/main` al día: `097e79f` (T6), `932bccf` (T9) y `e79a189`; T11 se publica al cerrar (`D5`) |
+| Publicación | `origin/main` al día: `097e79f` (T6), `932bccf` (T9), `e79a189` y `103d7eb` (T11) |
 | Navegador | 2026-11-18: T9 validado en Chromium 1440×1000 y 390×844 (capturas en `/tmp/opencode/shots/t9-*.png`, consola 0/0); 2/4/6/8 activos y práctica fija en la arena |
 
 ## Última acción completada
 
-**2026-11-18 · [T11] Auditoría de licencias y atribución por recurso.**
+**2026-11-18 · [T12] Referencia visual estable con versión y fecha.**
 
-- **Documento:** `roadmap/licencias-recursos.md` con tabla de 11 familias (origen, licencia, atribución, estado y redistribución), atribuciones obligatorias, bloqueos B1–B6, obligación de AGPL §13 y acciones L1–L6.
-- **Licencia confirmada:** cliente y servidor fijados declaran **AGPL-3.0** (`LICENSE` completo y GitHub API). `INIT/Creditos.txt` da créditos generales, no autoría por archivo.
-- **Copias exactas:** 203/203 PNG y 3/3 WAV coinciden con los blobs del upstream fijado; mapas y JSON son derivados.
-- **Sin tocar producto:** no se modificaron assets, `game.js`, `index.html`, `styles.css` ni reglas. Se corrigieron afirmaciones documentales sobre `map.json` y la licencia.
-- **Hallazgo H4:** `map.json` es legacy, no lo carga el cliente y difiere de `maps/272.json` en `tiles[43][31].b`.
+- **Documento:** `roadmap/referencia-visual.md` con la geometría del `frmMain.frm` en la revisión `7d32d61…` (commit 2025-09-22, SHA-256 del archivo), superficie **1022×767 px**, conversión **15 twips/px** y regiones principales.
+- **Comparación:** la galería oficial queda como referencia de estilo; no tiene versión ni fecha de captura. La geometría del formulario sí es versionada y reproducible.
+- **Límites:** se pueden comparar proporciones y tamaños de región; no colores/skins (`.frx`), tipografía VB6 ni iconos no importados. No se copiaron coordenadas al CSS ni se cambió el layout (`D3`).
+- **Sin tocar producto:** no se modificaron `game.js`, `index.html`, `styles.css`, assets ni reglas.
 
-`bash 00_cerebro_loop/verify.sh` verde y enlaces locales válidos; documento enlazado desde README, inventario y producto recuperado. Detalle en `HISTORY.md`.
+`bash 00_cerebro_loop/verify.sh` verde y enlaces locales válidos; documento enlazado desde producto recuperado. Detalle en `HISTORY.md`.
 
 ## Próximo paso inmediato
 
-**T12 — Referencia visual estable con versión y fecha.**
+**T8 — Chat lateral local (sin audio nuevo).**
 
-1. Fijar una captura/referencia reproducible del cliente con revisión, resolución, procedencia y fecha.
-2. Registrar qué elementos se pueden comparar (layout, proporciones, paleta) y cuáles no.
-3. No copiar píxeles de capturas sin versión verificable ni rehacer la interfaz por inercia.
-4. Documentar límites y evidencia; verificar enlaces y `verify.sh`.
+1. Revisar el historial de combate y el layout del panel lateral en `index.html`/`styles.css`.
+2. Habilitar un campo de mensaje local con envío al historial, sin red ni persistencia.
+3. Mantener el foco de juego y el layout 1440×1000 / 390×844 sin desborde.
+4. No agregar sonidos: la licencia de audio ampliado sigue pendiente (`L5`). Verificar consola 0/0, `dist/` y `verify.sh`.
 
 **Pendiente de aprobación (no hacer sin pedido):** aplicar las propuestas de `T5` (limpieza 330 → 300 y `Fuente de vida` 30-45).
 
@@ -59,7 +58,7 @@ playwright-cli console
 - Jugable: mover, objetivo (Tab/clic), atacar (F/Enter/Espacio), hechizos 1-4 con apuntado, pociones 5-6, esquiva, pausa y reinicio.
 - NPCs combaten de forma continua; curas, remociones y apoyo operativos.
 - La última validación de producto (2026-11-18, T9) fue en Chromium: cambio de formato 1→2→3→4 (2/4/6/8 activos), 40 s de práctica 1v1 sin rotación ni suplentes revividos y salida por REINICIAR; capturas 1440×1000 y 390×844 en `/tmp/opencode/shots/t9-*.png`, consola 0/0. La rotación completa 1 → 34 → 59 → 62 → 272 sigue validada desde T2.
-- **T11 (2026-11-18) fue solo documentación**: no cambió producto ni assets, por lo que no requiere nueva pasada de navegador; `verify.sh` valida enlaces y sincronía.
+- **T11 y T12 (2026-11-18) fueron solo documentación**: no cambiaron producto ni assets, por lo que no requieren nueva pasada de navegador; `verify.sh` valida enlaces y sincronía.
 
 ## Decisiones abiertas
 

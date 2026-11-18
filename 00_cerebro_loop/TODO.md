@@ -5,31 +5,31 @@
 
 ## Ahora
 
-### T12 — Referencia visual estable con versión y fecha
+### T8 — Chat lateral local (sin audio nuevo)
 
-**Estado:** lista para empezar. Es la siguiente tarea desbloqueada: `T7` depende de `D2` y `T8` de la licencia de audio/GUI, ya auditada.
-**Depende de:** nada; la galería oficial ya está revisada y descartada como patrón estable.
-**Pedido:** «Referencia visual estable con versión y fecha» (`ROADMAP.md`).
+**Estado:** lista para empezar. Se separa el chat (UI propia) de los sonidos licenciados, que siguen condicionados por `L5`.
+**Depende de:** `T11` (hecho) y `T1` (hecho). No depende de `D2`.
+**Pedido:** «Chat lateral y sonidos de golpes/hechizos si hay recursos licenciados» (`USER_REQUESTS.md`).
 
 **Alcance**
 
-- Fijar una referencia visual del cliente (versión/revisión, resolución y procedencia) que se pueda reproducir.
-- Registrar la fuente y la fecha de captura, y qué partes de la UI cubre.
-- Comparar solo los elementos que la referencia permita sostener (layout, proporciones, paleta), sin declarar fidelidad de píxeles.
-- Dejar documentado qué falta para una comparación lado a lado.
+- Convertir el historial de combate en un panel de chat lateral con mensajes del sistema y del jugador.
+- Permitir escribir y enviar un mensaje local (sin red ni persistencia); el texto se muestra en el historial con hora o marca simple.
+- Respetar el layout actual: en móvil debe seguir siendo usable y no desbordar el HUD.
+- Etiquetar claramente que el chat es local y no hay multijugador (`D4`/`T10`).
 
 **No incluye**
 
-- Rehacer la interfaz ni copiar píxeles de capturas sin versión verificable.
-- Cambiar reglas, balance o assets.
-- Publicar avisos legales definitivos (`T11` ya auditó; `L1`–`L3` siguen pendientes de producto).
+- Red, multijugador, moderación, persistencia ni canales.
+- Sonidos nuevos: `T11` no encontró autoría/licencia por pista para ampliar audio (`L5`).
+- Cambiar reglas de combate, balance o assets.
 
 **Criterios de aceptación**
 
-- [ ] Referencia con versión/revisión, resolución, procedencia y fecha.
-- [ ] Tabla de qué se puede comparar y qué no, con límites explícitos.
-- [ ] Enlaces locales válidos y `bash 00_cerebro_loop/verify.sh` verde.
-- [ ] Evidencia y próximo paso en `HISTORY.md` y `HANDOFF.md`.
+- [ ] Se puede escribir y enviar un mensaje local; aparece en el historial y no rompe el foco del juego.
+- [ ] El panel funciona a 1440×1000 y 390×844 sin desborde, con consola 0/0.
+- [ ] Sin cambios en daños, costos, curaciones, alcances ni reglas.
+- [ ] `game.js` + `dist/`, `verify.sh` verde y evidencia en `HISTORY.md`/`HANDOFF.md`.
 
 ## Bloqueadas / requieren decisión
 
@@ -40,6 +40,7 @@
 
 ## Terminadas recientemente
 
+- [x] **T12 — Referencia visual estable con versión y fecha (2026-11-18).** `roadmap/referencia-visual.md`: geometría del `frmMain.frm` de la revisión `7d32d61…` (1022×767 px, 15 twips/px, commit 2025-09-22, SHA-256 del archivo), regiones principales, comparación con la galería y límites de píxeles. Sin cambios de producto.
 - [x] **T11 — Auditoría de licencias y atribución por recurso (2026-11-18).** `roadmap/licencias-recursos.md`: tabla por familia con origen, licencia, atribución y estado; AGPL-3.0 confirmada en cliente y servidor fijados; 203/203 PNG y 3/3 WAV idénticos byte a byte al upstream; atribuciones obligatorias, bloqueos B1–B6, obligación de AGPL §13 y acciones L1–L6. Sin cambios de assets ni de producto.
 - [x] **T9 — Escenarios 1v1 / 2v2 / 3v3 (2026-11-18).** Selector en la barra del mapa (1v1, 2v2, 3v3 y 4v4 por defecto) que carga o reinicia la arena con esa cantidad por bando; los suplentes no reaparecen ni bloquean. El escenario de práctica no rota de mapa; REINICIAR sale de él. Sin cambios de reglas ni balance. Evidencia en `HISTORY.md`.
 - [x] **T6 — Ritmos de combate y persecución (2026-11-18).** La variación de ritmo ya existía y se midió; el único bloqueo real era el mago acosado, que retrocedía sin lanzar durante hasta 10,75 s porque la rama de retirada cortaba antes de los hechizos. Ahora lanza mientras se despega y el tramo máximo bajo presión bajó a 1,75 s. Sin cambios de daños, costos, curaciones ni alcances; pares adyacentes sin bloqueo (máximo 1,25 s, intervalo normal de golpe). Evidencia en `HISTORY.md`.

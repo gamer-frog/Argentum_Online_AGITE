@@ -14,14 +14,14 @@
 
 | ID | Tarea | Estado | Depende | Criterio de cierre |
 | --- | --- | --- | --- | --- |
-| **T12** | Referencia visual estable con versión/fecha | Ahora | — | Referencia reproducible con revisión, resolución, fuente y fecha; límites de comparación explícitos |
+| **T8** | Chat lateral local (sin audio nuevo) | Ahora | `T11` + `T1` | Mensajes locales en el historial; sin red ni sonidos; layout 1440/390 y consola 0/0 |
 
 ## Después
 
 | ID | Tarea | Depende | Nota |
 | --- | --- | --- | --- |
 | **T7** | Inventario/equipamiento funcional | T1 + `D2` B | Requiere contrato de objetos; no inventar reglas |
-| **T8** | Chat lateral y sonidos licenciados | `T11` + L5 | Chat propio sí; sonidos solo con autoría/licencia compatible |
+| **T8b** | Sonidos nuevos de golpes/hechizos | `T8` + L5 | Solo con autoría/licencia compatible; no ampliar audio sin auditar |
 | **T10** | Multijugador y persistencia | T7/T9 + alcance | Pospuesto; requiere backend |
 
 ## Bloqueos y decisiones
@@ -36,6 +36,7 @@
 
 | Fecha | Tarea | Evidencia |
 | --- | --- | --- |
+| 2026-11-18 | T12: referencia visual versionada | `HISTORY.md`; `roadmap/referencia-visual.md`; `frmMain.frm` 1022×767 px, revisión `7d32d61…` |
 | 2026-11-18 | T11: auditoría de licencias y atribución por recurso | `HISTORY.md`; `roadmap/licencias-recursos.md`; AGPL-3.0; 203/203 PNG y 3/3 WAV idénticos |
 | 2026-11-18 | T9: escenarios 1v1 / 2v2 / 3v3 con selector de formato | `HISTORY.md`; selector en la barra; 2/4/6/8 activos; práctica fija en la arena |
 | 2026-11-18 | T6: ritmos de combate y persecución (mago acosado corregido) | `HISTORY.md`; probes de 90 s y 45 s; tramo bajo presión 10,75 s → 1,75 s |
