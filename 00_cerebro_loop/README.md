@@ -27,7 +27,7 @@ Este archivo explica **cómo opera el loop**. No reemplaza a los pedidos del usu
 4. **Implementar:** cambios mínimos y compatibles con el código existente. Si el cambio toca `game.js`, `index.html` o `styles.css`, mantener `dist/` sincronizado.
 5. **Verificar:** ejecutar `bash 00_cerebro_loop/verify.sh` y validar en navegador (escritorio y móvil) con consola 0 errores / 0 advertencias.
 6. **Registrar:** marcar la tarea, agregar evidencia en `HISTORY.md` y actualizar `HANDOFF.md` con el próximo paso. Si cambió una decisión, actualizar `DECISIONS.md`. Si cambió el alcance visible, actualizar `README.md`.
-7. **Publicar:** solo si el usuario lo pidió explícitamente en el turno. Sin pedido: dejar el árbol listo y reportar «listo para publicar». Nunca `push --force`.
+7. **Publicar:** al cerrar cada tarea, integrar a `main` y pushear a `origin/main` (pedido del usuario, 2026-11-18: sin push el trabajo no queda guardado). Nunca `push --force`; si `main` divergió, merge sin force.
 
 ## 3. Cómo elegir la tarea
 
@@ -106,8 +106,8 @@ Comprobaciones mínimas:
 ## 8. Estado actual (2026-11-16)
 
 - **Build:** verde; `dist/` sincronizado.
-- **Completado:** `T1 — Inventario/equipamiento, fase 1 visual`; `T2 — Rotación de mapas` (lista 1→34→59→62→272, inicio distinto y rotación cada 5 bajas); `T3 — Auditoría de FX de hechizos` (`roadmap/fx-hechizos.md`); `T4 — Matriz de combate vs AO Libre` ([`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md)).
-- **Ahora:** `T6 — Variar ritmos de combate y persecución (sin balance)`.
-- **Bloqueado:** nada; `D1` resuelta y `T4` cerrada.
-- **Decisión abierta:** `D2=B` (inventario funcional).
-- **Regla de publicación:** no commitear ni pushear sin pedido explícito del usuario.
+- **Completado:** `T1 — Inventario/equipamiento, fase 1 visual`; `T2 — Rotación de mapas` (lista 1→34→59→62→272, inicio distinto y rotación cada 5 bajas); `T3 — Auditoría de FX de hechizos` (`roadmap/fx-hechizos.md`); `T4 — Matriz de combate vs AO Libre` ([`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md)); `T5 — Combo, maná y Fuente de vida`; `T6 — Ritmos de combate y persecución`.
+- **Ahora:** `T11 — Auditoría de licencias y atribución por recurso`.
+- **Bloqueado:** `T7` (decisión `D2`) y `T8` (esta auditoría de licencias).
+- **Decisión abierta:** `D2=B` (inventario funcional) y propuestas de balance de `T5` (`D7`).
+- **Regla de publicación:** al cerrar cada tarea, commit, integración y push a `origin/main`; nunca `--force` (`D5`).

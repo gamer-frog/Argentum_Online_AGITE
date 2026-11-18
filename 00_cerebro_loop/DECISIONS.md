@@ -54,7 +54,7 @@
 
 ### D5 — Publicación
 
-**Decisión de esta sesión:** no hacer commit ni push sin pedido explícito del usuario. Al terminar una tarea, dejar el árbol verificado y reportar «listo para publicar». Si el usuario pide publicar, usar fast-forward a `main` y nunca `--force`.
+**Decisión (actualizada 2026-11-18):** el usuario pidió que el trabajo se **publique en `main` al cerrar cada tarea**, porque si no se pushea no queda guardado. Por eso el cierre de una tarea incluye: commit en la rama de trabajo, integración a `main` y `git push origin main`. Nunca `--force`. Si `main` divergió (por ejemplo, por commits del runtime de OmGithub), se integra con merge y se resuelven los conflictos a favor del estado verificado del loop, conservando los archivos de infraestructura que solo están en `main`. El reporte final debe indicar el hash publicado o el motivo por el que no se pudo publicar.
 
 ### D6 — Fuente de recursos y fidelidad
 

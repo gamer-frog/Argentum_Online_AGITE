@@ -3,6 +3,17 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-18 · [T9] Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato
+Se agregó un selector de formato en la barra del mapa y se reutilizó la arena existente (mapa 272). **No se cambiaron clases, daños, costos, curaciones, alcances ni reglas.**
+
+- **Selector:** opciones **1v1, 2v2, 3v3 y 4v4**; 4v4 queda por defecto para conservar la partida actual. Elegir un formato carga la arena (o la reinicia si ya estás ahí) con esa cantidad de combatientes por bando.
+- **Composición:** se usan los actores existentes en su orden actual. Sagrado: jugador, mago, clérigo, paladín; caótico: guerrero, mago, clérigo, paladín. Los que no entran quedan **suplentes**: no se dibujan, no bloquean casillas, no reaparecen y se ocultan de la lista de combatientes.
+- **HUD:** el selector muestra el formato activo; la píldora del mapa pasa a `ARENA · PRÁCTICA 2v2`; `MODALIDAD` muestra `2v2`; la barra de estado y la lista de combatientes muestran la cantidad real (`4 PERSONAJES`, `4 ACTIVOS`).
+- **Práctica repetible:** mientras dura un escenario elegido, las bajas no acumulan rotación y la arena no cambia de mapa. **REINICIAR** sale de la práctica y vuelve al reinicio aleatorio normal. La rotación de `D1` sigue intacta para ciudad y para la arena 4v4 alcanzada por rotación.
+- **API de depuración:** `AO_DEBUG()` expone `arenaFormat`, `practiceActive` y `benched` por combatiente para poder auditar el formato.
+
+Verificación en Chromium (`http://localhost:3002`): cambiar 1→2→3→4 produjo **2/4/6/8** activos con los ids correctos y 6 filas ocultas en 1v1; la píldora, `MODALIDAD`, la barra de estado y el contador de combatientes coincidieron en cada caso. Prueba de 40 s en 1v1: el mapa se mantuvo en 272, `killsTowardRotation` quedó en 0 y ningún suplente revivió. `REINICIAR` volvió a Ullathorpe con 8 activos y `practiceActive:false`. Layout validado a 1440×1000 y 390×844: el selector entra en la barra sin desborde horizontal (390: selector 39×20 px, botones hasta 364 px sobre 369). Consola **0 errores / 0 advertencias**; capturas `/tmp/opencode/shots/t9-desktop-2v2.png` y `/tmp/opencode/shots/t9-mobile.png`. `game.js`, `index.html`, `styles.css` y `dist/` sincronizados; `verify.sh` verde.
+
 ## 2026-11-18 · [T6] Ritmos de combate y persecución: variación vigente y corrección del mago acosado
 Se midió el combate real antes de tocar nada y se corrigió el único bloqueo observable. No se cambiaron daños, costos, curaciones, alcances, cooldowns ni `STEP_DURATION`.
 
