@@ -12,7 +12,7 @@
 | Última completada | `T9 — Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato` |
 | Bloqueo | Ninguno para `T11`; `T7` depende de `D2` y `T8` de esta auditoría |
 | Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` (`D7`) |
-| Publicación | `main` publicado (`097e79f` al cerrar T6); T9 se publica al cerrar esta tarea (`D5`) |
+| Publicación | `origin/main` al día: `097e79f` (T6) y `932bccf` (T9); regla en `D5` |
 | Navegador | 2026-11-18: T9 validado en Chromium 1440×1000 y 390×844 (capturas en `/tmp/opencode/shots/t9-*.png`, consola 0/0); 2/4/6/8 activos y práctica fija en la arena |
 
 ## Última acción completada
