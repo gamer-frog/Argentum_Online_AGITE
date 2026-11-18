@@ -23,7 +23,7 @@
       <section class="world-window">
         <div class="world-toolbar">
           <span class="location-mark">⌖</span><strong id="mapName">CARGANDO MAPA</strong><span class="toolbar-divider"></span><span>MUNDO · AO LOCAL</span>
-          <div class="toolbar-actions"><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar en otro mapa">REINICIAR</button></div>
+          <div class="toolbar-actions"><label class="format-control" title="Escenario de práctica en la arena"><span>FORMATO</span><select id="formatSelect" aria-label="Formato de práctica en la arena"><option value="1">1v1</option><option value="2">2v2</option><option value="3">3v3</option><option value="4" selected>4v4</option></select></label><button id="scoreboardToggle" type="button" aria-controls="sidePanel" aria-expanded="false">COMBATIENTES</button><button id="restartBtn" type="button" title="Reiniciar en otro mapa">REINICIAR</button></div>
         </div>
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
@@ -45,7 +45,7 @@
           <div class="mobile-action-cluster" id="mobileActionCluster"><button class="mobile-attack" id="mobileAttackBtn" type="button" aria-label="Atacar al rival adyacente">⚔<small>ATACAR</small></button></div>
           <div class="canvas-tip"><span>FLECHAS / WASD</span> MOVER <i>·</i> <span>CLICK</span> ELEGIR / LANZAR <i>·</i> <span>F</span> ATACAR</div>
         </div>
-        <div class="world-statusbar"><span><i class="status-light"></i> CONECTADO · PARTIDA LOCAL</span><span>8 PERSONAJES EN EL MAPA</span></div>
+        <div class="world-statusbar"><span><i class="status-light"></i> CONECTADO · PARTIDA LOCAL</span><span id="mapPopulation">8 PERSONAJES EN EL MAPA</span></div>
       </section>
 
       <aside class="right-dock" aria-label="Personaje e inventario">
@@ -56,7 +56,7 @@
             <div class="character-info"><label class="sr-only" for="classSelect">Clase del personaje</label><select id="classSelect" aria-label="Elegir clase"><option value="warrior">GUERRERO</option><option value="mage">MAGO</option><option value="cleric">CLÉRIGO</option><option value="paladin">PALADÍN</option></select><strong class="hero-class" id="heroClass">GUERRERO</strong><span class="hero-name">GUERRERO</span><span class="character-faction">LEGIÓN SAGRADA</span></div>
           </div>
           <div class="resource-block no-mana" id="resourceBlock"><div class="resource-row"><span>VIDA</span><b id="healthValue">380 / 380</b></div><div class="health-track"><i id="healthBar"></i></div><div class="resource-row mana-row"><span>MANA</span><b id="manaValue">—</b></div><div class="mana-track"><i id="manaBar"></i></div></div>
-          <div class="character-stats"><span>ESTADO <b>EN COMBATE</b></span><span>MODALIDAD <b>LIBRE</b></span></div>
+          <div class="character-stats"><span>ESTADO <b>EN COMBATE</b></span><span>MODALIDAD <b id="modeLabel">LIBRE</b></span></div>
         </section>
 
         <section class="dock-panel target-panel">
@@ -99,7 +99,7 @@
       <p class="spell-hint" id="spellHint">Elegí una habilidad y hacé clic en un objetivo</p>
         </section>
         <aside class="side-panel hidden" id="sidePanel" aria-label="Tabla de combatientes">
-          <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count">08 / 08</span></h2><div id="roster" class="roster">
+          <section class="roster-section"><h2 class="panel-title">COMBATIENTES <span class="roster-count" id="rosterCount">8 ACTIVOS</span></h2><div id="roster" class="roster">
             <div class="roster-row self-row" data-fighter="player"><span class="roster-avatar">♞</span><span class="roster-copy"><b class="name-sacred">GUERRERO</b><small>TÚ</small></span></div>
             <button type="button" class="roster-row" data-fighter="sacredMage"><span class="roster-avatar">✧</span><span class="roster-copy"><b class="name-sacred">MAGO</b><small>ALIADO</small></span></button>
             <button type="button" class="roster-row" data-fighter="sacredCleric"><span class="roster-avatar">✚</span><span class="roster-copy"><b class="name-sacred">CLÉRIGO</b><small>ALIADO</small></span></button>

@@ -5,29 +5,30 @@
 
 ## Ahora
 
-### T9 — Escenarios de práctica 1v1, 2v2 y 3v3 con selector de formato
+### T11 — Auditoría de licencias y atribución por recurso
 
-**Estado:** lista para empezar. Es la primera tarea desbloqueada del roadmap: `T7` depende de `D2` y `T8` de la auditoría de licencias.
-**Depende de:** `T1` y `T5` (hechos) y la arena (mapa 272) ya integrada en `T2`.
-**Pedido:** «Escenarios de práctica 1v1, 2v2 y 3v3 con selector de formato» (`USER_REQUESTS.md`).
+**Estado:** lista para empezar. Es la siguiente tarea desbloqueada: `T7` depende de `D2` y `T8` de esta auditoría.
+**Depende de:** nada; usa el inventario de recursos ya documentado.
+**Pedido:** «Auditoría de licencias/atribuciones por recurso antes de redistribuir» (`USER_REQUESTS.md`).
 
 **Alcance**
 
-- Agregar un selector visible de formato **1v1 / 2v2 / 3v3** para la arena, sin duplicar el HTML de los combatientes.
-- Reutilizar la arena 272 y sus dos spawns; completar cada equipo con los actores existentes (el jugador ocupa un cupo del equipo sagrado).
-- Indicar el formato activo en el HUD junto al nombre del mapa.
-- Mantener intacta la rotación de ciudad de `D1`: el formato aplica cuando se juega la arena.
+- Inventariar las familias de recursos de `assets/ao/` (mapas, gráficos, personajes, FX, audio, datos) y su origen declarado.
+- Contrastar cada familia con la licencia o términos del repositorio de origen y con lo que ya dice `roadmap/inventario-recursos-ao.md`.
+- Registrar una tabla con: recurso, origen, licencia/términos, atribución requerida y estado (`confirmado`, `aproximado`, `sin dato`).
+- Marcar explícitamente qué se puede redistribuir y qué no.
 
 **No incluye**
 
-- Matchmaking, red, puntaje, rankings, balance nuevo o condiciones de victoria (`D4` sigue cerrada).
-- Inventario funcional (`D2=B`), hechizos nuevos o assets nuevos.
+- Cambiar, extraer o borrar assets.
+- Publicar avisos legales definitivos ni chat/sonidos nuevos (`T8`).
+- Tocar código de producto.
 
 **Criterios de aceptación**
 
-- [ ] Los tres formatos se pueden elegir y la arena muestra la cantidad correcta de combatientes por equipo.
-- [ ] Sin cambios en daños, costos, curaciones, alcances ni reglas de combate.
-- [ ] `game.js` + `dist/game.js`, `bash 00_cerebro_loop/verify.sh` y navegador 1440/390 con consola 0/0.
+- [ ] Tabla completa por familia de recursos, con fuente y etiqueta de fidelidad.
+- [ ] Lista explícita de bloqueos para redistribuir y de atribuciones obligatorias.
+- [ ] Enlaces locales válidos y `bash 00_cerebro_loop/verify.sh` verde.
 - [ ] Evidencia y próximo paso en `HISTORY.md` y `HANDOFF.md`.
 
 ## Bloqueadas / requieren decisión
@@ -39,6 +40,7 @@
 
 ## Terminadas recientemente
 
+- [x] **T9 — Escenarios 1v1 / 2v2 / 3v3 (2026-11-18).** Selector en la barra del mapa (1v1, 2v2, 3v3 y 4v4 por defecto) que carga o reinicia la arena con esa cantidad por bando; los suplentes no reaparecen ni bloquean. El escenario de práctica no rota de mapa; REINICIAR sale de él. Sin cambios de reglas ni balance. Evidencia en `HISTORY.md`.
 - [x] **T6 — Ritmos de combate y persecución (2026-11-18).** La variación de ritmo ya existía y se midió; el único bloqueo real era el mago acosado, que retrocedía sin lanzar durante hasta 10,75 s porque la rama de retirada cortaba antes de los hechizos. Ahora lanza mientras se despega y el tramo máximo bajo presión bajó a 1,75 s. Sin cambios de daños, costos, curaciones ni alcances; pares adyacentes sin bloqueo (máximo 1,25 s, intervalo normal de golpe). Evidencia en `HISTORY.md`.
 - [x] **T5 — Combo, maná y `Fuente de vida` (2026-11-18).** `Sanar` no equivale a `Curar Heridas Graves` (AO 12-35/40 vs 40-45/220); `Fuente de vida` 30-45 queda como propuesta `práctica`; el paladín agota su maná para limpiarse en combate real (mínimos 13-85, 23 muestras paralizado con <330) y necesita apoyo. Propuestas con fuente y etiqueta, sin aplicar. Evidencia en `HISTORY.md` y [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md#capacidad-de-maná-del-paladín-t5).
 - [x] **T4 — Matriz de reglas del combate actual vs AO Libre, primer corte (2026-11-16).** Matriz en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) con ataque adyacente, intervalos, daño, alcance, apuntado, inmovilización/remoción, costos de maná, stamina, pociones y nivel 40; cada fila con código, fuente y etiqueta. Sin cambios de código. Evidencia en `HISTORY.md`.

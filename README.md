@@ -1,6 +1,6 @@
 # Argentum Online — Reinos
 
-Prototipo web local inspirado en **Argentum Online**. Presenta un mundo explorable al centro, controles de personaje y paneles laterales para estado, objetivos, habilidades e interfaces futuras. El combate actual es una arena de prueba 4v4; todavía no es un cliente fiel ni una recreación completa de AO.
+Prototipo web local inspirado en **Argentum Online**. Presenta un mundo explorable al centro, controles de personaje y paneles laterales para estado, objetivos, habilidades e interfaces futuras. El combate actual es una arena de prueba con formatos 1v1, 2v2, 3v3 y 4v4; todavía no es un cliente fiel ni una recreación completa de AO.
 
 > **Referencia de fidelidad:** Argentum Online Libre, cliente oficial de la organización [ao-libre](https://github.com/ao-libre), repositorio [ao-libre/ao-cliente](https://github.com/ao-libre/ao-cliente), revisión `7d32d61759d6b95069aba72ae12bed03c1d13700`. El cliente incluye gráficos (`Graficos/`), mapas (`Mapas/Alkon/`), efectos y sonidos; esta revisión fijada es la fuente de los recursos seleccionados, no una afirmación de fidelidad completa del prototipo.
 >
@@ -69,16 +69,17 @@ Preflight local: `bash 00_cerebro_loop/verify.sh`. La validación final siempre 
 - **Teclas 5 y 6:** beber una poción roja (vida) o azul (maná). Son ilimitadas para la práctica, pero beber ocupa al personaje: no podés atacar ni lanzar hechizos mientras dura la acción, y un golpe o hechizo reciente tampoco te deja beber hasta recuperarte.
 - **Esquiva:** los NPC anuncian algunos ataques con una línea y una mira; moverte durante el apuntado puede evitar el impacto.
 - **Combatientes:** mostrar u ocultar la lista de combatientes. **Esc** cierra la lista o la guía.
+- **FORMATO:** elegí **1v1**, **2v2**, **3v3** o **4v4** en la barra del mapa; carga la arena con esa cantidad de combatientes por bando. Mientras dura el escenario la arena no rota; **REINICIAR** sale de la práctica.
 - **☰:** pausar o reanudar.
 - En pantallas táctiles, usá el pad en pantalla para moverte y el botón **ATACAR** para golpear.
 
-La arena 4v4 es local e infinita: no tiene puntuación ni estados de fin de partida. Las bajas aparecen únicamente como avisos informativos y cada combatiente reaparece después de **2,4 segundos**. Los ataques y habilidades ofensivas solo pueden dirigirse a rivales. El panel del objetivo muestra su vida, la distancia en casilleros y si el ataque está listo o cuánto falta para recuperarse.
+La arena es local e infinita: no tiene puntuación ni estados de fin de partida. El selector de formato permite practicar **1v1, 2v2, 3v3 o 4v4** con los mismos actores y reglas; el escenario de práctica queda fijo en la arena hasta reiniciar. Las bajas aparecen únicamente como avisos informativos y cada combatiente reaparece después de **2,4 segundos**. Los ataques y habilidades ofensivas solo pueden dirigirse a rivales. El panel del objetivo muestra su vida, la distancia en casilleros y si el ataque está listo o cuánto falta para recuperarse.
 
 ## Estado y alcance
 
 El prototipo incluye:
 
-- Mundo central con movimiento cardinal y una arena de combate 4v4 con reaparición.
+- Mundo central con movimiento cardinal y una arena de combate con formatos 1v1 a 4v4 y reaparición.
 - Perfiles de guerrero, mago, clérigo y paladín, con estadísticas y habilidades propias.
 - HUD de vida/maná, selección de objetivo con distancia y disponibilidad del ataque, habilidades, curación, inmovilización, esquiva, avisos informativos de bajas y registro de combate.
 - Paneles laterales para personaje y objetivo, más marcadores explícitamente incompletos para inventario y equipo.
@@ -129,7 +130,7 @@ Fases graduales y verificables. Cada paso se valida en navegador antes de pasar 
 **Fase 3 — Sentirse AO**
 7. Afinar mapa, sprites, animaciones y controles con los recursos originales y su atribución; el prefijo visual de la arena de práctica solo se usa si no hay recursos.
 8. Interfaz de AO: inventario y equipamiento mínimos para la práctica (pociones de vida y mana), chat lateral, sonidos de golpes y hechizos si hay assets.
-9. Escenarios de práctica: arenas pequeñas de variedad (1v1, 2v2, 3v3) con selectores de formato.
+9. Escenarios de práctica: arenas pequeñas de variedad (1v1, 2v2, 3v3) con selectores de formato. **Hecho (T9, 2026-11-18):** selector en la barra del mapa, 1v1/2v2/3v3/4v4 sobre la arena existente; el escenario de práctica no rota de mapa.
 
 **Fase 4 — Más allá de la práctica**
 10. Multijugador en red local y persistencia de personaje, solo después de definir el alcance y sostener la fases anteriores.

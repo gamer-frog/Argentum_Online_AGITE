@@ -113,6 +113,9 @@
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
   let mapManifest = [], mapRotation = [], currentMap = null, lastStartMapId = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
+  // T9 — escenarios de práctica: tamaño de equipo por bando en la arena. 4v4 conserva la partida actual.
+  const ARENA_FORMAT_SIZES = [1, 2, 3, 4];
+  let arenaFormat = 4, practiceActive = false;
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
@@ -281,7 +284,11 @@
       if (!serverSpawn) continue;
       const centerX = serverSpawn[0] - 1, centerY = serverSpawn[1] - 1;
       const teamShift = map.kind === 'arena' ? 0 : (teamIndex ? 2 : -2);
+      // El formato solo recorta la arena; la ciudad conserva los cuatro actores por bando.
+      const limit = map.kind === 'arena' ? clamp(arenaFormat, 1, teamActors.length) : teamActors.length;
       teamActors.forEach((actor, index) => {
+        actor.benched = index >= limit;
+        if (actor.benched) { actor.respawn = 0; actor.supportTask = null; actor.movePlan = null; return; }
         const [offsetX, offsetY] = (map.kind === 'arena' ? arenaOffsets : cityOffsets)[index] || [0, index];
         const [x, y] = findOpen(centerX + teamShift + offsetX, centerY + offsetY, actor);
         Object.assign(actor, {
@@ -293,11 +300,28 @@
       });
     }
   }
+  function arenaLabel() { return `PRÁCTICA ${arenaFormat}v${arenaFormat}`; }
+  function firstActiveEnemyId() {
+    return fighters.find(actor => actor.alive && !actor.benched && isEnemy(player, actor))?.id ?? null;
+  }
   function refreshMapHud() {
     const name = currentMap?.name || 'Campo de batalla';
     const location = $('mapName'), pillLabel = $('mapPillLabel');
     if (location) location.textContent = name.toLocaleUpperCase('es');
-    if (pillLabel) pillLabel.textContent = `${name.toLocaleUpperCase('es')} · ARENA LIBRE`;
+    // El formato activo se refleja junto al nombre del mapa y en la barra de estado.
+    const mode = currentMap?.kind === 'arena' ? arenaLabel() : 'ARENA LIBRE';
+    if (pillLabel) pillLabel.textContent = `${name.toLocaleUpperCase('es')} · ${mode}`;
+    const select = $('formatSelect');
+    if (select) select.value = String(arenaFormat);
+    const modeLabel = $('modeLabel');
+    if (modeLabel) modeLabel.textContent = currentMap?.kind === 'arena' ? `${arenaFormat}v${arenaFormat}` : 'LIBRE';
+    const population = $('mapPopulation');
+    if (population) {
+      const total = fighters.filter(actor => !actor.benched).length;
+      population.textContent = `${total} PERSONAJE${total === 1 ? '' : 'S'} EN EL MAPA`;
+    }
+    const rosterCount = $('rosterCount');
+    if (rosterCount) rosterCount.textContent = `${fighters.filter(actor => !actor.benched).length} ACTIVOS`;
   }
   function resize() {
     const rect = frame.getBoundingClientRect();
@@ -855,7 +879,9 @@
     const empty = log.querySelector('.empty-log'); if (empty) empty.remove(); log.prepend(entry); while (log.children.length > 5) log.lastElementChild.remove();
     toast(victim === player ? 'Has caído. Regresarás al campo en un instante.' : attacker === player ? `Derrotaste a ${actorDisplayName(victim)}.` : `${actorDisplayName(victim)} cayó en combate.`);
     tone(victim === player ? 110 : 380, .17);
-    killsTowardRotation++;
+    // En práctica la arena no rota: las bajas no acumulan hacia el cambio de mapa.
+    if (practiceActive && currentMap?.kind === 'arena') killsTowardRotation = 0;
+    else killsTowardRotation++;
     refreshMapHud();
     if (killsTowardRotation >= 5) rotateMapAfterKills();
     refreshHud();
@@ -863,6 +889,8 @@
   async function rotateMapAfterKills() {
     const rotation = activeMapRotation();
     if (mapChangeInProgress || resetInProgress || rotation.length < 2) return;
+    // Mientras haya un escenario de práctica elegido, la arena se queda fija.
+    if (practiceActive && currentMap?.kind === 'arena') return;
     mapChangeInProgress = true;
     const transitionId = ++mapTransitionId;
     try {
@@ -895,7 +923,7 @@
     }
   }
   function respawn(actor) {
-    if (!actor) return;
+    if (!actor || actor.benched) return;
     const [x, y] = findOpen(actor.homeX, actor.homeY, actor);
     const profile = CLASS_PROFILES[actor.className] ?? CLASS_PROFILES.warrior;
     Object.assign(actor, { x, y, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, respawn: 0, flash: .6, attackCd: .7, aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
@@ -1133,7 +1161,12 @@
           if (actor !== player) npcPlanStep(actor);
         }
       }
-      if (!actor.alive) { actor.respawn -= dt; if (actor.respawn <= 0) respawn(actor); }
+      if (!actor.alive) {
+        // Los suplentes del formato (1v1/2v2/3v3) no entran en la rotación de respawn.
+        if (actor.benched) continue;
+        actor.respawn -= dt;
+        if (actor.respawn <= 0) respawn(actor);
+      }
     }
     updateRespawnNotice();
     for (const text of floatingTexts) text.age += dt;
@@ -1460,7 +1493,11 @@
     $('mobileAttackBtn').disabled = $('attackBtn').disabled;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
-      if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('targeted', actor.id === selected); }
+      if (row) {
+        row.classList.toggle('fighter-dead', !actor.alive);
+        row.classList.toggle('targeted', actor.id === selected);
+        row.classList.toggle('bench', Boolean(actor.benched));
+      }
     }
   }
   async function resetGame() {
@@ -1477,9 +1514,10 @@
       }
       if (transitionId !== mapTransitionId) return;
       killsTowardRotation = 0;
+      practiceActive = false;
       for (const actor of fighters) {
         const profile = CLASS_PROFILES[actor.className];
-        Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: true, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
+        Object.assign(actor, { x: actor.homeX, y: actor.homeY, hp: profile.hp, maxHp: profile.hp, mana: profile.mana, maxMana: profile.mana, alive: !actor.benched, step: null, stepTime: 0, respawn: 0, flash: 0, attackCd: rand(.2, .8), aiTimer: rand(.2, 1), aim: null, immobilized: 0, aiTargetId: null, skillCooldowns: [0, 0, 0, 0], potionCd: 0, castCd: 0, supportTask: null, movePlan: null, strafeTimer: 0 });
       }
       floatingTexts.length = 0; spellEffects.length = 0;
       selected = 'chaoticWarrior'; selectedSkill = null; elapsed = 0; paused = false; keys.clear();
@@ -1492,6 +1530,45 @@
         resetInProgress = false;
         mapChangeInProgress = false;
       }
+    }
+  }
+  // T9 — práctica por formato: carga la arena y deja solo el cupo elegido por bando.
+  // No toca clases, reglas, daños ni costos; el resto de los actores queda suplente.
+  async function startArenaFormat(size) {
+    const format = ARENA_FORMAT_SIZES.includes(size) ? size : arenaFormat;
+    if (mapChangeInProgress || resetInProgress) {
+      const select = $('formatSelect');
+      if (select) select.value = String(arenaFormat);
+      return;
+    }
+    arenaFormat = format;
+    const applyArena = () => {
+      practiceActive = true;
+      killsTowardRotation = 0;
+      spawnActorsOnMap(currentMap);
+      floatingTexts.length = 0; spellEffects.length = 0;
+      selected = firstActiveEnemyId() ?? 'chaoticWarrior';
+      selectedSkill = null; refreshSkillSelection();
+      $('respawnNotice')?.classList.add('hidden');
+      refreshMapHud(); refreshHud();
+      toast(`Práctica ${format}v${format} · arena reiniciada. REINICIAR sale del escenario.`);
+    };
+    if (currentMap?.kind === 'arena') { applyArena(); return; }
+    mapChangeInProgress = true;
+    const transitionId = ++mapTransitionId;
+    try {
+      const arena = mapManifest.find(map => map.id === 272)
+        ?? activeMapRotation().find(map => map.kind === 'arena');
+      if (!arena) { toast('No hay una arena disponible en los assets.'); return; }
+      const data = await fetchJson(`${MAP_URL}maps/${arena.id}.json`);
+      if (transitionId !== mapTransitionId) return;
+      currentMap = arena; mapData = data;
+      applyArena();
+    } catch (error) {
+      console.warn('No se pudo cargar la arena de práctica.', error);
+      toast('No se pudo cargar la arena; la partida continúa donde estaba.');
+    } finally {
+      if (transitionId === mapTransitionId) { mapChangeInProgress = false; refreshMapHud(); }
     }
   }
   function togglePause() { paused = !paused; toast(paused ? 'Partida pausada' : 'Partida reanudada'); }
@@ -1747,6 +1824,10 @@
     joystick.addEventListener('lostpointercapture', clearJoystick);
   }
   $('restartBtn').addEventListener('click', resetGame);
+  $('formatSelect')?.addEventListener('change', event => {
+    const size = Number(event.target.value);
+    if (ARENA_FORMAT_SIZES.includes(size)) startArenaFormat(size);
+  });
   $('soundToggle').addEventListener('click', () => { audioOn = !audioOn; $('soundLabel').textContent = `SONIDO ${audioOn ? 'ON' : 'OFF'}`; $('soundIcon').textContent = audioOn ? '♫' : '♪'; });
   $('helpBtn').addEventListener('click', () => $('helpModal').classList.remove('hidden'));
   $('closeHelp').addEventListener('click', () => $('helpModal').classList.add('hidden'));
@@ -1760,6 +1841,8 @@
     mapRotation: activeMapRotation().map(map => map.id),
     killsTowardRotation,
     lastStartMapId,
+    arenaFormat,
+    practiceActive,
     // Solo lectura: la mira libre debe seguir el cursor en píxeles, no el centro de la casilla.
     aimPoint: mousePoint ? { x: Math.round(mousePoint.x), y: Math.round(mousePoint.y) } : null,
     aimTile: mouseTile ? { x: mouseTile[0], y: mouseTile[1] } : null,
@@ -1786,7 +1869,7 @@
     fighters: fighters.map(actor => ({
       id: actor.id, cls: actor.className, hp: Math.round(actor.hp), maxHp: actor.maxHp,
       mana: Math.round(actor.mana), maxMana: actor.maxMana,
-      x: actor.x, y: actor.y, stepping: Boolean(actor.step),
+      x: actor.x, y: actor.y, stepping: Boolean(actor.step), benched: Boolean(actor.benched),
       immobilized: Number(actor.immobilized.toFixed(2)), alive: actor.alive,
       aiming: Boolean(actor.aim), aimSpell: actor.aim?.spell?.skill?.name ?? null, aimColor: actor.aim?.spell?.skill?.aimColor ?? null, aimTargetId: actor.aim?.targetId ?? null,
       support: actor.supportTask ? { kind: actor.supportTask.kind, ally: actor.supportTask.allyId, timer: Number(actor.supportTask.timer.toFixed(2)) } : null

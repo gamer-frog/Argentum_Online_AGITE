@@ -107,7 +107,7 @@ Comprobaciones mínimas:
 
 - **Build:** verde; `dist/` sincronizado.
 - **Completado:** `T1 — Inventario/equipamiento, fase 1 visual`; `T2 — Rotación de mapas` (lista 1→34→59→62→272, inicio distinto y rotación cada 5 bajas); `T3 — Auditoría de FX de hechizos` (`roadmap/fx-hechizos.md`); `T4 — Matriz de combate vs AO Libre` ([`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md)); `T5 — Combo, maná y Fuente de vida`; `T6 — Ritmos de combate y persecución`.
-- **Ahora:** `T9 — Escenarios 1v1 / 2v2 / 3v3 con selector de formato`.
-- **Bloqueado:** `T7` (decisión `D2`) y `T8` (auditoría de licencias).
+- **Ahora:** `T11 — Auditoría de licencias y atribución por recurso`.
+- **Bloqueado:** `T7` (decisión `D2`) y `T8` (esta auditoría de licencias).
 - **Decisión abierta:** `D2=B` (inventario funcional) y propuestas de balance de `T5` (`D7`).
 - **Regla de publicación:** al cerrar cada tarea, commit, integración y push a `origin/main`; nunca `--force` (`D5`).
