@@ -12,7 +12,7 @@
 5. **Si se renombra un campo, actualizar todos los usos** en el mismo cambio.
 6. **Build verde no es suficiente.** Toda tarea de producto se verifica en navegador con consola 0 errores / 0 advertencias antes de considerarse terminada.
 7. **Mantener `game.js` y `dist/game.js` sincronizados**, junto con `index.html`, `styles.css` y `favicon.svg` cuando corresponda. `start.sh` copia al arrancar, pero el repo debe quedar consistente.
-8. **No commit ni push sin pedido explícito del usuario.** Si lo pide, publicar por fast-forward a `main`; nunca `--force`.
+8. **Publicar en `main` al cerrar cada tarea** (pedido explícito del usuario, 2026-11-18: si no se pushea, el trabajo no queda guardado). Commit en la rama de trabajo, integración a `main` y `git push origin main`; nunca `--force`. Si `main` divergió, merge y conflictos a favor del estado verificado del loop, conservando la infraestructura que solo está en `main`.
 9. **Ignorar `gh`.** Usar `git` directamente. No bloquearse por autenticación de GitHub CLI.
 10. **No borrar pedidos pendientes.** Se mueven a `[x]`/`[~]` con evidencia, o se archivan en `HISTORY.md`.
 

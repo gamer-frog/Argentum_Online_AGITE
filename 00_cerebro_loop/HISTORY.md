@@ -3,6 +3,17 @@
 > Historial de acciones verificadas. La entrada más reciente va arriba. No se reescribe: se agrega.
 > Estado actual y próximo paso: [`HANDOFF.md`](HANDOFF.md). Cola viva: [`TODO.md`](TODO.md).
 
+## 2026-11-18 · [T6] Ritmos de combate y persecución: variación vigente y corrección del mago acosado
+Se midió el combate real antes de tocar nada y se corrigió el único bloqueo observable. No se cambiaron daños, costos, curaciones, alcances, cooldowns ni `STEP_DURATION`.
+
+- **Medición previa (90 s, 250 ms, 7 bots):** movimiento 53-81 % del tiempo, sin objetivo 1-3 %, adyacente sin paso 0-19 %, **cero** tramos de más de 1 s sin objetivo, 0-2 reversiones de casillero y 0-10 lanzamientos por bot. La variación de ritmo ya existente (paso 0,82-1,22×, ráfagas de 2-4 casilleros, pausas de IA 0,12-0,20 s, apuntado 0,36-0,62 s, recuperación 0,85-1,15 s, apoyo 0,3-1,8 s) se documenta como suficiente: no hacía falta agregar jitter artificial.
+- **Bloqueo encontrado:** el mago sagrado pasó **43 muestras continuas (≈10,75 s)** a distancia <3 sin lanzar un solo hechizo. La rama «el mago jamás entra a melee» hacía `continue` antes de las tiradas de Inmovilizar/daño, así que mientras lo perseguían solo retrocedía en círculos. Es el «par que se persigue sin cerrar distancia ni atacar» del pedido.
+- **Corrección:** la retirada se resuelve ahora en el bloque de movimiento común (sin `continue` previo) y con respaldo a `nextPathStep` si el paso codicioso está bloqueado por pared, aliado o esquina. Como apuntar no detiene al NPC, el mago y el clérigo **lanzan mientras retroceden**; el mago sigue sin golpear a melee.
+- **Medición posterior:** el tramo máximo del mago sagrado bajo presión bajó de **43 a 7 muestras (1,75 s)**; las muestras apuntando bajo presión subieron de **2 a 12** y los lanzamientos bajo presión de **0 a 3**. Sondeo de 90 s: movimiento 47-84 %, sin objetivo 0-5 %, cero tramos sin objetivo, 0-1 reversiones, 8 muertes. Sondeo específico de pares cara a cara (45 s, solo actores no inmovilizados): máximo **5 muestras (1,25 s)** sin daño, mira ni paso entre adyacentes, que corresponde al intervalo normal de golpe (0,85-1,15 s); sin bloqueo.
+- **Sin balance:** el daño total y las muertes varían entre corridas porque el PvP es aleatorio; los valores por golpe y por hechizo no se tocaron. Las propuestas de `T5` (`D7`) siguen sin aplicar.
+
+Verificación en Chromium (`http://localhost:3002`): `game.js` y `dist/game.js` sincronizados, `bash 00_cerebro_loop/verify.sh` verde, capturas a 1440×1000 y 390×844, consola **0 errores / 0 advertencias**. Prueba funcional: movimiento con flechas (4 direcciones), poción roja y selección de habilidad responden; el arrastre de hechizos no se modificó.
+
 ## 2026-11-18 · [T5] Combo, maná y `Fuente de vida`: confirmación y propuesta
 Se cerró la verificación pendiente de T4 sin tocar código de producto ni aplicar balance. Resultado en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md#capacidad-de-maná-del-paladín-t5) y [`roadmap/hechizos-referencia.md`](../roadmap/hechizos-referencia.md#verificación-t5-2026-11-18-sanar-vs-curar-heridas-graves).
 

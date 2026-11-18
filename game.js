@@ -1034,17 +1034,9 @@
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
-      // El mago jamás entra a melee: si lo presionan, primero se despega y busca ángulo.
-      if (actor.className === 'mage' && range < combatRange.min) {
-        const step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
-          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
-        if (step) {
-          actor.movePlan = { kind: 'retreat', targetId: target.id };
-          startStep(actor, step[0], step[1]);
-          continue;
-        }
-        // Sin salida: se defiende a hechazos, nunca a golpes.
-      }
+      // El que está presionado (el mago jamás entra a melee) se despega más abajo, en el bloque de
+      // movimiento. No se corta acá: apuntar no frena al NPC, así que puede lanzar MIENTRAS retrocede.
+      // Antes esta rama hacía `continue` y el mago quedaba huyendo en círculos sin atacar.
       // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
       const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (freezeIndex >= 0 && !actor.aim && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
@@ -1064,7 +1056,11 @@
       // Agite frenético: nunca se queda quieto; en el anillo baila (flanquea) y a veces se reacomoda.
       let step, plan = null;
       if (range < combatRange.min) {
-        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max); plan = 'retreat';
+        // Presionado: se despega con el paso codicioso; si está bloqueado (pared, aliado, esquina),
+        // rodea por ruta para volver al anillo. Nunca se queda plantado recibiendo golpes.
+        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
+          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
+        plan = 'retreat';
       } else if (range > combatRange.max) {
         step = nextPathStep(actor, target, combatRange.min, combatRange.max); plan = 'path';
       } else {

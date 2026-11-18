@@ -5,29 +5,28 @@
 
 ## Ahora
 
-### T6 — Variar ritmos de combate y persecución (sin balance)
+### T9 — Escenarios de práctica 1v1, 2v2 y 3v3 con selector de formato
 
-**Estado:** lista para empezar; `T4` y `T5` ya dejaron la referencia y la medición.
-**Depende de:** `T4` + playtest de `T5` (hecho el 2026-11-18).
-**Pedido:** «Variar momentos de inmovilización/remoción/curación/ataque; persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara» (`USER_REQUESTS.md`).
+**Estado:** lista para empezar. Es la primera tarea desbloqueada del roadmap: `T7` depende de `D2` y `T8` de la auditoría de licencias.
+**Depende de:** `T1` y `T5` (hechos) y la arena (mapa 272) ya integrada en `T2`.
+**Pedido:** «Escenarios de práctica 1v1, 2v2 y 3v3 con selector de formato» (`USER_REQUESTS.md`).
 
 **Alcance**
 
-- Medir los patrones repetidos actuales: cooldowns fijos de hechizos, intervalo de ataque, pausas de la IA y persecución.
-- Introducir variación dentro de los valores vigentes (jitter de tiempos y de decisión), **sin** cambiar daños, costos, curaciones, alcances ni reglas.
-- Detectar y corregir oscilaciones o bloqueos: dos actores que se persiguen sin cerrar distancia, NPC plantado sin objetivo, pares cara a cara que no atacan.
-- Conservar el comportamiento observable: nadie quieto, blancos congelados prioritarios y mago que no entra a melee.
+- Agregar un selector visible de formato **1v1 / 2v2 / 3v3** para la arena, sin duplicar el HTML de los combatientes.
+- Reutilizar la arena 272 y sus dos spawns; completar cada equipo con los actores existentes (el jugador ocupa un cupo del equipo sagrado).
+- Indicar el formato activo en el HUD junto al nombre del mapa.
+- Mantener intacta la rotación de ciudad de `D1`: el formato aplica cuando se juega la arena.
 
 **No incluye**
 
-- Cambios de balance (costos, daños, curaciones): las propuestas de `T5` siguen pendientes de aprobación.
-- Terminología AO de los mensajes: requiere una referencia fija (`T12`/`D6`) que todavía no existe.
-- Inventario funcional (`D2=B`), multijugador o assets nuevos.
+- Matchmaking, red, puntaje, rankings, balance nuevo o condiciones de victoria (`D4` sigue cerrada).
+- Inventario funcional (`D2=B`), hechizos nuevos o assets nuevos.
 
 **Criterios de aceptación**
 
-- [ ] Playtest de 90 s antes/después con métricas: % de tiempo en movimiento por bot, pares a distancia 1 sin atacar, tiempo inmóvil sin objetivo y lanzamientos por bot.
-- [ ] Sin cambios en daños, costos, alcances ni reglas.
+- [ ] Los tres formatos se pueden elegir y la arena muestra la cantidad correcta de combatientes por equipo.
+- [ ] Sin cambios en daños, costos, curaciones, alcances ni reglas de combate.
 - [ ] `game.js` + `dist/game.js`, `bash 00_cerebro_loop/verify.sh` y navegador 1440/390 con consola 0/0.
 - [ ] Evidencia y próximo paso en `HISTORY.md` y `HANDOFF.md`.
 
@@ -40,6 +39,7 @@
 
 ## Terminadas recientemente
 
+- [x] **T6 — Ritmos de combate y persecución (2026-11-18).** La variación de ritmo ya existía y se midió; el único bloqueo real era el mago acosado, que retrocedía sin lanzar durante hasta 10,75 s porque la rama de retirada cortaba antes de los hechizos. Ahora lanza mientras se despega y el tramo máximo bajo presión bajó a 1,75 s. Sin cambios de daños, costos, curaciones ni alcances; pares adyacentes sin bloqueo (máximo 1,25 s, intervalo normal de golpe). Evidencia en `HISTORY.md`.
 - [x] **T5 — Combo, maná y `Fuente de vida` (2026-11-18).** `Sanar` no equivale a `Curar Heridas Graves` (AO 12-35/40 vs 40-45/220); `Fuente de vida` 30-45 queda como propuesta `práctica`; el paladín agota su maná para limpiarse en combate real (mínimos 13-85, 23 muestras paralizado con <330) y necesita apoyo. Propuestas con fuente y etiqueta, sin aplicar. Evidencia en `HISTORY.md` y [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md#capacidad-de-maná-del-paladín-t5).
 - [x] **T4 — Matriz de reglas del combate actual vs AO Libre, primer corte (2026-11-16).** Matriz en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md) con ataque adyacente, intervalos, daño, alcance, apuntado, inmovilización/remoción, costos de maná, stamina, pociones y nivel 40; cada fila con código, fuente y etiqueta. Sin cambios de código. Evidencia en `HISTORY.md`.
 - [x] **T2 — Rotación de mapas (2026-11-16).** Lista fija Ullathorpe → Nix → Banderbill → Lindos → Arena; inicio aleatorio sin repetir el anterior al reiniciar; avance cada 5 bajas y fallback. Rotación completa verificada en navegador (5 cambios, 25 bajas) y capturas de los cinco mapas. Evidencia en `HISTORY.md`.

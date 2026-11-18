@@ -12,7 +12,7 @@
 
 ## 0. Reglas permanentes del usuario (proceso, no producto)
 
-- [x] Trabajar en `main`; no llenar el repo de branches. Publicar cuando el usuario lo pida y mantener el preview actualizado al publicar. En esta sesión: no commit ni push sin pedido explícito.
+- [x] Trabajar en `main`; no llenar el repo de branches. **Publicar en `main` al cerrar cada tarea** (pedido explícito del 2026-11-18: si no se pushea, el trabajo no queda guardado) y mantener el preview actualizado. Nunca `--force`; si `main` divergió, merge.
 - [x] No hacer mejoras no pedidas: ejecutar los pedidos concretos de este archivo.
 - [x] Verificar en navegador (`http://localhost:3002`) con consola 100% limpia antes de publicar; usar `?.` y código defensivo.
 - [x] Es una build request: no preguntar, asumir y avisar los supuestos al terminar.
@@ -78,7 +78,7 @@
 - [~] **Contraste completo con AO Libre:** ataques, hechizos, alcance, direcciones, tiempos, requisitos, estados, costos de maná y estadísticas de nivel 40. Primer corte 2026-11-16 en [`roadmap/reglas-combate.md`](../roadmap/reglas-combate.md); falta una tabla AO de estadísticas de nivel 40 y la fórmula exacta de daño/impacto.
 - [~] **Ajuste del combo:** confirmar Curar heridas graves vs Sanar; evaluar `Fuente de vida` 30-45 (wiki 2012); validar mago (Apocalipsis/Juicio Final), paladín y clérigo (Ráfaga + Sanar). No inventar valores «reales». **2026-11-18 (T5):** `Sanar` **no** equivale a `Curar Heridas Graves` (AO #5 cura 12-35 por 40; el prototipo 40-45 por 220); `Fuente de vida` 30-45 queda como propuesta `práctica` sin aplicar. El mago y el clérigo ya se validaron en el playtest de 2026-11-12.
 - [~] **Agotamiento de maná del paladín** tras varios Remover Parálisis y necesidad de apoyo aliado (hoy los costos son de práctica). **2026-11-18 (T5):** medido en 120 s de combate real: 3 limpiezas consecutivas (990 de 1000), 4.ª a los ~53 s; mínimos de 13-85 y 23 muestras paralizado con <330. Propuestas `Remover parálisis` 330 → 300 y `Fuente de vida` 30-45 documentadas, **sin aplicar** hasta aprobación.
-- [ ] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara.
+- [x] **Variar momentos de inmovilización/remoción/curación/ataque;** persecución menos predecible; evitar oscilaciones, bloqueos y pares quietos cara a cara. **2026-11-18 (T6):** la variación de ritmo ya existía y se midió (paso 0,82-1,22×, ráfagas de 2-4, pausas y apuntado aleatorios); el único bloqueo real era el mago acosado, que huía hasta 10,75 s sin lanzar porque la retirada cortaba antes de los hechizos. Ahora lanza mientras se despega (tramo máximo 1,75 s) y los pares adyacentes no se quedan quietos (máximo 1,25 s, el intervalo normal de golpe).
 - [ ] **Terminología y estilo de los mensajes de estado** contra una referencia AO concreta.
 - [~] **Acelerar la visualización de cambios en live preview:** el loop deja cada tarea verificada y lista para publicar; en esta sesión se publica solo cuando el usuario lo pide explícitamente. No acumular tareas sin registrar estado.
 
