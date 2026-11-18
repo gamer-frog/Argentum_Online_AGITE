@@ -1,47 +1,79 @@
-# HANDOFF (Estado Actual)
+# HANDOFF — estado actual
+
+> **Actualizado:** 2026-11-18 · **Rama:** `main` (T1, T2, T3, T4, T5, T6 y los pedidos de puntería completados; sin commit ni push).
+> Manual del loop: [`README.md`](README.md). Cola: [`TODO.md`](TODO.md). Decisiones: [`DECISIONS.md`](DECISIONS.md). Historial: [`HISTORY.md`](HISTORY.md).
+
+## Snapshot
+
+| Campo | Estado |
+| --- | --- |
+| Build | 🟢 Verde; `dist/` sincronizado; preflight 2026-11-18 verde |
+| Tarea actual | `T9 — Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato` |
+| Última completada | `T6 — Ritmos de combate y persecución (corrección del mago acosado)` |
+| Bloqueo | Ninguno para `T9`; `T7` depende de `D2` y `T8` de la auditoría de licencias |
+| Decisiones abiertas | `D2=B` (inventario funcional); propuestas de `T5` (`D7`) |
+| Publicación | Publicado en `origin/main` al cerrar cada tarea (`D5` actualizada 2026-11-18) |
+| Navegador | 2026-11-18: T6 validado en Chromium 1440×1000 y 390×844 (capturas en `/tmp/opencode/captures-t6/`, consola 0/0); probes de ritmo de 90 s y de pares de 45 s. Layout sin cambios desde el riel 1×6 del 2026-11-17 |
 
 ## Última acción completada
-2026-11-14 · [C] HUD de combate: retirado el contador «0/5 BAJAS», que chocaba con el pedido de PvP infinito sin marcador. Mapa/estado de arena permanecen visibles; no se cambió la lógica interna existente de rotación por bajas (tema de otro pendiente). Cambios sincronizados en `index.html`/`dist/index.html`, `styles.css`/`dist/styles.css` y `game.js`/`dist/game.js`. Chromium validado a 1440×1000 y 390×844: se ve el mapa/estado de arena, no aparece el contador y no hubo errores de página en la salida del navegador; capturas `/tmp/opencode/hud-desktop.png` y `hud-mobile.png`. `node --check`, copias sincronizadas y `git diff --check` aprobados.
-2026-11-14 · [C] Barra inferior y despliegue: las seis acciones (4 habilidades + 2 pociones) ahora caben en una fila equilibrada, sin dejar una ranura aislada; se sincronizaron `styles.css`/`dist/styles.css` y la eliminación de Google Fonts quedó reflejada también en `dist/index.html`. Chromium confirmó 6 columnas y las 6 ranuras en una misma fila, sin overflow interno, a 320, 390 y 1440 px; consola 0 errores/0 advertencias y cero solicitudes a Google Fonts. Se conserva el ajuste clásico del client.
-2026-11-14 · [R] Revisión visual de referencia: comparamos la captura oficial del cliente con el HUD actual en la misma composición sin introducir cambios adicionales. La referencia da una coincidencia general alta en layout, proporciones y estética de paneles; no se justifica un ajuste adicional sin un criterio objetivo de comparación lado a lado, así que el estado queda validado por inspección visual en los tamaños comprobados y no por una afirmación de “side-by-side completo”.
-2026-11-14 · [C] `ERRADO` sobre el lanzador: las tres rutas de fallo de `resolveNpcAim`/`resolveTileAim` ahora usan `addFloatingText(actor, ...)`. Se forzaron fallos en Chromium y la captura `/tmp/opencode/shots/errado-actor.png` confirma el texto sobre el personaje; consola limpia. `game.js` y `dist/game.js` sincronizados; `node --check` y `git diff --check` aprobados. Se actualizaron `USER_REQUESTS.md`, `ROADMAP.md` y este handoff.
-2026-11-14 · [B] Se inspeccionaron las seis capturas ya disponibles en la galería oficial de `argentumonline.org` (`assets/images/screenshots/1.png`–`6.png`); sirven como referencia visual de AO y no hay que pedir otra captura para avanzar. Nota de precisión: la página no identifica versión ni fecha de toma (imágenes de 1023×770 o 1024×770; el «V:5» visible no acredita una versión completa). Esa limitación de metadatos no bloquea la comparación ni el rediseño: usar la captura existente como referencia y documentar que la versión exacta no está confirmada. La comparación lado a lado de la interfaz sigue pendiente de ejecución.
-2026-11-14 · [A/C] Nombre del hechizo sobre el lanzador: inspección y playtest en Chromium confirmaron que los lanzamientos efectivos muestran el nombre sobre el personaje (capturado en combate real, por ejemplo «Remover parálisis»); textos de estado/daño también se conservaron y consola 0 errores/0 advertencias. No hubo gap que justificara cambio de código; `game.js` y `dist/game.js` ya estaban sincronizados. Se actualizaron `USER_REQUESTS.md`, `ROADMAP.md` y este handoff. Las animaciones auténticas siguen pendientes.
-2026-11-14 · [A/C] Seguimiento de hechizos con click directo: daño e Inmovilizar ahora resuelven sobre el rival clickeado aunque cambie de casilla durante la mira. Verificado en Chromium con `chaoticPaladin` (textos «Inmovilizar» y «Paralizado»); las pruebas de tiro a casilla y Apocalipsis por casilla también resolvieron sin tracking. `game.js` y `dist/game.js` sincronizados; sintaxis, `git diff --check` y consola (0 errores/0 advertencias) validados. Se actualizaron `USER_REQUESTS.md`, `ROADMAP.md` y este handoff. El filtro NPC de rango/camino se conserva; su selección runtime no quedó aislada concluyentemente.
-2026-11-13 · [A] Rescate de la lista perdida de pedidos: se extrajeron 141 mensajes de usuario únicos de `.omgithub/conversation.json` en 83 commits (2026-11-07 → 2026-11-13), se cruzaron con README, `roadmap/producto-recuperado.md`, hechizos e inventario, y se revisaron todas las refs (`main`, checkpoints, deployments, resumes, tags). El resultado quedó escrito en `00_cerebro_loop/USER_REQUESTS.md` (implementados, parciales, pendientes y citas literales) y el backlog pendiente se replicó en `ROADMAP.md`. El único ítem eliminado a propósito fue el marcador/condición de victoria, prohibido por el usuario. Sin cambios de código.
-2026-11-13 · [C] Playtest de ritmo de bots (~60 s) en Chromium: 6 muertes totales (el jugador quieto y sin entradas murió 2 veces), los NPC mostraron 20–88% de movimiento, 0–37% de apuntado y hasta 26% de inmovilización; hubo respawns y combate continuo. Consola 0 errores/0 advertencias. No hay un desajuste aislado que justifique cambiar balance sin feedback más específico; no se modificó código.
-2026-11-13 · [C] Endurecimiento de accesos: el autodesparalizarse usa un `cleanseSkill` local con optional chaining y valida `skillCooldowns`; `resolveNpcAim` usa `aim.spell?.skill/index`; `npcCastSkill` rechaza habilidades de daño sin arreglo `damage` y de inmovilización sin duración antes de consumir maná; el filtro de ataque exige `Array.isArray(skill.damage)`. Verificado en Chromium: 20 s con los 8 hechizos usados, consola 0/0.
-2026-11-12 · [B] Playtest de ritmo y balance: 90 s desde reinicio, 11 bajas (una cada 7,8 s), 4 guerrero / 3 mago / 2 paladín / 1 clérigo; 60–88 % de movimiento por bot; maná con mínimos de 5–92 y sin muestras en cero; todos los hechizos/golpes se usaron. No se ajustó ningún número. Observación: el paladín concentra 5 de las 11 muertes (4 del sagrado); si el playtest humano lo confirma, probar `Fuente de vida` 30-45 (wiki 2012) sin tocar el resto. Consola 0/0. `AO_DEBUG()` ahora expone maná para medir agotamiento.
-2026-11-12 · [B/A] Hechizos de Imperium (pedido textual: «Buscamos en wiki de imperium ao también»): se relevaron el manual de Imperium Classic y la wiki de Imperium AO (foro 2012) y `CLASS_PROFILES` quedó alineado: mago Apocalipsis 117-119 + Juicio Final 142-144; clérigo Ráfaga Ígnea 98-100 + Sanar 40-45; paladín Castigo Divino 90-92 + Fuente de vida 25-32; Inmovilizar y Remover parálisis se conservan. `skillHealAmount` acepta rangos de cura. Los costos de maná 230/350/330/220 son de práctica y están documentados como tales. Verificado en Chromium: 60 s de combate con los seis hechizos usados, daños/curaciones dentro de rango (Apocalipsis 118, Juicio Final 143-144, Ráfaga 99-100, Castigo 91-92, Sanar 41-42, Fuente 26-32), consola 0/0. Referencia: `roadmap/hechizos-referencia.md`.
-2026-11-12 · [A] Roles de equipo: `supportPriority(actor, ally, kind)` reemplaza al muerto `tacticalAlly`; el clérigo cura antes al paladín y lo desparaliza por encima de cualquier aliado, mientras magos/clérigos mantienen su apoyo. `AO_DEBUG()` expone el orden de prioridad (solo lectura). Verificado en Chromium: paladín primero (heal 0.67 / cleanse 0.02), tarea real del clérigo sagrado apuntada al paladín, consola 0/0.
-2026-11-12 · [A] IA de agite (pedido textual del usuario): los NPC ya no se plantan al apuntar; siguen planificando pasos y persiguiendo durante la mira, el mago prioriza retirada si un enemigo entra en su rango mínimo (jamás ataca a melee) y usa `nextPathStep` como escape cuando la retirada directa está bloqueada; los blancos inmovilizados se priorizan (bonus extra para clérigo). Probe de 18 s: 74–89 % de movimiento, 66–86 % de miras resueltas en movimiento, mago del caos 0 % a distancia 1, pares adyacentes quietos 8/58 muestras (86 % con al menos uno moviéndose), consola 0/0.
-2026-11-12 · [C] Saneamiento de spawn/respawn: `findOpen(x,y,except)` ahora excluye al propio actor y a los muertos, así la formación inicial se conserva (el jugador vuelve a aparecer en 43,46, antes se auto-desplazaba a 42,45); `respawn` pasa el actor para no bloquearse con su propio cadáver y usa `CLASS_PROFILES` con fallback; `kill` usa nombres seguros (`actorDisplayName`) para no romper si falta el atacante. Verificado en Chromium: spawn exacto, 7 vivos a los 11 s, consola 0/0.
-2026-11-12 · [C] HUD de maná fiel al pedido: el guerrero ya no muestra la fila/barra de maná vacía (`resource-block.no-mana`, `display:none`); mago/clérigo/paladín la muestran con su valor real. Se corrigieron los valores iniciales del HTML (380/380, maná "—") y se sincronizó `dist/index.html` + `dist/styles.css` + `dist/game.js` con la fuente. Verificado en Chromium: guerrero oculto → mago visible (1400/1400) → guerrero oculto, consola 0/0.
-2026-11-12 · [A] Regresión de balance corregida: el ataque melee básico del jugador usaba `rand(11,18)` en vez del daño por clase del pedido Imperium. Ahora usa `MELEE_DAMAGE` (guerrero 85-105, paladín 75-95, mago 45-60, clérigo 50-65) igual que los NPC; además `applyClass` cancela un apuntado en curso y libera `attackCd` para que no quede un hechizo viejo de la clase anterior. Verificación en Chromium: ataque real adyacente al GUERRERO enemigo con delta de vida **102** (`-102` flotante), consola 0 errores/0 advertencias.
+
+**2026-11-18 · [T6] Ritmos de combate y persecución: variación vigente y mago acosado corregido.**
+
+- **Lo que ya estaba:** el código tiene variación real de ritmo (paso 0,82-1,22×, ráfagas de 2-4 casilleros, pausas de IA aleatorias, apuntado 0,36-0,62 s y recuperación 0,85-1,15 s, apoyo 0,3-1,8 s). La medición de 90 s no mostró NPC plantado sin objetivo ni oscilaciones: 1-3 % sin objetivo, cero tramos >1 s, 0-2 reversiones.
+- **El bloqueo:** el mago sagrado acumuló **43 muestras (≈10,75 s)** bajo presión sin lanzar, porque la rama de retirada hacía `continue` antes de las tiradas de hechizo. Solo huía en círculos.
+- **Corrección:** la retirada se resuelve en el bloque de movimiento común, con respaldo por ruta si el paso está bloqueado. El mago y el clérigo apuntan **mientras retroceden**; el mago sigue sin golpear a melee. Sin cambios de daños, costos, curaciones, alcances, cooldowns ni `STEP_DURATION`.
+- **Resultado:** tramo máximo bajo presión 43 → **7 muestras (1,75 s)**; apuntando bajo presión 2 → 12; lanzamientos bajo presión 0 → 3. Pares adyacentes sin daño/mira/paso: máximo **1,25 s**, que es el intervalo normal de golpe. Sin bloqueos.
+
+Verificado en Chromium (`http://localhost:3002`, 1440×1000 y 390×844) con consola 0/0; `game.js` y `dist/game.js` sincronizados y `verify.sh` verde. Detalle y números en `HISTORY.md`.
+
+## Próximo paso inmediato
+
+**T9 — Escenarios de práctica 1v1 / 2v2 / 3v3 con selector de formato.**
+
+1. Leer cómo se arma la arena (mapa 272, `spawnActorsOnMap`, `arenaOffsets`) y el HUD del mapa.
+2. Agregar el selector de formato reutilizando los actores existentes; el jugador ocupa un cupo sagrado.
+3. Mantener intacta la rotación de ciudad (`D1`) y todas las reglas de combate.
+4. Verificar los tres formatos en Chromium 1440/390 con consola 0/0 y registrar evidencia.
+
+**Pendiente de aprobación (no hacer sin pedido):** aplicar las propuestas de `T5` (limpieza 330 → 300 y `Fuente de vida` 30-45).
+
+**No hacer todavía:** mecánicas de inventario (`D2=B`), cambios de balance sin aprobación, extracción de assets nuevos, rediseño global del HUD.
+
+## Cómo retomar en 60 segundos
+
+```bash
+cd /home/runner/work/Argentum_Online_AGITE/Argentum_Online_AGITE
+sed -n '1,80p' 00_cerebro_loop/HANDOFF.md
+sed -n '1,80p' 00_cerebro_loop/TODO.md
+sed -n '1,80p' 00_cerebro_loop/DECISIONS.md
+bash 00_cerebro_loop/verify.sh
+PORT=3002 bash start.sh
+playwright-cli open http://localhost:3002
+playwright-cli console
+```
 
 ## Estado del build/navegador
-🟢 Verde. `http://localhost:3002` sirve `dist/` vía `start.sh` (copia `game.js`→`dist/game.js` al arrancar). Consola limpia; jugable: mover, objetivo (Tab/clic), atacar (F), hechizos 1-4 con apuntado y tiro a casilla, pociones 5-6, esquiva, pausa y reinicio. NPCs combaten constantemente (quieto = morir); curas/remociones/apoyo operativos.
 
-## PRÓXIMO PASO INMEDIATO
-📌 La corrección de hechizos clickeados, el nombre del hechizo sobre el lanzador y `ERRADO` sobre el lanzador están completados/verificados. **Referencia visual:** la captura AO de la galería oficial ya está disponible y basta para avanzar; no pedir otra. La falta de versión/fecha confirmada es una limitación documental, no un bloqueo. Próximo paso del clon visual: comparar el HUD actual lado a lado con esa referencia y continuar los cambios pedidos, validando desktop y móvil. La **rotación de mapas** sí sigue bloqueada hasta proponer y obtener aprobación de la lista de ubicaciones; no implementarla antes. Continuar con el siguiente pedido pendiente y accionable de `USER_REQUESTS.md`, una tarea por vez y sin mejoras fuera de la lista. Las animaciones auténticas de hechizos siguen pendientes aparte del nombre.
+- `http://localhost:3002` sirve `dist/` vía `start.sh`, que copia `index.html`, `styles.css`, `game.js`, `favicon.svg` y `assets/ao/` al arrancar.
+- Jugable: mover, objetivo (Tab/clic), atacar (F/Enter/Espacio), hechizos 1-4 con apuntado, pociones 5-6, esquiva, pausa y reinicio.
+- NPCs combaten de forma continua; curas, remociones y apoyo operativos.
+- La última validación de producto (2026-11-18, T6) fue en Chromium: probes de ritmo de 90 s y de pares adyacentes de 45 s, más movimiento, poción y selección de habilidad; capturas 1440×1000 y 390×844 en `/tmp/opencode/captures-t6/`, consola 0/0. La última validación de layout sigue siendo la de 2026-11-17/16: riel 1×6 y rotación completa 1 → 34 → 59 → 62 → 272 a 1440×1000 y 390×844.
 
-## Decisiones de diseño tomadas
-- La fuente de verdad del cerebro es `00_cerebro_loop/`; `HANDOFF.md`/`todo.md`/`user-requests.md` en la raíz son duplicados legacy del BOOT y no se actualizan.
-- La regla v6.0 del usuario anula instrucciones previas del repo; por eso el bloque "REGLA SUPREMA" se retiró de `Agents.md` en esta iteración (el cambio ya estaba en el árbol de trabajo y coincide con la anulación solicitada).
-- `game.js` es la fuente y `dist/game.js` la copia de despliegue: mantenerlos sincronizados en cada commit (start.sh también los copia al arrancar).
-- Las mecánicas del prototipo siguen siendo aproximaciones de AO, no fidelidad confirmada; contrastar con AO Libre antes de presentar reglas como fieles.
-- Hechizos: `roadmap/hechizos-referencia.md` registra el contraste AO Libre / Imperium Classic / wiki Imperium AO. Daños y curas usan el manual de Imperium Classic; los manás 230/350/330/220 son costos de práctica porque los del foro (Juicio Final 1800, Apocalipsis 1050) no entran en las reservas de nivel 40. No presentarlos como valores auténticos.
+## Decisiones abiertas
 
-## Contexto importante
-- Ejecutar desde la raíz con `PORT=3002 bash start.sh`; abrir `http://localhost:3002`.
-- Controles actuales: flechas/WASD mover; clic/Tab objetivo; F/Enter/ESPACIO atacar; 1-4 hechizos (mira en vivo hasta el click, click en suelo = tiro a casilla, lanzar NO frena el movimiento); E arma Inmovilizar; Q arma Remover Parálisis; 5-6 pociones; Esc/click-derecho desarma el hechizo; Esc cerrar/pausar; botón pausa.
-- La sesión parte de `868700d` (rama `opencode/42952272654`), igual a `origin/main` tras fetch. Publicar solo con fast-forward (`git push origin HEAD:main`), nunca force push.
-- Ignorar por completo branches/tags `opencode-*` y `graveyard-*` viejos; no mergearlos a ciegas.
-- `playwright-cli` necesita `playwright-cli install-browser chromium` si la caché está vacía. Este modelo de agente no puede leer imágenes: verificar con `playwright-cli eval` (píxeles pintados del canvas, texto del HUD, estado de juego) y `playwright-cli console`.
-- Los screenshots se guardan fuera del repo (`/tmp/opencode/shots`); `screenshots/` está ignorado por `.gitignore`.
+- **D1 — Lista de mapas:** resuelta el 2026-11-16. Lista implementada: Ullathorpe (1), Nix (34), Banderbill (59), Lindos (62) y Arena (272).
+- **D2 — Inventario/equipo:** A visual ya ejecutado en T1; B funcional mínimo sigue pendiente de decisión. Sin respuesta no se agregan mecánicas.
+- **D7 — Propuestas de balance de T5:** limpieza 330 → 300 y `Fuente de vida` 30-45 quedaron documentadas, no aplicadas. Sin respuesta, `game.js` conserva 330/220.
 
-## Historial de verificación conservado
-- 2026-11-11: consola 0 errores/0 advertencias tras cargar y jugar (Tab, F, W); canvas 917×675 con >600k píxeles pintados; HUD vivo (`healthValue` cayó a 20/130 por daño de bots durante la prueba).
-- Sesiones previas: verificación del cerebro en 3002 con capturas desktop/mobile, recursos HTTP 200 y consola limpia; commits `9880942` y `868700d` publicados en `main` tras validar `game.js`/`dist/game.js` en Chromium.
-- 2026-11-13: runtime reabierto correctamente en `http://localhost:3002` con Chromium; título de la app visible y consola con 0 errores/0 advertencias. El fallo anterior se debía a que el servidor se lanzó con timeout y terminó; `PORT=3002 bash start.sh` en segundo plano persistente lo resolvió. La rotación sigue pendiente de acordar ubicaciones.
-- 2026-11-14: corrección de inventario para rotación: `assets/ao/maps.json` y `assets/ao/maps/{1,34,59,62,272}.json` ya contienen cinco mapas AO Libre con coordenadas de spawn en `maps.json`: Ullathorpe (1, [58,45]), Nix (34, [44,88]), Banderbill (59, [50,50]), Lindos (62, [72,41]) y Arena (272, [[30,44],[58,46]]). Se proponen estos cinco para la rotación, pendiente de aprobación del usuario. La lógica existente ya elige mapa al azar al iniciar, avanza al siguiente del manifiesto cada cinco bajas y al reiniciar elige otro al azar; aún no se ha aplicado la propuesta de asegurar mapas iniciales distintos a partir de una lista acordada. La última anotación del 2026-11-13 que decía que sólo estaba disponible Mapa2 estaba desactualizada.
+## Reglas operativas
+
+- Una tarea por ciclo; no mejoras fuera de la lista.
+- `game.js` es la fuente; `dist/game.js` la copia de despliegue. Mantener ambos sincronizados junto con HTML/CSS.
+- Publicar en `main` al cerrar cada tarea (`D5`, pedido 2026-11-18): commit, integración y `git push origin main`. Nunca `--force`; si `main` divergió, merge y conflictos a favor del estado verificado.
+- No mergear branches viejas a ciegas; reconstruir leyendo el código.
+- Etiquetar toda afirmación de fidelidad como confirmada, aproximada o de práctica.
+- Las capturas van fuera del repo (`/tmp/opencode/shots/`).
+
+## Historial
+
+El registro completo de acciones verificadas está en [`HISTORY.md`](HISTORY.md). No agregar historial extenso a este archivo: `HANDOFF` es estado, no diario.

@@ -12,7 +12,7 @@
   <main class="client-window">
     <header class="client-titlebar">
       <div class="client-brand"><span class="brand-gem">✦</span><strong>ARGENTUM ONLINE</strong><span class="client-version">CLIENTE DE PRUEBA</span></div>
-      <div class="window-actions"><button id="soundToggle" type="button" title="Alternar sonido"><span id="soundIcon">♫</span> <span id="soundLabel">SONIDO</span></button><button id="helpBtn" type="button" title="Controles">?</button><button id="menuBtn" type="button" title="Pausar o reanudar">Ⅱ</button></div>
+      <div class="window-actions"><button id="fullscreenBtn" type="button" title="Pantalla completa" aria-label="Alternar pantalla completa" aria-pressed="false"><span id="fullscreenIcon">⛶</span></button><button id="soundToggle" type="button" title="Alternar sonido"><span id="soundIcon">♫</span> <span id="soundLabel">SONIDO</span></button><button id="helpBtn" type="button" title="Controles">?</button><button id="menuBtn" type="button" title="Pausar o reanudar">Ⅱ</button></div>
     </header>
 
     <section class="client-layout" id="arenaLayout" aria-label="Cliente de juego">
@@ -28,10 +28,21 @@
         <div class="game-frame" id="gameFrame">
           <canvas id="game" aria-label="Mundo de Argentum Online. Usa flechas o WASD para moverte, selecciona un personaje y atacá con F o Enter."></canvas>
           <div class="frame-vignette"></div>
+          <section class="dock-panel spellbar-panel spell-rail" aria-label="Barra de hechizos y habilidades">
+            <div class="spellbar-heading">
+              <h2 class="panel-title">HECHIZOS Y HABILIDADES <span class="panel-mark">✧</span></h2>
+              <span class="spellbar-shortcut">ATAJOS · 1–4 HECHIZOS · 5–6 POCIONES · E INMO · Q REMO · ESPACIO PEGAR</span>
+            </div>
+            <div class="spell-loadout" aria-label="Habilidades y pociones del personaje"><button class="spell-slot" data-skill="0" type="button" aria-pressed="false"><kbd>1</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="1" type="button" aria-pressed="false"><kbd>2</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="2" type="button" aria-pressed="false"><kbd>3</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot" data-skill="3" type="button" aria-pressed="false"><kbd>4</kbd><b class="spell-icon"></b><span class="spell-name"></span><small class="spell-cost"></small></button><button class="spell-slot potion-slot potion-red" data-potion="red" type="button" title="Poción roja: restaura vida (5)"><kbd>5</kbd><b class="spell-icon">🧪</b><span class="spell-name">Poción roja</span><small class="spell-cost">VIDA ∞</small></button><button class="spell-slot potion-slot potion-blue" data-potion="blue" type="button" title="Poción azul: restaura maná (6)"><kbd>6</kbd><b class="spell-icon">💧</b><span class="spell-name">Poción azul</span><small class="spell-cost">MANÁ ∞</small></button></div>
+            <p class="spell-hint" id="spellHint">Mantené y arrastrá una habilidad para apuntar; soltá para lanzar.</p>
+          </section>
           <div class="game-top-hud"><div class="round-pill"><span>✦</span><span id="mapPillLabel">CARGANDO MAPA · ARENA LIBRE</span></div></div>
           <div class="respawn-notice hidden" id="respawnNotice" role="status" aria-live="polite"><strong>HAS CAÍDO</strong><span>Reaparecés en <b id="respawnTimer" aria-hidden="true">2.4</b> s</span></div>
+          <div class="mobile-vitals no-mana" id="mobileVitals" aria-hidden="true"><div class="mobile-vital health"><i id="mobileHealthBar"></i></div><div class="mobile-vital mana"><i id="mobileManaBar"></i></div></div>
           <div class="mobile-joystick" id="joystick"><div class="joy-ring"><div class="joy-knob" id="joyKnob"></div></div></div>
           <div class="mobile-cast-hint">MOVER · ATACAR EN EL PANEL</div>
+          <div class="mobile-cancel-hint" id="spellCancelHint">SOLTÁ PARA CANCELAR</div>
+          <div class="mobile-action-cluster" id="mobileActionCluster"><button class="mobile-attack" id="mobileAttackBtn" type="button" aria-label="Atacar al rival adyacente">⚔<small>ATACAR</small></button></div>
           <div class="canvas-tip"><span>FLECHAS / WASD</span> MOVER <i>·</i> <span>CLICK</span> ELEGIR / LANZAR <i>·</i> <span>F</span> ATACAR</div>
         </div>
         <div class="world-statusbar"><span><i class="status-light"></i> CONECTADO · PARTIDA LOCAL</span><span>8 PERSONAJES EN EL MAPA</span></div>
@@ -54,18 +65,30 @@
           <button class="attack-button" id="attackBtn" type="button" title="Ataque cuerpo a cuerpo (F / Enter)"><span>⚔</span><b>ATACAR</b><kbd>F</kbd></button>
         </section>
 
-        <section class="dock-panel inventory-panel" aria-label="Inventario (interfaz en desarrollo)">
-          <h2 class="panel-title">INVENTARIO · EN DESARROLLO <span class="inventory-capacity">0 / 20</span></h2>
-          <div class="inventory-grid" aria-label="Veinte espacios de inventario vacíos">
+        <section class="dock-panel inventory-panel" aria-label="Inventario (interfaz visual, sin objetos funcionales)">
+          <h2 class="panel-title">INVENTARIO <span class="inventory-capacity">0 / 35</span></h2>
+          <div class="inventory-grid" aria-label="Treinta y cinco espacios de inventario vacíos">
+            <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
+            <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
+            <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
             <span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span><span class="inventory-slot"></span>
           </div>
-          <p class="inventory-note">INTERFAZ PENDIENTE · SIN OBJETOS FUNCIONALES</p>
+          <p class="inventory-note">SIN OBJETOS · PRÁCTICA</p>
         </section>
 
-        <section class="dock-panel equipment-panel" aria-label="Equipamiento (interfaz en desarrollo)"><h2 class="panel-title">EQUIPAMIENTO · EN DESARROLLO <span class="panel-mark">◇</span></h2><div class="equipment-grid"><div class="equipment-slot"><span>◇</span><small>CASCO</small></div><div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div><div class="equipment-slot"><span>⚔</span><small>ARMA</small></div><div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div></div><p class="inventory-note">INTERFAZ PENDIENTE · SIN EQUIPO FUNCIONAL</p></section>
+        <section class="dock-panel equipment-panel" aria-label="Equipamiento (interfaz visual, sin equipo funcional)">
+          <h2 class="panel-title">EQUIPAMIENTO <span class="panel-mark">◇</span></h2>
+          <div class="equipment-grid">
+            <div class="equipment-slot"><span>◇</span><small>CASCO</small></div>
+            <div class="equipment-slot"><span>♧</span><small>ARMADURA</small></div>
+            <div class="equipment-slot"><span>⚔</span><small>ARMA</small></div>
+            <div class="equipment-slot"><span>⬡</span><small>ESCUDO</small></div>
+          </div>
+          <p class="inventory-note">SIN EQUIPO · PRÁCTICA</p>
+        </section>
 
         <section class="dock-panel spellbar-panel" aria-label="Barra de hechizos y habilidades">
       <div class="spellbar-heading">
@@ -106,7 +129,7 @@
     </section>
   </main>
   <div class="toast" id="toast"></div>
-  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3 / 4</kbd><span>Seleccionar una habilidad</span></p><p><kbd>E</kbd><span>Inmovilizar (arma el hechizo; clic para lanzar)</span></p><p><kbd>Q</kbd><span>Remover Parálisis (sobre vos o un aliado)</span></p><p><kbd>5 / 6</kbd><span>Beber poción roja (vida) o azul (maná)</span></p><p><kbd>ESPACIO / F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
+  <div class="modal hidden" id="helpModal"><div class="modal-card"><button class="modal-close" id="closeHelp" type="button">×</button><h2>Controles</h2><div class="control-list"><p><kbd>FLECHAS / WASD</kbd><span>Mover al personaje por el mapa</span></p><p><kbd>CLICK / TAB</kbd><span>Seleccionar personaje; con habilidad, lanzar</span></p><p><kbd>1 / 2 / 3 / 4</kbd><span>Seleccionar una habilidad</span></p><p><kbd>E</kbd><span>Inmovilizar (arma el hechizo; clic para lanzar)</span></p><p><kbd>Q</kbd><span>Remover Parálisis (sobre vos o un aliado)</span></p><p><kbd>5 / 6</kbd><span>Beber poción roja (vida) o azul (maná)</span></p><p><kbd>ESPACIO / F / ENTER</kbd><span>Atacar al rival adyacente</span></p><p><kbd>ESC</kbd><span>Cerrar panel de combatientes o esta ayuda</span></p><p><kbd>⛶</kbd><span>Pantalla completa; en móvil horizontal los hechizos quedan a la derecha</span></p></div><div class="modal-note">El inventario y el equipamiento aún son solo interfaz; todavía no contienen objetos funcionales.</div></div></div>
   <script src="game.js"></script>
 </body>
 </html>

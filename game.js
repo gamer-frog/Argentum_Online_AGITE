@@ -21,6 +21,8 @@
   if (!MAP_CANDIDATES.includes('assets/ao/')) MAP_CANDIDATES.push('assets/ao/');
   let MAP_URL = MAP_CANDIDATES[0];
   const CHARACTER_LEVEL = 40;
+  // Lista aprobada en D1 (2026-11-16): orden fijo de la rotación de mapas.
+  const APPROVED_MAP_IDS = [1, 34, 59, 62, 272];
   const ACTORS = [
     { id: 'player', name: 'GUERRERO', team: 'sacred', className: 'warrior', level: CHARACTER_LEVEL, x: 43, y: 46 },
     { id: 'sacredMage', name: 'MAGO', team: 'sacred', className: 'mage', level: CHARACTER_LEVEL, x: 43, y: 43 },
@@ -110,12 +112,21 @@
   const SELF_CARE_HP = .5;
   const images = new Map(), spellSounds = new Map();
   let mapData, grhs, characters, spellFx = {};
-  let mapManifest = [], currentMap = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
+  let mapManifest = [], mapRotation = [], currentMap = null, lastStartMapId = null, killsTowardRotation = 0, mapChangeInProgress = false, resetInProgress = false, mapTransitionId = 0;
   let fallbackWorld = false;
   let W = 800, H = 480, dpr = 1, tilePx = 32;
   let elapsed = 0, paused = false;
   let selected = 'chaoticWarrior', selectedSkill = null, currentClass = 'warrior';
-  let mouseTile = null; // Casilla bajo el cursor: alimenta la mira en vivo del hechizo preparado.
+  let mouseTile = null; // Casilla bajo el cursor: resuelve el lanzamiento a casilla.
+  let mousePoint = null; // Punto libre en píxeles: la mira sigue el cursor sin saltar de casilla.
+  // Arrastre tipo Wild Rift: la mira sale del personaje y se orienta con el vector desde el botón,
+  // no con la posición absoluta del dedo/cursor. Se engancha al rival si pasa cerca.
+  let dragAim = null; // { x, y, reach, maxRange, tile, target }
+  const DRAG_AIM_DEADZONE = 14; // px de recorrido antes de mover la mira
+  const DRAG_AIM_CANCEL = 12;   // volver a este radio desde el apoyo cancela al soltar
+  const DRAG_AIM_FULL = 96;     // px de recorrido que equivalen al alcance máximo
+  const DRAG_AIM_FULL_TOUCH = 64; // en táctil el pulgar tiene menos recorrido útil
+  let spellDrag = null, canvasPress = null, lastSpellGesture = null;
   const floatingTexts = [], spellEffects = [];
   let audioOn = true, audioReady = false, audioCtx;
   const keys = new Set();
@@ -167,6 +178,40 @@
     if (!response.ok) throw new Error(`Could not load ${url}: ${response.status}`);
     return response.json();
   }
+  function activeMapRotation() {
+    return mapRotation.length ? mapRotation : mapManifest;
+  }
+  function randomMap(list) {
+    return list.length ? list[Math.floor(Math.random() * list.length)] : null;
+  }
+  function shuffled(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  // Reinicio: prioriza un mapa distinto del inicio anterior y del actual; si no hay,
+  // conserva al menos la garantía de no repetir el inicio anterior.
+  async function loadResetMap(transitionId) {
+    const rotation = activeMapRotation();
+    const preferred = rotation.filter(map => map.id !== lastStartMapId && map.id !== currentMap?.id);
+    const fallback = rotation.filter(map => map.id !== lastStartMapId);
+    const preferredIds = new Set(preferred.map(map => map.id));
+    const candidates = [...shuffled(preferred), ...shuffled(fallback.filter(map => !preferredIds.has(map.id)))];
+    for (const candidate of candidates) {
+      if (transitionId !== mapTransitionId) return null;
+      try {
+        const data = await fetchJson(`${MAP_URL}maps/${candidate.id}.json`);
+        if (transitionId !== mapTransitionId) return null;
+        return { map: candidate, data };
+      } catch (error) {
+        console.warn(`No se pudo cargar ${candidate.name} al reiniciar; se prueba otro mapa.`, error);
+      }
+    }
+    return null;
+  }
   async function loadAssets() {
     try {
       for (let index = 0; index < MAP_CANDIDATES.length; index++) {
@@ -176,14 +221,19 @@
             fetchJson(MAP_URL + 'maps.json'), fetchJson(MAP_URL + 'grhs.json'), fetchJson(MAP_URL + 'characters.json')
           ]);
           mapManifest = manifest.maps || [];
+          mapRotation = APPROVED_MAP_IDS
+            .map(id => mapManifest.find(map => map.id === id))
+            .filter(Boolean);
+          if (!mapRotation.length) mapRotation = mapManifest.slice();
           grhs = graphicData; characters = characterData;
           break;
         } catch (error) {
           if (index === MAP_CANDIDATES.length - 1) throw error;
         }
       }
-      currentMap = mapManifest[Math.floor(Math.random() * mapManifest.length)];
+      currentMap = randomMap(activeMapRotation());
       if (!currentMap) throw new Error('No authentic AO maps were listed in maps.json');
+      lastStartMapId = currentMap.id;
       mapData = await fetchJson(`${MAP_URL}maps/${currentMap.id}.json`);
       try {
         const response = await fetch(MAP_URL + 'spellfx.json');
@@ -260,6 +310,25 @@
   new ResizeObserver(resize).observe(frame);
   window.addEventListener('resize', resize);
   resize();
+
+  // Móvil horizontal: el cargador de hechizos se reubica dentro del mundo, sobre la derecha.
+  // Es el mismo nodo (y los mismos listeners), así que escritorio y retrato no cambian.
+  const mobileCombatMedia = window.matchMedia('(orientation: landscape) and (max-height: 640px) and (pointer: coarse)');
+  const spellLoadout = document.querySelector('.spell-loadout');
+  const spellLoadoutHome = spellLoadout?.parentElement ?? null;
+  const spellLoadoutNext = spellLoadout?.nextElementSibling ?? null;
+  function syncMobileCombatLayout() {
+    const combat = mobileCombatMedia.matches;
+    document.body.classList.toggle('mobile-combat', combat);
+    const host = combat ? $('mobileActionCluster') : spellLoadoutHome;
+    if (spellLoadout && host && spellLoadout.parentElement !== host) {
+      if (combat) host.appendChild(spellLoadout);
+      else host.insertBefore(spellLoadout, spellLoadoutNext);
+    }
+    resize();
+  }
+  mobileCombatMedia.addEventListener('change', syncMobileCombatLayout);
+  syncMobileCombatLayout();
 
   function toast(message) {
     const el = $('toast'); el.textContent = message; el.classList.add('show');
@@ -635,9 +704,9 @@
     if (!skill) return;
     selectedSkill = selectedSkill === index ? null : index;
     refreshSkillSelection();
-    const usage = skill.type === 'heal' ? 'hacé clic en tu personaje o un aliado para curar.'
-      : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado.'
-      : 'elegí un rival en el campo.';
+    const usage = skill.type === 'heal' ? 'arrastrá al personaje o aliado para curar; en PC, elegilo y hacé clic para apuntar.'
+      : skill.type === 'cleanse' ? 'arrastrá al personaje o aliado paralizado; en PC, elegilo y hacé clic para apuntar.'
+      : 'arrastrá a un rival; en PC, elegilo y hacé clic para apuntar.';
     toast(selectedSkill === null ? 'Selección de hechizo cancelada.' : `${skill.name} seleccionado · ${usage}`);
   }
   // Atajos E/Q: arman el hechizo propio de la clase (Inmovilizar / Remover Parálisis) como los slots 1-4.
@@ -654,8 +723,8 @@
     });
     const skill = selectedSkill === null ? null : skillAt(selectedSkill);
     const hint = skill
-      ? `${skill.name} listo · ${skill.type === 'damage' || skill.type === 'immobilize' ? 'hacé clic en un rival' : skill.type === 'cleanse' ? 'hacé clic en tu personaje o un aliado paralizado' : 'hacé clic en tu personaje o un aliado'}`
-      : 'Elegí un hechizo y hacé clic en un rival';
+      ? `${skill.name} listo · arrastrá al objetivo o en PC hacé clic y soltá · ${skill.type === 'damage' || skill.type === 'immobilize' ? 'rival' : skill.type === 'cleanse' ? 'aliado paralizado' : 'aliado'}`
+      : 'Mantené y arrastrá un hechizo al campo · en PC elegilo y hacé clic para apuntar';
     $('spellHint').textContent = hint;
   }
   function refreshPotions() {
@@ -741,6 +810,7 @@
     player.maxHp = profile.hp; player.hp = profile.hp;
     player.maxMana = profile.mana; player.mana = profile.mana;
     player.skillCooldowns = [0, 0, 0, 0]; selectedSkill = null;
+    cancelSpellDrag();
     // Cambiar de clase a mitad de un apuntado cancela el hechizo viejo y libera el intervalo.
     player.aim = null; player.attackCd = 0;
     player.potionCd = 0; player.castCd = 0;
@@ -791,13 +861,14 @@
     refreshHud();
   }
   async function rotateMapAfterKills() {
-    if (mapChangeInProgress || resetInProgress || mapManifest.length < 2) return;
+    const rotation = activeMapRotation();
+    if (mapChangeInProgress || resetInProgress || rotation.length < 2) return;
     mapChangeInProgress = true;
     const transitionId = ++mapTransitionId;
     try {
       while (killsTowardRotation >= 5 && transitionId === mapTransitionId) {
-        const currentIndex = mapManifest.findIndex(map => map.id === currentMap?.id);
-        const nextMap = mapManifest[(currentIndex + 1 + mapManifest.length) % mapManifest.length];
+        const currentIndex = rotation.findIndex(map => map.id === currentMap?.id);
+        const nextMap = rotation[(currentIndex + 1 + rotation.length) % rotation.length];
         const nextData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
         if (transitionId !== mapTransitionId) return;
         mapData = nextData; currentMap = nextMap; killsTowardRotation -= 5;
@@ -963,17 +1034,9 @@
       actor.aiTargetId = target.id;
       const range = distance(actor, target), combatRange = NPC_COMBAT_RANGES[actor.className];
       if (!combatRange) continue;
-      // El mago jamás entra a melee: si lo presionan, primero se despega y busca ángulo.
-      if (actor.className === 'mage' && range < combatRange.min) {
-        const step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
-          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
-        if (step) {
-          actor.movePlan = { kind: 'retreat', targetId: target.id };
-          startStep(actor, step[0], step[1]);
-          continue;
-        }
-        // Sin salida: se defiende a hechazos, nunca a golpes.
-      }
+      // El que está presionado (el mago jamás entra a melee) se despega más abajo, en el bloque de
+      // movimiento. No se corta acá: apuntar no frena al NPC, así que puede lanzar MIENTRAS retrocede.
+      // Antes esta rama hacía `continue` y el mago quedaba huyendo en círculos sin atacar.
       // Inmovilizar: con el hechizo listo y el blanco libre, suele congelar primero (agite clásico de AO).
       const freezeIndex = skills.findIndex((skill, index) => skill?.type === 'immobilize' && actor.mana >= skill.cost && actor.skillCooldowns[index] <= 0);
       if (freezeIndex >= 0 && !actor.aim && !recovering && target.immobilized <= 0 && distance(actor, target) <= SPELL_VISION_RANGE && Math.random() < .6) {
@@ -993,7 +1056,11 @@
       // Agite frenético: nunca se queda quieto; en el anillo baila (flanquea) y a veces se reacomoda.
       let step, plan = null;
       if (range < combatRange.min) {
-        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max); plan = 'retreat';
+        // Presionado: se despega con el paso codicioso; si está bloqueado (pared, aliado, esquina),
+        // rodea por ruta para volver al anillo. Nunca se queda plantado recibiendo golpes.
+        step = nextRetreatStep(actor, target, combatRange.min, combatRange.max)
+          ?? nextPathStep(actor, target, combatRange.min, combatRange.max);
+        plan = 'retreat';
       } else if (range > combatRange.max) {
         step = nextPathStep(actor, target, combatRange.min, combatRange.max); plan = 'path';
       } else {
@@ -1237,15 +1304,28 @@
       }
       ctx.restore();
     }
-    // Mira en vivo del hechizo preparado: línea del personaje al cursor, misma estética que la mira de los bots.
-    const readySkill = selectedSkill === null ? null : skillAt(selectedSkill);
-    if (readySkill && player.alive && !paused && mouseTile) {
+    // Mira del hechizo preparado. Dos modos, como en Wild Rift:
+    //  - arrastre: la mira nace en el personaje y la orienta el vector desde el botón (con tope de alcance);
+    //  - mouse/teclado: el punto sigue al cursor sin imán de casilla.
+    // En ambos casos el ajuste a casilla ocurre recién al resolver el lanzamiento.
+    const readyIndex = spellDrag?.index ?? selectedSkill;
+    const readySkill = readyIndex === null ? null : skillAt(readyIndex);
+    const aim = spellDrag ? dragAim : mousePoint;
+    if (readySkill && player.alive && !paused && aim) {
       const [px, py] = position(player), [psx, psy] = screenTile(px, py, cameraX, cameraY);
-      const [msx, msy] = screenTile(mouseTile[0], mouseTile[1], cameraX, cameraY);
-      const x = msx + tilePx / 2, y = msy + tilePx / 2, lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
-      const color = readySkill.aimColor ?? DEFAULT_AIM_COLOR;
+      const lineX = psx + tilePx / 2, lineY = psy + tilePx / 2;
+      const x = clamp(aim.x, 0, W), y = clamp(aim.y, 0, H);
+      const color = spellDrag?.cancel ? '#e06a5e' : readySkill.aimColor ?? DEFAULT_AIM_COLOR;
       const pulse = .5 + Math.sin(now / 120) * .2;
-      ctx.save(); ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
+      ctx.save();
+      // Alcance máximo: anillo tenue alrededor del personaje mientras se arrastra (referencia de rango).
+      if (spellDrag && aim.maxRange) {
+        ctx.globalAlpha = .16; ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, tilePx * .04);
+        ctx.setLineDash([tilePx * .22, tilePx * .18]);
+        ctx.beginPath(); ctx.arc(lineX, lineY, aim.maxRange, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.globalAlpha = .55 + pulse * .3; ctx.strokeStyle = color; ctx.fillStyle = color;
       ctx.lineWidth = Math.max(2, tilePx * .05); ctx.shadowColor = color; ctx.shadowBlur = tilePx * .25;
       ctx.beginPath(); ctx.moveTo(lineX, lineY); ctx.lineTo(x, y); ctx.stroke();
       ctx.setLineDash([tilePx * .14, tilePx * .1]);
@@ -1255,6 +1335,19 @@
       ctx.beginPath();
       ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y); ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
       ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap); ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm); ctx.stroke();
+      // Punto central: marca exactamente dónde cae el hechizo.
+      ctx.beginPath(); ctx.arc(x, y, Math.max(2, tilePx * .075), 0, Math.PI * 2); ctx.fill();
+      // Objetivo enganchado: corchetes sobre el sprite, para saber que el arrastre ya lo fijó.
+      if (aim.target) {
+        const half = tilePx * .58, top = y - tilePx * .95, bottom = y + tilePx * .35, tick = tilePx * .3;
+        ctx.globalAlpha = .95; ctx.lineWidth = Math.max(2, tilePx * .07); ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(x - half, top + tick); ctx.lineTo(x - half, top); ctx.lineTo(x - half + tick, top);
+        ctx.moveTo(x + half - tick, top); ctx.lineTo(x + half, top); ctx.lineTo(x + half, top + tick);
+        ctx.moveTo(x - half, bottom - tick); ctx.lineTo(x - half, bottom); ctx.lineTo(x - half + tick, bottom);
+        ctx.moveTo(x + half - tick, bottom); ctx.lineTo(x + half, bottom); ctx.lineTo(x + half, bottom - tick);
+        ctx.stroke();
+      }
       ctx.restore();
     }
     // Apoyo aliado pendiente: anillo verde punteado que se cierra sobre el aliado mientras llega la ayuda.
@@ -1333,12 +1426,18 @@
   }
   function refreshHud() {
     if (!player) return;
-    $('healthBar').style.width = `${player.hp / player.maxHp * 100}%`;
+    const healthShare = `${player.hp / player.maxHp * 100}%`;
+    const manaShare = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
+    $('healthBar').style.width = healthShare;
     $('healthValue').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-    $('manaBar').style.width = player.maxMana ? `${player.mana / player.maxMana * 100}%` : '0%';
+    $('manaBar').style.width = manaShare;
     $('manaValue').textContent = player.maxMana ? `${Math.floor(player.mana)} / ${player.maxMana}` : '—';
     // El guerrero no tiene maná: se oculta la fila y la barra completas, no solo el valor.
     $('resourceBlock')?.classList.toggle('no-mana', !(player.maxMana > 0));
+    // Vitales compactos del HUD táctil en horizontal; repiten el estado sin duplicar lógica.
+    $('mobileHealthBar').style.width = healthShare;
+    $('mobileManaBar').style.width = manaShare;
+    $('mobileVitals').classList.toggle('no-mana', !(player.maxMana > 0));
     document.querySelectorAll('.spell-slot[data-skill]').forEach((button, index) => {
       const skill = skillAt(index), cooldown = player.skillCooldowns?.[index] ?? 0;
       button.disabled = !player.alive || !skill;
@@ -1358,6 +1457,7 @@
       $('targetStatus').textContent = 'Seleccioná un rival';
     }
     $('attackBtn').disabled = !targetAlive || !player.alive || paused || distance(player, target) > 1 || player.attackCd > 0;
+    $('mobileAttackBtn').disabled = $('attackBtn').disabled;
     for (const actor of fighters) {
       const row = document.querySelector(`[data-fighter="${actor.id}"]`);
       if (row) { row.classList.toggle('fighter-dead', !actor.alive); row.classList.toggle('targeted', actor.id === selected); }
@@ -1369,17 +1469,11 @@
     const transitionId = ++mapTransitionId;
     mapChangeInProgress = false;
     try {
-      const alternatives = mapManifest.filter(map => map.id !== currentMap?.id);
-      const nextMap = alternatives.length ? alternatives[Math.floor(Math.random() * alternatives.length)] : null;
-      if (nextMap) {
-        try {
-          const nextMapData = await fetchJson(`${MAP_URL}maps/${nextMap.id}.json`);
-          if (transitionId !== mapTransitionId) return;
-          currentMap = nextMap; mapData = nextMapData;
-          spawnActorsOnMap(currentMap);
-        } catch (error) {
-          console.warn('No se pudo elegir un mapa nuevo al reiniciar; se conserva el mapa actual.', error);
-        }
+      const next = await loadResetMap(transitionId);
+      if (next) {
+        currentMap = next.map; mapData = next.data;
+        lastStartMapId = currentMap.id;
+        spawnActorsOnMap(currentMap);
       }
       if (transitionId !== mapTransitionId) return;
       killsTowardRotation = 0;
@@ -1409,15 +1503,141 @@
     return [tx, ty];
   }
   function actorAtPointer(x, y) {
-    const [cx, cy] = position(player), range = visibleRange(cx, cy); let best = null, bestScore = Infinity;
+    const [cx, cy] = position(player); let best = null, bestScore = Infinity;
+    // Hitbox generosa alrededor del sprite: la puntería libre no obliga a caer en el centro de la casilla.
+    const padX = tilePx * .45, padTop = tilePx * .5, padBottom = tilePx * .2;
     for (const actor of fighters) {
       if (!actor.alive) continue;
       const [ax, ay] = position(actor), [sx, sy] = screenTile(ax, ay, cx, cy);
-      if (x >= sx - 5 && x <= sx + tilePx + 5 && y >= sy - tilePx * 1.2 && y <= sy + tilePx) {
-        const score = Math.hypot(x - (sx + tilePx / 2), y - (sy + tilePx / 2)); if (score < bestScore) { best = actor; bestScore = score; }
+      if (x >= sx - padX && x <= sx + tilePx + padX && y >= sy - tilePx * 1.2 - padTop && y <= sy + tilePx + padBottom) {
+        const score = Math.hypot(x - (sx + tilePx / 2), y - (sy + tilePx / 2 - tilePx * .15));
+        if (score < bestScore) { best = actor; bestScore = score; }
       }
     }
     return best;
+  }
+  function canvasPointAtPointer(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+    const x = clientX - rect.left, y = clientY - rect.top;
+    return { x, y, tile: tileAtPointer(x, y) };
+  }
+  function resolveCanvasPointer(point, skillIndex = null) {
+    if (!point) return;
+    const target = actorAtPointer(point.x, point.y);
+    if (skillIndex !== null) {
+      if (target) castSkill(skillIndex, target);
+      else if (point.tile) castSkillAtTile(skillIndex, point.tile);
+      return;
+    }
+    if (target) handleCanvasTarget(target);
+    else if (selectedSkill !== null && point.tile) castSkillAtTile(selectedSkill, point.tile);
+  }
+  function setSpellDragCancel(drag, cancel) {
+    if (!drag || drag.cancel === cancel) return;
+    drag.cancel = cancel;
+    drag.button.classList.toggle('cancel-aim', cancel);
+    $('spellCancelHint')?.classList.toggle('show', cancel);
+  }
+  function cancelSpellDrag(pointerId = null) {
+    if (spellDrag && (pointerId === null || spellDrag.pointerId === pointerId)) {
+      setSpellDragCancel(spellDrag, false);
+      lastSpellGesture = { button: spellDrag.button, expiresAt: performance.now() + 1000 };
+      spellDrag = null;
+    }
+    if (canvasPress && (pointerId === null || canvasPress.pointerId === pointerId)) canvasPress = null;
+    $('spellCancelHint')?.classList.remove('show');
+    mouseTile = null;
+    mousePoint = null;
+    dragAim = null;
+  }
+  // Dirección y alcance del arrastre: se mide el vector desde el punto donde se apoyó el botón,
+  // igual que un stick de Wild Rift. La mira nunca salta al dedo ni a una casilla.
+  function refreshDragAim(event) {
+    if (!spellDrag) { dragAim = null; return 0; }
+    const dx = event.clientX - spellDrag.startX, dy = event.clientY - spellDrag.startY;
+    const len = Math.hypot(dx, dy);
+    if (len > DRAG_AIM_DEADZONE) spellDrag.moved = true;
+    const skill = skillAt(spellDrag.index);
+    const [cx, cy] = position(player);
+    const originX = W / 2, originY = H / 2;
+    const maxRange = Math.max(tilePx, SPELL_VISION_RANGE * tilePx);
+    const full = event.pointerType === 'touch' ? DRAG_AIM_FULL_TOUCH : DRAG_AIM_FULL;
+    const span = Math.max(1, full - DRAG_AIM_DEADZONE);
+    const ratio = clamp((len - DRAG_AIM_DEADZONE) / span, 0, 1);
+    const reach = ratio * maxRange;
+    const ux = len > .0001 ? dx / len : 0, uy = len > .0001 ? dy / len : 0;
+    // La mira no puede salir de la pantalla: se pega al borde, como el indicador de Wild Rift.
+    let x = clamp(originX + ux * reach, 8, W - 8), y = clamp(originY + uy * reach, 8, H - 8);
+    // Enganche: si la mira cae sobre un objetivo válido, se pega a su sprite.
+    let target = null;
+    if (spellDrag.moved && skill) {
+      const hit = actorAtPointer(x, y);
+      if (hit) {
+        const wantsAlly = skill.type === 'heal' || skill.type === 'cleanse';
+        const valid = wantsAlly ? !isEnemy(player, hit) : (hit !== player && isEnemy(player, hit));
+        if (valid) target = hit;
+      }
+    }
+    if (target) {
+      const [tx, ty] = position(target), [sx, sy] = screenTile(tx, ty, cx, cy);
+      x = sx + tilePx / 2; y = sy + tilePx / 2;
+    }
+    dragAim = {
+      x, y, reach, maxRange, ratio, target,
+      tile: target ? actorTile(target) : tileAtPointer(x, y)
+    };
+    return len;
+  }
+  function pointFromEvent(event) {
+    return canvasPointAtPointer(event.clientX, event.clientY);
+  }
+  function finishSpellDrag(event, cancelled = false) {
+    if (!spellDrag || spellDrag.pointerId !== event.pointerId) return false;
+    const drag = spellDrag;
+    // Última lectura del vector antes de soltar: manda la posición real del puntero, no la de la caché.
+    const len = refreshDragAim(event);
+    const aim = dragAim;
+    // Cancelar = volver al punto de apoyo (no todo el riel: si no, apuntar a la derecha sería imposible).
+    const shouldCancel = drag.moved && len <= DRAG_AIM_CANCEL;
+    setSpellDragCancel(drag, false);
+    spellDrag = null;
+    mouseTile = null;
+    mousePoint = null;
+    dragAim = null;
+    lastSpellGesture = { button: drag.button, expiresAt: performance.now() + 1000 };
+    if (cancelled) return true;
+    if (shouldCancel) { toast('Lanzamiento cancelado.'); return true; }
+    if (!drag.moved) { selectSkill(drag.index); return true; }
+    if (!aim) return true;
+    if (aim.target) { castSkill(drag.index, aim.target); return true; }
+    if (aim.tile && aim.reach >= tilePx * .6) { castSkillAtTile(drag.index, aim.tile); return true; }
+    toast('Arrastrá hacia un rival o una casilla para lanzar.');
+    return true;
+  }
+  function finishCanvasPress(event, cancelled = false) {
+    if (!canvasPress || canvasPress.pointerId !== event.pointerId) return false;
+    const press = canvasPress;
+    canvasPress = null;
+    const point = cancelled ? null : pointFromEvent(event);
+    mouseTile = null;
+    mousePoint = null;
+    if (!cancelled && point) resolveCanvasPointer(point, press.skillIndex);
+    return true;
+  }
+  function updatePointerAim(event) {
+    const dragging = Boolean(spellDrag && spellDrag.pointerId === event.pointerId);
+    if (dragging) {
+      // Mientras se arrastra, la mira la manda el vector desde el botón (estilo Wild Rift);
+      // el dedo/cursor no arrastra la mira ni la pega a la casilla.
+      const len = refreshDragAim(event);
+      // Volver al punto de apoyo cancela al soltar, como en Wild Rift.
+      setSpellDragCancel(spellDrag, spellDrag.moved && len <= DRAG_AIM_CANCEL);
+      return;
+    }
+    const point = pointFromEvent(event);
+    mousePoint = point ? { x: point.x, y: point.y } : null;
+    mouseTile = point?.tile ?? null;
   }
   window.addEventListener('pointerdown', () => { audioReady = true; }, { once: true });
   window.addEventListener('keydown', event => {
@@ -1440,26 +1660,79 @@
     keys.add(key);
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
-  window.addEventListener('blur', () => { keys.clear(); clearJoystick(); });
-  canvas.addEventListener('pointermove', event => {
-    const rect = canvas.getBoundingClientRect();
-    mouseTile = tileAtPointer(event.clientX - rect.left, event.clientY - rect.top);
+  window.addEventListener('blur', () => { keys.clear(); clearJoystick(); cancelSpellDrag(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelSpellDrag(); });
+  canvas.addEventListener('pointermove', event => updatePointerAim(event));
+  canvas.addEventListener('pointerleave', event => {
+    if (!spellDrag && !canvasPress) { mouseTile = null; mousePoint = null; }
   });
-  canvas.addEventListener('pointerleave', () => { mouseTile = null; });
   canvas.addEventListener('pointerdown', event => {
-    const rect = canvas.getBoundingClientRect(), px = event.clientX - rect.left, py = event.clientY - rect.top;
-    const target = actorAtPointer(px, py);
-    if (target) { handleCanvasTarget(target); return; }
-    // Click en el suelo con hechizo preparado: lanza a esa casilla (le pega a quien esté ahí, o erra).
-    if (selectedSkill !== null) { const tile = tileAtPointer(px, py); if (tile) castSkillAtTile(selectedSkill, tile); }
+    if (event.button !== 0 || spellDrag) return;
+    event.preventDefault();
+    audioReady = true;
+    const point = pointFromEvent(event);
+    if (!point) return;
+    canvasPress = { pointerId: event.pointerId, skillIndex: selectedSkill };
+    mouseTile = point.tile;
+    mousePoint = { x: point.x, y: point.y };
+    try { canvas.setPointerCapture(event.pointerId); } catch {}
   });
+  canvas.addEventListener('pointerup', event => finishCanvasPress(event));
+  canvas.addEventListener('pointercancel', event => { finishCanvasPress(event, true); cancelSpellDrag(event.pointerId); });
+  canvas.addEventListener('lostpointercapture', event => { finishCanvasPress(event, true); cancelSpellDrag(event.pointerId); });
   canvas.addEventListener('contextmenu', event => {
     event.preventDefault();
     if (selectedSkill !== null) { selectedSkill = null; refreshSkillSelection(); toast('Hechizo desarmado.'); }
   });
   $('attackBtn').addEventListener('click', () => attack());
+  $('mobileAttackBtn').addEventListener('click', () => attack());
+  const fullscreenButton = $('fullscreenBtn');
+  function syncFullscreenState() {
+    const active = Boolean(document.fullscreenElement);
+    fullscreenButton.setAttribute('aria-pressed', String(active));
+    fullscreenButton.title = active ? 'Salir de pantalla completa' : 'Pantalla completa';
+    fullscreenButton.setAttribute('aria-label', active ? 'Salir de pantalla completa' : 'Activar pantalla completa');
+    $('fullscreenIcon').textContent = active ? '↙' : '⛶';
+  }
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        screen.orientation?.unlock?.();
+      } else {
+        await (document.querySelector('.client-window').requestFullscreen?.() ?? document.documentElement.requestFullscreen());
+        try { await screen.orientation?.lock?.('landscape'); } catch (_) { /* Orientation lock is optional and browser-dependent. */ }
+      }
+    } catch (_) {
+      toast('La pantalla completa no está disponible en este navegador.');
+    }
+  });
+  document.addEventListener('fullscreenchange', syncFullscreenState);
+  syncFullscreenState();
   $('classSelect').addEventListener('change', event => applyClass(event.target.value));
-  document.querySelectorAll('.spell-slot[data-skill]').forEach(button => button.addEventListener('click', () => selectSkill(Number(button.dataset.skill))));
+  document.querySelectorAll('.spell-slot[data-skill]').forEach(button => {
+    button.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || button.disabled || spellDrag) return;
+      lastSpellGesture = null;
+      event.preventDefault();
+      audioReady = true;
+      spellDrag = { pointerId: event.pointerId, index: Number(button.dataset.skill), button, startX: event.clientX, startY: event.clientY, moved: false };
+      dragAim = null;
+      try { button.setPointerCapture(event.pointerId); } catch {}
+    });
+    button.addEventListener('pointermove', event => { if (spellDrag?.pointerId === event.pointerId) updatePointerAim(event); });
+    button.addEventListener('pointerup', event => finishSpellDrag(event));
+    button.addEventListener('pointercancel', event => finishSpellDrag(event, true));
+    button.addEventListener('lostpointercapture', event => finishSpellDrag(event, true));
+    button.addEventListener('click', event => {
+      if (event.detail > 0 && lastSpellGesture?.button === button && performance.now() <= lastSpellGesture.expiresAt) {
+        event.preventDefault();
+        lastSpellGesture = null;
+        return;
+      }
+      selectSkill(Number(button.dataset.skill));
+    });
+  });
   document.querySelectorAll('.spell-slot[data-potion]').forEach(button => button.addEventListener('click', () => drinkPotion(button.dataset.potion)));
   $('scoreboardToggle').addEventListener('click', () => toggleScoreboard());
   document.querySelectorAll('.roster-row[data-fighter]').forEach(row => {
@@ -1482,6 +1755,21 @@
   // Gancho de verificación (solo lectura): permite auditar estado del juego desde la consola/playwright.
   window.AO_DEBUG = () => ({
     elapsed: Number(elapsed.toFixed(2)), paused,
+    map: currentMap?.name ?? null,
+    mapId: currentMap?.id ?? null,
+    mapRotation: activeMapRotation().map(map => map.id),
+    killsTowardRotation,
+    lastStartMapId,
+    // Solo lectura: la mira libre debe seguir el cursor en píxeles, no el centro de la casilla.
+    aimPoint: mousePoint ? { x: Math.round(mousePoint.x), y: Math.round(mousePoint.y) } : null,
+    aimTile: mouseTile ? { x: mouseTile[0], y: mouseTile[1] } : null,
+    draggingSkill: spellDrag?.index ?? null,
+    // Solo lectura: mira del arrastre (dirección/alcance y objetivo enganchado).
+    dragAim: dragAim ? {
+      x: Math.round(dragAim.x), y: Math.round(dragAim.y),
+      reach: Math.round(dragAim.reach), maxRange: Math.round(dragAim.maxRange),
+      tile: dragAim.tile, target: dragAim.target?.id ?? null
+    } : null,
     // Solo lectura: orden de apoyo que usaría el clérigo del equipo del jugador.
     supportPriority: (() => {
       const cleric = fighters.find(actor => actor.alive && actor.className === 'cleric' && actor.team === player.team);

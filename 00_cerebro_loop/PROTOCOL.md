@@ -1,100 +1,75 @@
-# PROTOCOLO DE TRABAJO OBLIGATORIO (RALPH LOOP)
+# PROTOCOLO DE TRABAJO (LOOP)
 
-## REGLAS INQUEBRANTABLES
+> Manual operativo y cola: [`README.md`](README.md) y [`TODO.md`](TODO.md).
+> Este archivo define **cómo** se ejecuta y verifica cada tarea.
 
-1. **NUNCA hagas `git merge` a ciegas de branches anteriores** (`opencode-checkpoints`, `opencode-resume`). Eso introduce errores de runtime como `TypeError: Cannot read properties of undefined`.
+## 1. Reglas inquebrantables
 
-2. **SIEMPRE reconstruí los cambios leyendo el código** e implementándolo de forma compatible en tu branch actual. Si una branch anterior cambió un nombre de campo (ej: `type` → `characterType`), actualizá TODOS los usos.
+1. **Una tarea por ciclo.** No mezclar producto, refactor y documentación en el mismo cambio salvo que sean inseparables.
+2. **No inventar alcance.** Si un pedido no está en `USER_REQUESTS.md` o en una decisión de `DECISIONS.md`, no se implementa. Ante duda, preguntar o registrar la asunción.
+3. **No hacer `git merge` a ciegas** de branches viejas (`opencode-checkpoints/*`, `opencode-resume/*`, `graveyard-*`). Reconstruir leyendo el código y verificar.
+4. **Código defensivo.** No acceder a `obj.prop` sin guardia. Usar `obj?.prop ?? default` o un `if (!obj) return`.
+5. **Si se renombra un campo, actualizar todos los usos** en el mismo cambio.
+6. **Build verde no es suficiente.** Toda tarea de producto se verifica en navegador con consola 0 errores / 0 advertencias antes de considerarse terminada.
+7. **Mantener `game.js` y `dist/game.js` sincronizados**, junto con `index.html`, `styles.css` y `favicon.svg` cuando corresponda. `start.sh` copia al arrancar, pero el repo debe quedar consistente.
+8. **Publicar en `main` al cerrar cada tarea** (pedido explícito del usuario, 2026-11-18: si no se pushea, el trabajo no queda guardado). Commit en la rama de trabajo, integración a `main` y `git push origin main`; nunca `--force`. Si `main` divergió, merge y conflictos a favor del estado verificado del loop, conservando la infraestructura que solo está en `main`.
+9. **Ignorar `gh`.** Usar `git` directamente. No bloquearse por autenticación de GitHub CLI.
+10. **No borrar pedidos pendientes.** Se mueven a `[x]`/`[~]` con evidencia, o se archivan en `HISTORY.md`.
 
-3. **BUILD VERDE NO ES SUFICIENTE. SIEMPRE verificá en el navegador.**
-   - Ejecutá: `playwright-cli open http://localhost:3002`
-   - Abrí la consola del desarrollador
-   - Si hay errores rojos → NO pushees
+## 2. Antes de empezar
 
-4. **Si ves en consola: `TypeError: Cannot read properties of undefined (reading 'type')`**, DETENETE. Es un error de estado.
-   - Buscá en el código accesos a `.type` sin verificar
-   - Cambialos por `?.type` o `if (!obj) return`
-   - O revertí al último tag `save-NNN` que funcione: `git reset --hard save-XXX`
+- Leer `HANDOFF.md`, `TODO.md` y `DECISIONS.md`.
+- Confirmar que `git status --short` no tiene cambios ajenos sin explicar.
+- Verificar que la tarea elegida está en «Ahora» y tiene alcance, no-objetivos y criterios de aceptación.
+- Si la tarea depende de una decisión abierta, no tomarla: elegir la siguiente no bloqueada.
 
-5. **PUSHEÁ A MAIN después de cada subtarea verificada en el navegador.**
-   - `git add . && git commit -m "tipo(área): descripción"`
-   - `git push origin HEAD:main` (Fast-forward)
-   - Hito visible → `git tag save-NNN && git push origin save-NNN`
+## 3. Durante la implementación
 
-6. **IGNORÁ POR COMPLETO `gh` (GitHub CLI).** Usá solo comandos `git`. No te detengas por errores de autenticación de `gh`.
+- Leer el código real antes de modificarlo; no asumir nombres de campos.
+- Hacer el cambio mínimo que cumple el criterio de aceptación.
+- No aprovechar para «mejorar» cosas no pedidas.
+- Si aparece un bloqueo nuevo, registrarlo en `TODO.md`/`DECISIONS.md` y seguir solo si hay una parte segura que se pueda cerrar.
+- Si se toca lógica de combate, no cambiar números de balance sin una tarea específica y evidencia.
 
-7. **CÓDIGO DEFENSIVO OBLIGATORIO:**
-   - NUNCA accedas a `obj.prop` sin verificar
-   - SIEMPRE usá: `obj?.prop ?? default` o `if (!obj) return null;`
-   - Si cambiás un nombre de campo, actualizá TODOS los usos en el mismo commit
+## 4. Verificación antes de cerrar
 
-## VERIFICACIÓN ANTES DE CADA PUSH
+1. `bash 00_cerebro_loop/verify.sh` → debe terminar en verde.
+2. Servidor persistente: `PORT=3002 bash start.sh`.
+3. Navegador: `playwright-cli open http://localhost:3002`.
+4. Consola: `playwright-cli console` → 0 errores / 0 advertencias.
+5. Probar el flujo completo afectado y los controles básicos (mover, apuntar, atacar, hechizos, pociones, pausa, reinicio).
+6. Revisar escritorio **1440×1000** y móvil **390×844** (o 320 px si la tarea es de layout).
+7. Guardar evidencia en `/tmp/opencode/shots/` y anotar la ruta.
 
-Antes de hacer `git push origin HEAD:main`:
-1. Ejecutá la app en el navegador
-2. Abrí la consola del desarrollador
-3. Confirmá que NO hay errores rojos ni TypeErrors
-4. Solo entonces pusheá
+## 5. Cierre de tarea
 
-## GESTIÓN DE RAMAS ANTERIORES
+- Marcar la tarea en `TODO.md` y `ROADMAP.md`.
+- Agregar una entrada breve en `HISTORY.md` con: qué se hizo, cómo se verificó, qué queda pendiente.
+- Actualizar `HANDOFF.md`: estado, próxima tarea y bloqueos.
+- Si cambió una decisión, actualizar `DECISIONS.md`.
+- Si cambió el alcance visible, actualizar `README.md`.
+- Reportar: tarea, resultado, evidencia, próximo paso y si quedó listo para publicar.
 
-Si existen branches `opencode-checkpoints/*` o `opencode-resume/*`:
-- **NO las mergees a ciegas**
-- Revisá qué cambios tienen: `git diff main..origin/opencode-checkpoints/N`
-- Leé el código y entendé qué hace
-- Reconstruí los cambios de forma compatible en tu branch actual
-- Verificá en el navegador
-- Si funciona → pusheá a main
-- Si NO funciona → documentalo en TODO.md y saltalo
-- Una vez a salvo el código valioso, limpiá el remoto: `git push origin --delete <nombre-rama>`
+## 6. Errores y reversión
 
-## 📋 DICCIONARIO DE EMOJIS (COMUNICACIÓN OBLIGATORIA)
+- Si aparece `TypeError: Cannot read properties of undefined (reading '...')`, detenerse. Buscar el acceso sin guardia y corregirlo; no seguir agregando features sobre un estado roto.
+- Si un cambio rompe el navegador y no se corrige en dos intentos, revertir solo ese cambio (`git restore` de los archivos afectados) y registrar el bloqueo.
+- No usar `git reset --hard` sobre trabajo ajeno. No descartar cambios sin inspeccionarlos.
 
-**USÁ ESTOS EMOJIS EXACTOS EN TODOS TUS REPORTES. NO INVENTES OTROS.**
+## 7. Reporte (formato compacto)
 
-### Estados de Tareas
-- 🚀 **Iniciando tarea** → `🚀 [P0/A/B/C/D] Tarea X | Comenzando`
-- ✅ **Tarea completada exitosamente** → `✅ Tarea X | Navegador limpio | Push a main completado`
-- ⚠️ **Advertencia o problema menor** → `⚠️ Tarea X | Problema menor | Continuando`
-- ❌ **Tarea falló** → `❌ Tarea X falló (3 intentos) | Movida a TODO.md | Continuando`
-- 🔄 **Reintentando** → `🔄 Tarea X | Intento N/3 | [motivo del reintento]`
+Usar un formato estable; los emojis son opcionales pero consistentes:
 
-### Estados del Sistema
-- 🟢 **Navegador/Build verde** → `🟢 Navegador limpio | Sin errores`
-- 🔴 **Navegador/Build rojo** → `🔴 Navegador con errores | [detalle del error]`
-- 🛑 **Detenido por emergencia** → `🛑 DETENIDO | [motivo] | Requiere intervención`
+```text
+🚀 [T1] Inventario/equipo visual | Comenzando
+🔍 Alcance: slots vacíos, sin mecánicas
+🟢 Preflight verde | Consola 0/0 | 1440 + 390
+📝 TODO/HANDOFF/HISTORY actualizados
+✅ [T1] Completado | Evidencia: /tmp/opencode/shots/...
+```
 
-### Estados de Git
-- 📤 **Push exitoso** → `📤 Push a main completado | Commit: [hash]`
-- 🏷️ **Tag creado** → `🏷️ Tag save-NNN creado | Commit: [hash]`
-- 🔀 **Merge/Reconstrucción** → `🔀 Reconstruyendo cambios de branch X | Estado: [progreso]`
-- 🗑️ **Branch eliminada** → `🗑️ Branch X eliminada del remoto`
+Estados: 🚀 inicio · ✅ completado · ⚠️ advertencia · ❌ falló · 🔄 reintento · 🟢 verde · 🔴 rojo · 🛑 detenido · 🧠 cerebro actualizado.
 
-### Estados del Cerebro
-- 🧠 **Cerebro actualizado** → `🧠 HANDOFF.md actualizado | Próximo paso: [descripción]`
-- 📝 **Archivo creado/modificado** → `📝 [archivo] creado/modificado | Contenido: [resumen]`
+## 8. Regla de oro
 
-### Estados de Nacimiento
-- 🏗️ **Infraestructura creada** → `🏗️ [componente] creado | Estado: [OK/Error]`
-- 🎯 **Fundación completada** → `🎯 FUNDACIÓN COMPLETADA | Cerebro listo | Main actualizado`
-
-### Estados de Rescate
-- 🔍 **Analizando branch** → `🔍 Analizando branch X | Cambios: [descripción]`
-- 🛠️ **Reconstruyendo código** → `🛠️ Reconstruyendo cambios de X | Progreso: [N/M archivos]`
-- 💾 **Código rescatado** → `💾 Código de branch X rescatado | Push a main: [OK/Error]`
-
-### Estados de Error
-- 🐛 **Bug detectado** → `🐛 Bug detectado: [descripción] | Archivo: [ruta]`
-- 💥 **TypeError** → `💥 TypeError: [detalle] | Acción: [revertir/arreglar]`
-- 🚨 **Error crítico** → `🚨 ERROR CRÍTICO: [descripción] | Deteniendo loop`
-
-### Formato de Reporte Completo
-🚀 [C] Revisar optional chaining | Comenzando
-🔍 Analizando archivos: game.js, dist/game.js
-🛠️ Agregando ?. en 15 accesos
-🟢 Navegador limpio | Sin errores
-📤 Push a main completado | Commit: abc1234
-🧠 HANDOFF.md actualizado | Próximo paso: Siguiente tarea del roadmap
-✅ [C] Revisar optional chaining | Completado | 15 fixes aplicados
-
-**REGLA: Usá SIEMPRE el mismo emoji para el mismo estado. No mezcles emojis. No inventes nuevos.**
+**El loop no avanza por cantidad de cambios, sino por tareas cerradas con evidencia.** Es mejor una tarea pequeña, verificada y documentada que cinco cambios a medias.

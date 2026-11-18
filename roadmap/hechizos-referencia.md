@@ -22,7 +22,7 @@ práctica) o **decisión propia**. Ningún número se presenta como fidelidad co
 | Apocalipsis (mago) | 85-100 / 1000 | 117-119 | 102-124 / 1050 | **117-119**, 230 maná (práctica), FX 25 |
 | Juicio Final (mago) | no existe | 142-144 | 145-150 / 1800 | **142-144**, 350 maná (práctica), FX 25 |
 | Ráfaga Ígnea (clérigo) | no existe | 98-100 | 88-102 / 700 | **98-100**, 230 maná (práctica), FX 2 (fallback) |
-| Sanar (clérigo) | no existe | 40-45 | 50-90 y remueve estados / 1000 | **40-45**, 220 maná (práctica) |
+| Sanar (clérigo) | `Curar Heridas Graves` #5: 12-35 / 40, MinSkill 38, 5 stamina — nombre distinto, no equivalente | 40-45 | 50-90 y remueve estados / 1000 | **40-45**, 220 maná (práctica) |
 | Castigo Divino (paladín) | no existe | 90-92 | 80-95 / 520 | **90-92**, 40 maná (práctica) |
 | Fuente de vida (paladín) | no existe | 25-32 | 30-45 / 300 | **25-32**, 220 maná (práctica) |
 | Inmovilizar | nombre del spell 24; 300 maná; FX 12 | spellIndex 24 | 230 maná | **350 maná** (Paralizar), FX 9 |
@@ -52,6 +52,50 @@ práctica) o **decisión propia**. Ningún número se presenta como fidelidad co
   Ráfaga, Sanar, Castigo y Fuente. El combo del mago (golpe 45-60 + Apocalipsis 117-119 +
   Juicio Final 142-144 = 304-323) es letal contra ~300 de vida, como se pidió. El paladín concentra
   5 de las 11 muertes; queda como observación para un playtest humano, no como ajuste automático.
-- **Pendiente:** decidir si `Fuente de vida` sube al rango 30-45 de la wiki 2012 para sostener al
-  paladín, y si `Sanar` debe remover estados como en esa wiki. Cualquier cambio debe medirse con el
-  mismo probe de 90 s y documentarse acá.
+- **Pendiente:** la decisión de aplicar `Fuente de vida` 30-45 y de agregar remoción de estados a
+  `Sanar` sigue abierta. T5 (2026-11-18) dejó la verificación y las propuestas en las secciones
+  siguientes; cualquier cambio debe medirse con el mismo probe de 90 s y documentarse acá.
+
+## Verificación T5 (2026-11-18): `Sanar` vs `Curar Heridas Graves`
+
+Se descargó `Dat/Hechizos.dat` de la revisión fijada `ca6ad7ff…` y se leyeron los campos de los
+hechizos 3, 5, 9, 10, 24 y 25. El hechizo 5 de AO Libre es **`Curar Heridas Graves`**:
+
+| Campo | AO Libre #5 | `Sanar` implementado |
+| --- | ---: | ---: |
+| Nombre | Curar Heridas Graves | Sanar (Imperium) |
+| Curación | **12-35** (`MinHP=12`, `MaxHP=35`) | **40-45** |
+| Maná | **40** | **220** |
+| Stamina | 5 | no implementada |
+| `MinSkill` | 38 | no exigido |
+| Target | 3 (usuario y NPC) | aliado / uno mismo |
+
+**Veredicto: no son equivalentes.** El nombre `Sanar`, el rango 40-45 y el costo 220 vienen del
+manual de Imperium Classic; AO cura 12-35 por 40 de maná. La diferencia no es de escala: el
+prototipo cura aproximadamente el doble por lanzamiento y cuesta 5,5× más maná. Tampoco coincide
+con la wiki 2012 (50-90 y remoción de estados por 1000 maná). Por eso `Sanar` sigue etiquetado como
+**práctica** y no se renombra a `Curar Heridas Graves`.
+
+Además, `Curar Heridas Graves` no está limitado por clase: `PuedeLanzar` solo exige `MinSkill` de
+Magia, maná y stamina (`modHechizos.bas:534-541,589`). La restricción «solo clérigo» es del
+prototipo, no de AO.
+
+Si en el futuro se quiere fidelidad AO para ese slot, hay que **agregar** `Curar Heridas Graves`
+como hechizo aparte (12-35 / 40 maná / `MinSkill` 38) en vez de reetiquetar `Sanar`. Eso agrega una
+habilidad y queda fuera del alcance de T5.
+
+## Evaluación de `Fuente de vida` 30-45 (wiki 2012)
+
+| Fuente | Curación | Maná | Etiqueta |
+| --- | ---: | ---: | --- |
+| Implementado (Imperium Classic) | 25-32 | 220 | **práctica** |
+| Wiki Imperium AO 2012 | 30-45 | 300 | **práctica** |
+| AO Libre | no existe | — | **sin dato** |
+
+Subir la curación a 30-45 manteniendo 220 de maná mejora la eficiencia de 0,114-0,145 a
+0,136-0,205 de vida por maná (+5 a +13 de vida por lanzamiento). No resuelve el agotamiento del
+paladín: 220 de maná sigue siendo 22 % de la reserva de 1000 y compite con `Inmovilizar` (350) y
+`Remover parálisis` (330). Con el costo 300 de la wiki la eficiencia no mejora y el problema de maná
+empeora. **Propuesta sin aplicar:** subir solo la curación a 30-45 y dejar el costo en 220
+(`práctica`), o no cambiar nada hasta que se apruebe un plan de maná más amplio. Ver la medición y
+la tabla de propuestas en [`reglas-combate.md`](reglas-combate.md#capacidad-de-maná-del-paladín-t5).
